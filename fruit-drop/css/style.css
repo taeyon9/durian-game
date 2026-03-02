@@ -206,6 +206,12 @@ html, body {
 }
 
 /* ===== MENU SCREEN ===== */
+#menuScreen {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 45%, rgba(10,123,97,0.4) 0%, transparent 70%),
+    linear-gradient(180deg, #064A3E 0%, #0A7B61 40%, #0A7B61 60%, #053D33 100%);
+}
+
 .menu-settings { position: absolute; top: calc(var(--safe-top) + 4px); right: 12px; }
 
 .menu-content {
