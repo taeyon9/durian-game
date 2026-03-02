@@ -171,7 +171,6 @@ const Game = (() => {
     UI.showScreen('playing');
     UI.updateHUD(0, highScore);
     UI.updateNextFruit(nextLevel);
-    UI.showTutorial();
   }
 
   function resetGame() {
@@ -249,8 +248,6 @@ const Game = (() => {
     FruitAlbum.unlock(currentLevel);
     SoundManager.playDrop();
     Haptic.drop();
-    UI.advanceTutorial();
-
     canDrop = false;
     dropCooldown = DROP_COOLDOWN_MS;
 

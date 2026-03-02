@@ -83,10 +83,6 @@ const UI = (() => {
       // Combo
       comboText: document.getElementById('comboText'),
 
-      // Tutorial
-      tutorial: document.getElementById('tutorialOverlay'),
-      tutorialMsg: document.getElementById('tutorialMsg'),
-      tutorialHand: document.getElementById('tutorialHand'),
     };
 
     bindEvents();
@@ -596,29 +592,6 @@ const UI = (() => {
     if (onContinueCallback) onContinueCallback();
   }
 
-  // ===== TUTORIAL =====
-  let tutorialStep = 0;
-
-  function showTutorial() {
-    if (localStorage.getItem('durianMergeTutorialDone')) return;
-    tutorialStep = 1;
-    els.tutorialMsg.textContent = 'Drag left or right to aim!';
-    els.tutorial.style.display = '';
-  }
-
-  function advanceTutorial() {
-    if (tutorialStep === 1) {
-      tutorialStep = 2;
-      els.tutorialHand.style.display = 'none';
-      els.tutorialMsg.textContent = 'Merge same fruits to evolve! 🎯';
-      setTimeout(() => {
-        els.tutorial.style.display = 'none';
-        localStorage.setItem('durianMergeTutorialDone', 'true');
-        tutorialStep = 0;
-      }, 2000);
-    }
-  }
-
   // ===== UTILS =====
 
   function escHtml(s) {
@@ -636,7 +609,5 @@ const UI = (() => {
     updateMenu,
     showModal,
     hideModal,
-    showTutorial,
-    advanceTutorial,
   };
 })();
