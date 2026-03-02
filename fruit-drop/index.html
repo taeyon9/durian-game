@@ -40,6 +40,12 @@
     <span id="comboText"></span>
   </div>
 
+  <!-- Tutorial overlay -->
+  <div id="tutorialOverlay" class="tutorial-overlay" style="display:none;">
+    <div class="tutorial-msg" id="tutorialMsg"></div>
+    <div class="tutorial-hand" id="tutorialHand">👆</div>
+  </div>
+
   <!-- ===== MENU SCREEN ===== -->
   <div id="menuScreen" class="screen overlay">
     <button class="icon-btn menu-settings" id="menuSettingsBtn">⚙️</button>
@@ -128,7 +134,7 @@
     <div class="lb-tabs">
       <div class="lb-tab active" data-tab="alltime">All Time</div>
       <div class="lb-tab" data-tab="weekly">Weekly</div>
-      <div class="lb-tab" data-tab="daily">Daily</div>
+      <div class="lb-tab" data-tab="country">🌏 Country</div>
     </div>
     <div class="lb-list" id="lbList"></div>
     <div class="lb-me" id="lbMe"></div>
@@ -190,6 +196,9 @@
   <div id="bannerAd" class="banner-ad"><span>AD</span></div>
 
   <!-- Scripts -->
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <script src="js/fruits.js"></script>
   <script src="js/sounds.js"></script>
@@ -199,6 +208,7 @@
   <script src="js/nickname.js"></script>
   <script src="js/ranking.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/firebase-leaderboard.js"></script>
   <script src="js/game.js"></script>
   <script src="js/admob.js"></script>
 </body>

@@ -51,6 +51,19 @@ const Game = (() => {
       onWatchAd: watchAdForTicket,
     });
 
+    // Firebase init
+    if (typeof FirebaseLeaderboard !== 'undefined') {
+      FirebaseLeaderboard.init({
+        // TODO: 실제 Firebase config로 교체
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      });
+    }
+
     resize();
     window.addEventListener('resize', resize);
 
@@ -149,6 +162,7 @@ const Game = (() => {
     UI.updateHUD(0, highScore);
     UI.updateNextFruit(nextLevel);
     SoundManager.startBGM();
+    UI.showTutorial();
   }
 
   function resetGame() {
@@ -197,6 +211,7 @@ const Game = (() => {
     FruitAlbum.unlock(currentLevel);
     SoundManager.playDrop();
     Haptic.drop();
+    UI.advanceTutorial();
 
     canDrop = false;
     dropCooldown = DROP_COOLDOWN_MS;
@@ -323,6 +338,10 @@ const Game = (() => {
     const name = NicknameManager.getName();
     if (name) {
       gameOverRank = RankingManager.addScore(name, score);
+      // Submit to Firebase
+      if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
+        FirebaseLeaderboard.submitScore(name, score);
+      }
     } else {
       gameOverRank = RankingManager.getRank(score);
     }

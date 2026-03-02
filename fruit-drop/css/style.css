@@ -711,3 +711,38 @@ html, body {
   font-size: 11px;
   color: var(--text-dim);
 }
+
+/* ===== TUTORIAL ===== */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  pointer-events: none;
+}
+.tutorial-msg {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 50px;
+  border: 1px solid var(--gold-dim);
+  white-space: nowrap;
+}
+.tutorial-hand {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  font-size: 32px;
+  animation: tutorialSwipe 1.5s ease-in-out infinite;
+}
+@keyframes tutorialSwipe {
+  0%   { transform: translateX(-40px); opacity: 0.4; }
+  50%  { transform: translateX(40px); opacity: 1; }
+  100% { transform: translateX(-40px); opacity: 0.4; }
+}

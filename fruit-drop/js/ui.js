@@ -79,6 +79,11 @@ const UI = (() => {
 
       // Combo
       comboText: document.getElementById('comboText'),
+
+      // Tutorial
+      tutorial: document.getElementById('tutorialOverlay'),
+      tutorialMsg: document.getElementById('tutorialMsg'),
+      tutorialHand: document.getElementById('tutorialHand'),
     };
 
     bindEvents();
@@ -426,22 +431,35 @@ const UI = (() => {
 
   // ===== LEADERBOARD FULL =====
 
-  function renderLeaderboardFull(tab) {
-    // For now, all tabs show the same data (Firebase will differentiate later)
-    const board = RankingManager.getTopScores(20);
+  async function renderLeaderboardFull(tab) {
     const name = NicknameManager.getName();
-    let html = '';
+    let board = [];
 
+    // Try Firebase first, fallback to local
+    if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
+      els.lbList.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Loading...</div>';
+      board = await FirebaseLeaderboard.getScores(tab === 'alltime' ? 'alltime' : tab, 50);
+    }
+
+    // Fallback to local
+    if (board.length === 0 && tab === 'alltime') {
+      board = RankingManager.getTopScores(20);
+    }
+
+    let html = '';
     if (board.length === 0) {
       html = '<div style="text-align:center;padding:40px;color:var(--text-dim);">No scores yet. Play a game!</div>';
     } else {
       board.forEach((entry, i) => {
         const rankLabel = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
         const isMe = entry.name === name;
+        const flag = entry.country && typeof FirebaseLeaderboard !== 'undefined'
+          ? FirebaseLeaderboard.countryFlag(entry.country) + ' '
+          : '';
         html += `
           <div class="lb-row ${isMe ? 'me' : ''}">
             <div class="lb-rank">${rankLabel}</div>
-            <div class="lb-name">${escHtml(entry.name)}${isMe ? ' ⭐' : ''}</div>
+            <div class="lb-name">${flag}${escHtml(entry.name)}${isMe ? ' ⭐' : ''}</div>
             <div class="lb-pts">${entry.score}</div>
           </div>`;
       });
@@ -519,6 +537,29 @@ const UI = (() => {
     if (onWatchAdCallback) onWatchAdCallback();
   }
 
+  // ===== TUTORIAL =====
+  let tutorialStep = 0;
+
+  function showTutorial() {
+    if (localStorage.getItem('fruitDropTutorialDone')) return;
+    tutorialStep = 1;
+    els.tutorialMsg.textContent = '좌우로 드래그해서 위치를 정하세요!';
+    els.tutorial.style.display = '';
+  }
+
+  function advanceTutorial() {
+    if (tutorialStep === 1) {
+      tutorialStep = 2;
+      els.tutorialHand.style.display = 'none';
+      els.tutorialMsg.textContent = '같은 과일끼리 합치면 진화! 🎯';
+      setTimeout(() => {
+        els.tutorial.style.display = 'none';
+        localStorage.setItem('fruitDropTutorialDone', 'true');
+        tutorialStep = 0;
+      }, 2000);
+    }
+  }
+
   // ===== UTILS =====
 
   function escHtml(s) {
@@ -536,5 +577,7 @@ const UI = (() => {
     updateMenu,
     showModal,
     hideModal,
+    showTutorial,
+    advanceTutorial,
   };
 })();
