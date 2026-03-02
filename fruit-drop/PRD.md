@@ -145,7 +145,10 @@
 | `fruitDropHighScore` | 최고 점수 |
 | `fruitDropTickets` | 남은 횟수 + 날짜 |
 | `fruitDropNickname` | 플레이어 닉네임 |
-| `fruitDropLeaderboard` | 상위 20개 기록 (이름, 점수, 날짜) |
+| `fruitDropUserId` | 유저 고유 UUID (내부 식별, UI 비노출) |
+| `fruitDropNickChangedAt` | 닉네임 마지막 변경 일시 (ISO 타임스탬프) |
+| `fruitDropCountry` | 국가 코드 (GeoIP 캐시) |
+| `fruitDropLeaderboard` | 상위 20개 기록 (이름, 점수, 날짜, userId) |
 
 - 서버/백엔드 없음 — 완전 오프라인
 - 클라우드 동기화 없음
@@ -216,7 +219,7 @@
 
 ### 기능 확장 가능
 - [ ] iOS 버전 (Capacitor iOS)
-- [ ] 클라우드 리더보드 (Firebase 등)
+- [x] 클라우드 리더보드 (Firebase Firestore)
 - [ ] 광고 제거 인앱결제
 - [ ] 애널리틱스 연동
 - [ ] 과일 스킨 시스템
