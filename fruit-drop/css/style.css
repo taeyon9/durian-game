@@ -128,6 +128,28 @@ html, body {
 }
 .icon-btn:active { opacity: 1; }
 
+/* Icon: three bars */
+.icon-bars {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--gold-dim);
+  border-radius: 1px;
+  position: relative;
+}
+.icon-bars::before,
+.icon-bars::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--gold-dim);
+}
+.icon-bars::before { top: -6px; }
+.icon-bars::after { top: 6px; }
+
 /* ===== HUD ===== */
 #hud {
   z-index: 15;
