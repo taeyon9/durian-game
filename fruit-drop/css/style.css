@@ -300,14 +300,18 @@ html, body {
 .menu-title {
   font-size: 42px;
   font-weight: 700;
-  color: var(--white);
-  text-shadow: 0 2px 20px var(--gold-glow);
+  background: linear-gradient(180deg, #FFE066 0%, #FFD700 40%, #FFA500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 20px rgba(255,215,0,0.3));
   letter-spacing: -1px;
 }
 .menu-subtitle {
   font-size: 13px;
   font-weight: 600;
-  color: var(--gold-dim);
+  color: #DAA520;
   letter-spacing: 4px;
 }
 
