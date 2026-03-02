@@ -324,7 +324,7 @@ html, body {
 }
 .go-board-list {
   padding: 4px 0;
-  min-height: 160px;
+  min-height: 260px;
   transition: filter 0.5s;
 }
 .go-board-list.blurred {

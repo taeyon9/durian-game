@@ -111,10 +111,20 @@ const SoundManager = (() => {
     osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.05);
   }
 
-  // ===== BGM — chill looping synth pad =====
-  // Procedural tropical-ish ambient loop using oscillators
+  // ===== BGM — tropical lo-fi arpeggio loop =====
 
   let bgmNodes = [];
+  let bgmTimeout = null;
+
+  // Chord progression: Fmaj7 → Dm7 → Am7 → Cmaj7 (tropical feel)
+  const BGM_CHORDS = [
+    [349.23, 440.00, 523.25, 659.25],  // Fmaj7: F4 A4 C5 E5
+    [293.66, 349.23, 440.00, 523.25],  // Dm7:   D4 F4 A4 C5
+    [440.00, 523.25, 659.25, 783.99],  // Am7:   A4 C5 E5 G5
+    [523.25, 659.25, 783.99, 987.77],  // Cmaj7: C5 E5 G5 B5
+  ];
+  const BGM_BPM = 75;
+  const BGM_BEAT = 60 / BGM_BPM;
 
   function startBGM() {
     if (_bgmMuted) return;
@@ -123,45 +133,83 @@ const SoundManager = (() => {
 
     bgmGain = ctx.createGain();
     bgmGain.gain.setValueAtTime(0, ctx.currentTime);
-    bgmGain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 1); // Fade in
+    bgmGain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 1.5);
     bgmGain.connect(ctx.destination);
 
-    // Chord: Cmaj7 feel — C E G B
-    const notes = [130.81, 164.81, 196.00, 246.94]; // C3 E3 G3 B3
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      osc.type = i % 2 === 0 ? 'sine' : 'triangle';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      // Slow detune wobble for warmth
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
-      lfo.frequency.setValueAtTime(0.3 + i * 0.1, ctx.currentTime);
-      lfoGain.gain.setValueAtTime(2, ctx.currentTime);
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc.detune);
-      lfo.start(ctx.currentTime);
+    // Sub bass pad (quiet, warm)
+    const bass = ctx.createOscillator();
+    const bassGain = ctx.createGain();
+    bass.type = 'sine';
+    bass.frequency.setValueAtTime(87.31, ctx.currentTime); // F2
+    bassGain.gain.setValueAtTime(0.06, ctx.currentTime);
+    bass.connect(bassGain);
+    bassGain.connect(bgmGain);
+    bass.start(ctx.currentTime);
+    bgmNodes.push(bass);
 
-      osc.connect(bgmGain);
-      osc.start(ctx.currentTime);
-      bgmNodes.push(osc, lfo);
-    });
+    let chordIdx = 0;
+    let beatInChord = 0;
 
-    // Subtle rhythmic pulse
-    bgmInterval = setInterval(() => {
+    function scheduleNote() {
       if (_bgmMuted || !bgmGain) return;
       const ctx = getCtx();
       const t = ctx.currentTime;
-      // Gentle volume pulse
-      bgmGain.gain.setValueAtTime(0.06, t);
-      bgmGain.gain.linearRampToValueAtTime(0.04, t + 0.3);
-      bgmGain.gain.linearRampToValueAtTime(0.06, t + 0.6);
-    }, 2400);
+
+      const chord = BGM_CHORDS[chordIdx];
+      // Arpeggio: cycle through chord notes
+      const noteIdx = beatInChord % chord.length;
+      const freq = chord[noteIdx];
+
+      // Main arp note (soft pluck feel)
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      // Slight pitch drift for lo-fi warmth
+      osc.detune.setValueAtTime((Math.random() - 0.5) * 8, t);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.01, t + BGM_BEAT * 0.9);
+      osc.connect(g);
+      g.connect(bgmGain);
+      osc.start(t);
+      osc.stop(t + BGM_BEAT);
+
+      // Octave-down ghost note on beats 0 and 2
+      if (noteIdx === 0 || noteIdx === 2) {
+        const sub = ctx.createOscillator();
+        const sg = ctx.createGain();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(freq / 2, t);
+        sg.gain.setValueAtTime(0.07, t);
+        sg.gain.exponentialRampToValueAtTime(0.01, t + BGM_BEAT * 1.5);
+        sub.connect(sg);
+        sg.connect(bgmGain);
+        sub.start(t);
+        sub.stop(t + BGM_BEAT * 1.5);
+      }
+
+      // Update bass note on chord change
+      if (beatInChord === 0) {
+        bass.frequency.setValueAtTime(chord[0] / 4, t); // Root note, 2 octaves down
+      }
+
+      beatInChord++;
+      if (beatInChord >= 8) {
+        beatInChord = 0;
+        chordIdx = (chordIdx + 1) % BGM_CHORDS.length;
+      }
+
+      bgmTimeout = setTimeout(scheduleNote, BGM_BEAT * 1000);
+    }
+
+    scheduleNote();
   }
 
   function stopBGM() {
     bgmNodes.forEach(n => { try { n.stop(); } catch {} });
     bgmNodes = [];
     if (bgmInterval) { clearInterval(bgmInterval); bgmInterval = null; }
+    if (bgmTimeout) { clearTimeout(bgmTimeout); bgmTimeout = null; }
     bgmGain = null;
   }
 

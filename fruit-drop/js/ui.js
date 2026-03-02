@@ -143,6 +143,19 @@ const UI = (() => {
     els.goNickInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') handleNickSubmit();
     });
+
+    // DEBUG: BEST 라벨 5탭 → 강제 게임오버 (릴리스 전 제거)
+    let bestTapCount = 0;
+    let bestTapTimer = null;
+    els.hudBest.addEventListener('click', () => {
+      bestTapCount++;
+      clearTimeout(bestTapTimer);
+      bestTapTimer = setTimeout(() => { bestTapCount = 0; }, 1500);
+      if (bestTapCount >= 5) {
+        bestTapCount = 0;
+        if (typeof Game !== 'undefined' && Game.triggerGameOver) Game.triggerGameOver();
+      }
+    });
   }
 
   // ===== SCREEN MANAGEMENT =====

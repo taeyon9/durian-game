@@ -5,6 +5,8 @@ const FirebaseLeaderboard = (() => {
 
   function init(firebaseConfig) {
     try {
+      // Skip if placeholder config
+      if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith('YOUR_')) return;
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
       // Detect country from locale
