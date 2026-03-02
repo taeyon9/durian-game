@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Fruit Drop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Game Canvas (gameplay rendering only) -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- ===== GAMEPLAY HUD ===== -->
+  <div id="hud" class="screen" style="display:none;">
+    <div class="hud-bar">
+      <div class="hud-left">
+        <div class="hud-best-label">BEST</div>
+        <div class="hud-best" id="hudBest">0</div>
+      </div>
+      <div class="hud-center">
+        <div class="hud-score-label">SCORE</div>
+        <div class="hud-score" id="hudScore">0</div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-next-label">NEXT</div>
+        <canvas id="hudNextCanvas" width="50" height="50"></canvas>
+      </div>
+    </div>
+    <!-- Settings icon during play -->
+    <button class="hud-settings-btn" id="hudSettingsBtn">⚙️</button>
+  </div>
+
+  <!-- Combo popup (floats over gameplay) -->
+  <div id="comboPopup" class="combo-popup" style="display:none;">
+    <span id="comboText"></span>
+  </div>
+
+  <!-- ===== MENU SCREEN ===== -->
+  <div id="menuScreen" class="screen overlay">
+    <button class="icon-btn menu-settings" id="menuSettingsBtn">⚙️</button>
+
+    <div class="menu-content">
+      <div class="menu-fruits" id="menuFruits"></div>
+      <h1 class="menu-title">Fruit Drop</h1>
+      <p class="menu-subtitle">TROPICAL MERGE</p>
+    </div>
+
+    <div class="menu-player" id="menuPlayer" style="display:none;">
+      <span class="menu-player-name" id="menuPlayerName"></span>
+      <span class="menu-player-best">Best: <span id="menuBestScore">0</span></span>
+    </div>
+
+    <div class="menu-actions">
+      <button class="btn btn-play" id="menuPlayBtn">
+        <span class="btn-icon">▶</span> PLAY
+      </button>
+      <div class="menu-tickets">
+        🎟️ <span id="menuTickets">5</span> plays left today
+      </div>
+      <div class="menu-row">
+        <button class="btn btn-outline" id="menuRankingBtn">🏆 Ranking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GAME OVER ===== -->
+  <div id="gameoverScreen" class="screen overlay" style="display:none;">
+    <div class="go-score-section">
+      <div class="go-label">GAME OVER</div>
+      <div class="go-newbest" id="goNewBest" style="display:none;">🎉 NEW BEST!</div>
+      <div class="go-score" id="goScore">0</div>
+    </div>
+
+    <!-- Blurred leaderboard (first-time user) -->
+    <div class="go-board-wrap" id="goBoardWrap">
+      <div class="go-board-header">🏆 Global Ranking</div>
+      <div class="go-board-list" id="goBoardList"></div>
+
+      <!-- Nickname overlay on blurred board -->
+      <div class="go-nick-overlay" id="goNickOverlay">
+        <div class="go-nick-emoji">👀</div>
+        <div class="go-nick-title">What's your name?</div>
+        <div class="go-nick-desc">Enter to unlock your ranking</div>
+        <input type="text" class="go-nick-input" id="goNickInput"
+               placeholder="Your name..." maxlength="12" autocomplete="off">
+        <button class="btn btn-gold" id="goNickSubmit">🔓 UNLOCK RANKING</button>
+        <div class="go-nick-skip" id="goNickSkip">Skip for now</div>
+      </div>
+    </div>
+
+    <!-- Returning user: neighbor ranks (shown instead of blurred board) -->
+    <div class="go-neighbors" id="goNeighbors" style="display:none;">
+      <div class="go-board-header">
+        <span>🏆 Your Position</span>
+        <span class="go-view-all" id="goViewAll">View All →</span>
+      </div>
+      <div class="go-neighbor-list" id="goNeighborList"></div>
+      <div class="go-neighbor-goal" id="goNeighborGoal"></div>
+    </div>
+
+    <!-- Rank reveal animation -->
+    <div class="go-rank-reveal" id="goRankReveal" style="display:none;">
+      <div class="go-rank-text" id="goRankText"></div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="go-buttons">
+      <div class="go-btn-row">
+        <button class="btn btn-play" id="goPlayAgain">▶ PLAY AGAIN</button>
+        <button class="btn btn-share" id="goShareBtn">📤</button>
+      </div>
+      <button class="btn btn-ad" id="goWatchAd">📺 Watch Ad +1 Play</button>
+      <div class="go-back" id="goBackMenu">Back to Menu</div>
+    </div>
+  </div>
+
+  <!-- ===== LEADERBOARD FULL ===== -->
+  <div id="leaderboardScreen" class="screen overlay" style="display:none;">
+    <div class="lb-header">
+      <button class="lb-back" id="lbBack">←</button>
+      <h2 class="lb-title">🏆 Ranking</h2>
+    </div>
+    <div class="lb-tabs">
+      <div class="lb-tab active" data-tab="alltime">All Time</div>
+      <div class="lb-tab" data-tab="weekly">Weekly</div>
+      <div class="lb-tab" data-tab="daily">Daily</div>
+    </div>
+    <div class="lb-list" id="lbList"></div>
+    <div class="lb-me" id="lbMe"></div>
+  </div>
+
+  <!-- ===== SETTINGS MODAL ===== -->
+  <div id="settingsOverlay" class="modal-bg" style="display:none;">
+    <div class="settings-panel">
+      <div class="settings-header">
+        <h3>Settings</h3>
+        <button class="settings-close" id="settingsClose">✕</button>
+      </div>
+      <div class="settings-nick" id="settingsNickSection" style="display:none;">
+        <div class="settings-nick-info">
+          <div class="settings-nick-label">Nickname</div>
+          <div class="settings-nick-name" id="settingsNickName"></div>
+        </div>
+        <button class="settings-nick-edit" id="settingsNickEdit">✏️</button>
+      </div>
+      <div class="settings-toggles">
+        <label class="toggle-row">
+          <span>🎵 Background Music</span>
+          <input type="checkbox" id="toggleBgm" checked>
+          <div class="toggle-track"><div class="toggle-knob"></div></div>
+        </label>
+        <label class="toggle-row">
+          <span>🔊 Sound Effects</span>
+          <input type="checkbox" id="toggleSfx" checked>
+          <div class="toggle-track"><div class="toggle-knob"></div></div>
+        </label>
+        <label class="toggle-row">
+          <span>📳 Haptic Feedback</span>
+          <input type="checkbox" id="toggleHaptic" checked>
+          <div class="toggle-track"><div class="toggle-knob"></div></div>
+        </label>
+      </div>
+      <div class="settings-ver">Fruit Drop v1.0</div>
+    </div>
+  </div>
+
+  <!-- ===== SHARE MODAL ===== -->
+  <div id="shareOverlay" class="modal-bg" style="display:none;">
+    <div class="share-panel">
+      <div class="share-title">Share Your Score!</div>
+      <div class="share-card" id="shareCard">
+        <div class="share-card-name">FRUIT DROP 🍉</div>
+        <div class="share-card-score" id="shareScore">0</div>
+        <div class="share-card-cta">Can you beat me? 🔥</div>
+      </div>
+      <div class="share-buttons">
+        <button class="share-btn" data-platform="copy">📋 Copy</button>
+        <button class="share-btn" data-platform="share">📤 Share</button>
+      </div>
+      <div class="share-close" id="shareClose">Close</div>
+    </div>
+  </div>
+
+  <!-- Banner ad placeholder -->
+  <div id="bannerAd" class="banner-ad"><span>AD</span></div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="js/fruits.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/haptic.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/tickets.js"></script>
+  <script src="js/nickname.js"></script>
+  <script src="js/ranking.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/admob.js"></script>
+</body>
+</html>

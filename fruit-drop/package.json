@@ -1,0 +1,25 @@
+{
+  "name": "fruit-drop",
+  "version": "1.0.0",
+  "description": "Southeast Asian Fruit Drop Game - Suika-style merge puzzle",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "rm -rf www && mkdir -p www/js www/css www/assets && cp index.html www/ && cp js/*.js www/js/ && cp css/*.css www/css/ && cp -r assets/* www/assets/ 2>/dev/null || true",
+    "cap:sync": "npm run build && npx cap sync"
+  },
+  "keywords": [
+    "game",
+    "fruit",
+    "merge",
+    "puzzle",
+    "suika"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor-community/admob": "^8.0.0",
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0"
+  }
+}
