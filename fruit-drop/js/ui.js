@@ -412,20 +412,21 @@ const UI = (() => {
   }
 
   function unlockRanking() {
-    // Hide nickname overlay
     els.goNickOverlay.style.display = 'none';
-
-    // Unblur with transition
     els.goBoardList.classList.remove('blurred');
 
-    // Re-render board with real name
     const score = parseInt(els.goScore.textContent);
     const name = NicknameManager.getName();
-    const rank = RankingManager.addScore(name, score);
+    const userId = NicknameManager.getUserId();
+    const rank = RankingManager.addScore(name, score, userId);
+
+    // Submit to Firebase
+    if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
+      FirebaseLeaderboard.submitScore(name, score, userId);
+    }
 
     renderBoardList(true);
 
-    // Show rank reveal
     setTimeout(() => {
       els.goRankReveal.style.display = '';
       els.goRankText.textContent = '🎉 You\'re #' + rank + '!';
@@ -433,10 +434,27 @@ const UI = (() => {
   }
 
   function handleNickEdit() {
+    if (!NicknameManager.canChangeName()) {
+      const nextDate = NicknameManager.getNextChangeDate();
+      const days = Math.ceil((nextDate - Date.now()) / (1000 * 60 * 60 * 24));
+      alert('Nickname change available in ' + days + ' day' + (days !== 1 ? 's' : ''));
+      return;
+    }
+
     const current = NicknameManager.getName() || '';
     const name = prompt('Edit nickname (max 12 chars):', current);
-    if (name && name.trim()) {
+    if (name && name.trim() && name.trim() !== current) {
+      const userId = NicknameManager.getUserId();
       NicknameManager.setName(name.trim());
+
+      // Update local rankings
+      RankingManager.updateNickname(userId, name.trim());
+
+      // Update Firebase rankings
+      if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
+        FirebaseLeaderboard.updateNickname(userId, name.trim());
+      }
+
       updateSettingsPanel();
     }
   }
@@ -486,6 +504,17 @@ const UI = (() => {
     if (name) {
       els.settingsNickSection.style.display = '';
       els.settingsNickName.textContent = name;
+
+      // Show change availability
+      if (!NicknameManager.canChangeName()) {
+        const nextDate = NicknameManager.getNextChangeDate();
+        const days = Math.ceil((nextDate - Date.now()) / (1000 * 60 * 60 * 24));
+        els.settingsNickEdit.textContent = '🔒';
+        els.settingsNickEdit.title = days + ' day(s) until change';
+      } else {
+        els.settingsNickEdit.textContent = '✏️';
+        els.settingsNickEdit.title = 'Edit nickname';
+      }
     } else {
       els.settingsNickSection.style.display = 'none';
     }
