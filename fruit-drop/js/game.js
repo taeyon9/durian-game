@@ -18,6 +18,9 @@ const Game = (() => {
   let mergeEffects = [];
   let scorePopups = [];
   let shakeIntensity = 0;
+  let dropTrails = [];
+  let trailFrame = 0;
+  let comboBorderAlpha = 0;
   let lastTime = 0;
   let pointerDown = false;
 
@@ -154,6 +157,8 @@ const Game = (() => {
     mergeEffects = [];
     scorePopups = [];
     shakeIntensity = 0;
+    dropTrails = [];
+    comboBorderAlpha = 0;
     score = 0;
     dangerTimer = 0;
     comboCount = 0;
@@ -243,6 +248,7 @@ const Game = (() => {
         UI.showCombo(comboCount);
         SoundManager.playCombo(comboCount);
         Haptic.combo();
+        comboBorderAlpha = 0.6;
       } else {
         Haptic.merge();
       }
@@ -342,6 +348,26 @@ const Game = (() => {
     if (gameState === 'playing') {
       Physics.update(delta);
 
+      // Drop trails - generate for recently dropped fruits
+      trailFrame++;
+      if (trailFrame % 3 === 0) {
+        for (const body of fruitBodies) {
+          if (!body.droppedAt) continue;
+          const age = performance.now() - body.droppedAt;
+          if (age > 600) continue;
+          const vel = body.velocity;
+          if (Math.abs(vel.y) < 1) continue;
+          const fruit = FRUITS[body.fruitLevel];
+          dropTrails.push({
+            x: body.position.x + (Math.random() - 0.5) * fruit.radius * 0.5,
+            y: body.position.y,
+            alpha: 0.5,
+            size: 2 + Math.random() * 2,
+            color: fruit.color,
+          });
+        }
+      }
+
       if (!canDrop) {
         dropCooldown -= delta;
         if (dropCooldown <= 0) canDrop = true;
@@ -378,6 +404,18 @@ const Game = (() => {
         scorePopups[i].dy -= delta * 0.05;
         scorePopups[i].alpha -= delta / 800;
         if (scorePopups[i].alpha <= 0) scorePopups.splice(i, 1);
+      }
+
+      // Drop trail decay
+      for (let i = dropTrails.length - 1; i >= 0; i--) {
+        dropTrails[i].alpha -= delta / 300;
+        if (dropTrails[i].alpha <= 0) dropTrails.splice(i, 1);
+      }
+
+      // Combo border decay
+      if (comboBorderAlpha > 0) {
+        comboBorderAlpha -= delta / 500;
+        if (comboBorderAlpha < 0) comboBorderAlpha = 0;
       }
 
       render();
@@ -428,10 +466,29 @@ const Game = (() => {
     ctx.stroke();
     ctx.setLineDash([]);
 
+    // Drop trails
+    for (const t of dropTrails) {
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
+      ctx.fillStyle = t.color;
+      ctx.globalAlpha = t.alpha;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
     // Fruits
     for (const body of fruitBodies) {
       if (body.isMerging) continue;
-      drawFruit(ctx, body.position.x, body.position.y, body.fruitLevel, body.angle);
+      const vel = body.velocity;
+      const speed = Math.abs(vel.y);
+      const squashX = speed > 3 ? 1 + Math.min(speed * 0.01, 0.12) : 1;
+      const squashY = speed > 3 ? 1 - Math.min(speed * 0.01, 0.12) : 1;
+      ctx.save();
+      ctx.translate(body.position.x, body.position.y);
+      ctx.rotate(body.angle);
+      ctx.scale(squashX, squashY);
+      drawFruit(ctx, 0, 0, body.fruitLevel, 0);
+      ctx.restore();
     }
 
     // Merge effects
@@ -500,6 +557,17 @@ const Game = (() => {
       ctx.globalAlpha = 0.65;
       drawFruit(ctx, dropX, DANGER_LINE_Y - 20, currentLevel, 0);
       ctx.globalAlpha = 1.0;
+    }
+
+    // Combo border pulse
+    if (comboBorderAlpha > 0) {
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 215, 0, ${comboBorderAlpha})`;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
+      ctx.shadowBlur = 15;
+      ctx.strokeRect(2, DANGER_LINE_Y, BASE_WIDTH - 4, BASE_HEIGHT - DANGER_LINE_Y - 2);
+      ctx.restore();
     }
 
     // End screen shake
