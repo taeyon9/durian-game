@@ -32,23 +32,6 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ===== WEB SPLASH ===== */
-.web-splash {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 9999;
-  background: var(--bg-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.5s ease;
-}
-.web-splash.hide { opacity: 0; pointer-events: none; }
-.web-splash-img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-}
-
 /* ===== CANVAS ===== */
 #gameCanvas {
   position: fixed;
