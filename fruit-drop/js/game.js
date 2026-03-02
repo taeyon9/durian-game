@@ -457,23 +457,23 @@ const Game = (() => {
     }
 
     // Background
-    ctx.fillStyle = '#0D2818';
+    ctx.fillStyle = '#041E1A';
     ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
     // Subtle gradient
     const bgGrad = ctx.createLinearGradient(0, 0, 0, BASE_HEIGHT);
-    bgGrad.addColorStop(0, 'rgba(26,64,37,0.3)');
-    bgGrad.addColorStop(1, 'rgba(13,40,24,0)');
+    bgGrad.addColorStop(0, 'rgba(13,80,70,0.3)');
+    bgGrad.addColorStop(1, 'rgba(4,30,26,0)');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
     // Walls
-    ctx.fillStyle = '#1A5C2E';
+    ctx.fillStyle = '#0D6B5E';
     ctx.fillRect(0, DANGER_LINE_Y, 4, BASE_HEIGHT - DANGER_LINE_Y);
     ctx.fillRect(BASE_WIDTH - 4, DANGER_LINE_Y, 4, BASE_HEIGHT - DANGER_LINE_Y);
 
     // Floor
-    ctx.fillStyle = '#1A5C2E';
+    ctx.fillStyle = '#0D6B5E';
     ctx.fillRect(0, BASE_HEIGHT - 4, BASE_WIDTH, 4);
 
     // Danger line

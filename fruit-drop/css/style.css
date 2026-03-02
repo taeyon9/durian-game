@@ -2,17 +2,17 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
-  --bg-dark: #0D2818;
-  --bg-card: #122E1B;
-  --bg-panel: rgba(18,46,27,0.97);
+  --bg-dark: #041E1A;
+  --bg-card: #093532;
+  --bg-panel: rgba(9,53,50,0.97);
   --gold: #FFD700;
   --gold-dim: #B8860B;
   --gold-glow: rgba(255,215,0,0.25);
   --red: #E53935;
-  --green: #43A047;
+  --green: #2B9E80;
   --white: #FFFAF0;
   --text: #E8E0D4;
-  --text-dim: #8B9A7E;
+  --text-dim: #7A9A8F;
   --font: 'Fredoka', sans-serif;
   --radius: 16px;
   --radius-sm: 10px;
@@ -135,12 +135,12 @@ html, body {
 }
 .hud-bar {
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: var(--safe-top); left: 0; right: 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: var(--safe-top) 12px 8px;
-  background: linear-gradient(180deg, rgba(13,40,24,0.95) 0%, rgba(13,40,24,0) 100%);
+  padding: 4px 12px 8px;
+  background: none;
   pointer-events: auto;
 }
 .hud-left, .hud-right { text-align: center; min-width: 60px; }
@@ -273,7 +273,7 @@ html, body {
 
 /* ===== GAME OVER ===== */
 #gameoverScreen {
-  background: rgba(13,40,24,0.95);
+  background: rgba(4,30,26,0.95);
   justify-content: flex-start;
   padding-top: 40px;
   gap: 16px;
@@ -649,7 +649,7 @@ html, body {
   margin-bottom: 16px;
 }
 .share-card {
-  background: linear-gradient(135deg, #1A4025, #0D2818);
+  background: linear-gradient(135deg, #104A42, #041E1A);
   border: 2px solid var(--gold-dim);
   border-radius: var(--radius);
   padding: 24px;
@@ -666,6 +666,12 @@ html, body {
   font-weight: 700;
   color: var(--white);
   line-height: 1.2;
+}
+.share-card-fruit {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold);
+  margin: 4px 0;
 }
 .share-card-cta {
   font-size: 14px;

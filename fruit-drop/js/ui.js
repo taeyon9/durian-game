@@ -74,6 +74,7 @@ const UI = (() => {
 
       // Share
       shareScore: document.getElementById('shareScore'),
+      shareFruit: document.getElementById('shareFruit'),
       shareClose: document.getElementById('shareClose'),
 
       // Combo
@@ -180,6 +181,8 @@ const UI = (() => {
       els.settings.style.display = '';
     }
     if (name === 'share') {
+      const fruitName = FRUITS[lastMaxFruitLevel] ? FRUITS[lastMaxFruitLevel].name : '';
+      els.shareFruit.textContent = fruitName ? `Merged up to ${fruitName}!` : '';
       els.share.style.display = '';
     }
   }
