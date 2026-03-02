@@ -69,7 +69,6 @@ const UI = (() => {
       settingsNickSection: document.getElementById('settingsNickSection'),
       settingsNickName: document.getElementById('settingsNickName'),
       settingsNickEdit: document.getElementById('settingsNickEdit'),
-      toggleBgm: document.getElementById('toggleBgm'),
       toggleSfx: document.getElementById('toggleSfx'),
       toggleHaptic: document.getElementById('toggleHaptic'),
 
@@ -123,7 +122,7 @@ const UI = (() => {
     els.settingsClose.addEventListener('click', () => hideModal('settings'));
     els.settingsNickEdit.addEventListener('click', handleNickEdit);
     // Toggle persistence
-    [els.toggleBgm, els.toggleSfx, els.toggleHaptic].forEach(t => {
+    [els.toggleSfx, els.toggleHaptic].forEach(t => {
       t.addEventListener('change', saveSettings);
     });
     // Close modals on backdrop click
@@ -494,14 +493,12 @@ const UI = (() => {
 
   function saveSettings() {
     const settings = {
-      bgm: els.toggleBgm.checked,
       sfx: els.toggleSfx.checked,
       haptic: els.toggleHaptic.checked,
     };
     localStorage.setItem('fruitDropSettings', JSON.stringify(settings));
-    
+
     SoundManager.sfxMuted = !settings.sfx;
-    SoundManager.bgmMuted = !settings.bgm;
     Haptic.enabled = settings.haptic;
   }
 
@@ -510,11 +507,9 @@ const UI = (() => {
       const raw = localStorage.getItem('fruitDropSettings');
       if (!raw) return;
       const s = JSON.parse(raw);
-      els.toggleBgm.checked = s.bgm !== false;
       els.toggleSfx.checked = s.sfx !== false;
       els.toggleHaptic.checked = s.haptic !== false;
       SoundManager.sfxMuted = !els.toggleSfx.checked;
-      SoundManager.bgmMuted = !els.toggleBgm.checked;
       Haptic.enabled = els.toggleHaptic.checked;
     } catch {}
   }

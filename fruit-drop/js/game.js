@@ -161,7 +161,6 @@ const Game = (() => {
     UI.showScreen('playing');
     UI.updateHUD(0, highScore);
     UI.updateNextFruit(nextLevel);
-    SoundManager.startBGM();
     UI.showTutorial();
   }
 
@@ -347,7 +346,6 @@ const Game = (() => {
     }
 
     SoundManager.playGameOver();
-    SoundManager.stopBGM();
     Haptic.gameOver();
 
     // Show interstitial
