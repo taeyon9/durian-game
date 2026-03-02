@@ -80,10 +80,10 @@ const AdMobManager = (() => {
   }
 
   async function showInterstitial(gameDurationMs) {
-    gamesSinceLastInterstitial++;
-
-    // Skip if game was too short (accidental/instant game over)
+    // Skip if game was too short (accidental/instant game over) — don't count these
     if (typeof gameDurationMs === 'number' && gameDurationMs < MIN_GAME_DURATION_MS) return;
+
+    gamesSinceLastInterstitial++;
 
     // Frequency cap: show every N games
     if (gamesSinceLastInterstitial < INTERSTITIAL_EVERY_N_GAMES) return;

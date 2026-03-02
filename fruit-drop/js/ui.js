@@ -29,6 +29,8 @@ const UI = (() => {
       hudScore: document.getElementById('hudScore'),
       hudBest: document.getElementById('hudBest'),
       hudNextCanvas: document.getElementById('hudNextCanvas'),
+      hudSettingsBtn: document.getElementById('hudSettingsBtn'),
+
       // Menu
       menuPlayBtn: document.getElementById('menuPlayBtn'),
       menuRankingBtn: document.getElementById('menuRankingBtn'),
@@ -97,6 +99,9 @@ const UI = (() => {
     els.menuPlayBtn.addEventListener('click', handlePlay);
     els.menuRankingBtn.addEventListener('click', () => showScreen('leaderboard'));
     els.menuSettingsBtn.addEventListener('click', () => showModal('settings'));
+
+    // HUD
+    els.hudSettingsBtn.addEventListener('click', () => showModal('settings'));
 
     // Game Over
     els.goContinue.addEventListener('click', handleContinue);
@@ -560,10 +565,10 @@ const UI = (() => {
   function handleShare(platform) {
     const score = els.shareScore.textContent;
     const fruitName = FRUITS[lastMaxFruitLevel] ? FRUITS[lastMaxFruitLevel].name : 'Lychee';
-    const text = `🍉 I scored ${score} pts and merged up to ${fruitName} in Fruit Drop! Can you beat me? 🔥`;
+    const text = `🍉 I scored ${score} pts and merged up to ${fruitName} in Durian Merge! Can you beat me? 🔥`;
     
     if (platform === 'share' && navigator.share) {
-      navigator.share({ title: 'Fruit Drop', text }).catch(() => {});
+      navigator.share({ title: 'Durian Merge', text }).catch(() => {});
     } else {
       // Copy to clipboard
       navigator.clipboard.writeText(text).catch(() => {});

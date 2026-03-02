@@ -75,6 +75,7 @@ const Physics = (() => {
 
   function onCollision(callback) {
     Events.on(engine, 'collisionStart', callback);
+    Events.on(engine, 'collisionActive', callback);
   }
 
   function getAllBodies() {

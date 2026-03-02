@@ -123,6 +123,7 @@ const Game = (() => {
     canvas.style.marginTop = Math.max(0, (maxH - displayH) / 2) + 'px';
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bgGrad = null; // Invalidate cached gradient on resize
   }
 
   function screenToGame(clientX, clientY) {
@@ -214,15 +215,22 @@ const Game = (() => {
   function continueGame() {
     continuedThisGame = true;
     // Push danger-zone fruits down to give breathing room
+    const maxY = BASE_HEIGHT - 50;
     for (const body of fruitBodies) {
       if (body.position.y - FRUITS[body.fruitLevel].radius < DANGER_LINE_Y + 30) {
-        Matter.Body.setPosition(body, { x: body.position.x, y: body.position.y + 60 });
+        const newY = Math.min(body.position.y + 60, maxY);
+        Matter.Body.setPosition(body, { x: body.position.x, y: newY });
+        Matter.Body.setVelocity(body, { x: 0, y: 0 });
+        Matter.Sleeping.set(body, false);
       }
     }
     dangerTimer = 0;
+    canDrop = true;
+    dropCooldown = 0;
     gameState = 'playing';
     UI.showScreen('playing');
     UI.updateHUD(score, highScore);
+    UI.updateNextFruit(nextLevel);
   }
 
   // ===== GAME LOGIC =====

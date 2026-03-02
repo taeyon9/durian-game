@@ -35,7 +35,8 @@ const RankingManager = (() => {
 
     save(board);
 
-    return board.findIndex(e => e === entry) + 1;
+    const idx = board.findIndex(e => e === entry);
+    return idx === -1 ? -1 : idx + 1;
   }
 
   function getTopScores(count) {

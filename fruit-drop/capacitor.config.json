@@ -1,6 +1,6 @@
 {
   "appId": "com.fruitdrop.game",
-  "appName": "Fruit Drop",
+  "appName": "Durian Merge",
   "webDir": "www",
   "plugins": {
     "SplashScreen": {
