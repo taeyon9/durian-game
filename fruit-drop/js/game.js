@@ -16,6 +16,8 @@ const Game = (() => {
   const DANGER_TIMEOUT = 2000;
   let fruitBodies = [];
   let mergeEffects = [];
+  let scorePopups = [];
+  let shakeIntensity = 0;
   let lastTime = 0;
   let pointerDown = false;
 
@@ -150,6 +152,8 @@ const Game = (() => {
     for (const body of fruitBodies) Physics.removeFruit(body);
     fruitBodies = [];
     mergeEffects = [];
+    scorePopups = [];
+    shakeIntensity = 0;
     score = 0;
     dangerTimer = 0;
     comboCount = 0;
@@ -244,12 +248,37 @@ const Game = (() => {
       }
 
       // Merge effect
+      const particles = [];
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const speed = 0.08 + Math.random() * 0.06;
+        particles.push({
+          angle,
+          dist: 0,
+          speed,
+          size: 2 + Math.random() * 3,
+        });
+      }
       mergeEffects.push({
         x: mx, y: my,
         radius: FRUITS[level + 1].radius,
         alpha: 1,
         color: FRUITS[level + 1].color,
+        glowRadius: 0,
+        particles,
       });
+
+      scorePopups.push({
+        x: mx, y: my,
+        text: '+' + points,
+        alpha: 1,
+        dy: 0,
+      });
+
+      // Screen shake for high-level merges
+      if (level >= 4) {
+        shakeIntensity = Math.min(6, (level - 3) * 2);
+      }
 
       SoundManager.playMerge(level);
       UI.updateHUD(score, highScore);
@@ -328,9 +357,27 @@ const Game = (() => {
 
       // Merge effects decay
       for (let i = mergeEffects.length - 1; i >= 0; i--) {
-        mergeEffects[i].alpha -= delta / 400;
-        mergeEffects[i].radius += delta * 0.1;
-        if (mergeEffects[i].alpha <= 0) mergeEffects.splice(i, 1);
+        const e = mergeEffects[i];
+        e.alpha -= delta / 400;
+        e.radius += delta * 0.1;
+        e.glowRadius += delta * 0.15;
+        for (const p of e.particles) {
+          p.dist += p.speed * delta;
+        }
+        if (e.alpha <= 0) mergeEffects.splice(i, 1);
+      }
+
+      // Shake decay
+      if (shakeIntensity > 0) {
+        shakeIntensity -= delta * 0.02;
+        if (shakeIntensity < 0) shakeIntensity = 0;
+      }
+
+      // Score popup decay
+      for (let i = scorePopups.length - 1; i >= 0; i--) {
+        scorePopups[i].dy -= delta * 0.05;
+        scorePopups[i].alpha -= delta / 800;
+        if (scorePopups[i].alpha <= 0) scorePopups.splice(i, 1);
       }
 
       render();
@@ -342,6 +389,14 @@ const Game = (() => {
   // ===== RENDERING (gameplay only — no UI) =====
 
   function render() {
+    // Screen shake
+    if (shakeIntensity > 0) {
+      const sx = (Math.random() - 0.5) * shakeIntensity;
+      const sy = (Math.random() - 0.5) * shakeIntensity;
+      ctx.save();
+      ctx.translate(sx, sy);
+    }
+
     // Background
     ctx.fillStyle = '#0D2818';
     ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
@@ -381,25 +436,52 @@ const Game = (() => {
 
     // Merge effects
     for (const effect of mergeEffects) {
+      // Glow
+      ctx.save();
+      ctx.globalAlpha = effect.alpha * 0.4;
+      const glow = ctx.createRadialGradient(
+        effect.x, effect.y, 0,
+        effect.x, effect.y, effect.glowRadius
+      );
+      glow.addColorStop(0, effect.color);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, effect.glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Ring
       ctx.beginPath();
       ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
-      const alpha = Math.floor(effect.alpha * 60).toString(16).padStart(2, '0');
-      ctx.fillStyle = effect.color + alpha;
-      ctx.fill();
+      ctx.strokeStyle = effect.color;
+      ctx.globalAlpha = effect.alpha * 0.6;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
 
       // Particles
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2;
-        const d = effect.radius * 1.2;
+      for (const p of effect.particles) {
+        const px = effect.x + Math.cos(p.angle) * p.dist;
+        const py = effect.y + Math.sin(p.angle) * p.dist;
         ctx.beginPath();
-        ctx.arc(
-          effect.x + Math.cos(a) * d,
-          effect.y + Math.sin(a) * d,
-          3, 0, Math.PI * 2
-        );
+        ctx.arc(px, py, p.size * effect.alpha, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 200, ${effect.alpha})`;
         ctx.fill();
       }
+    }
+
+    // Score popups
+    for (const pop of scorePopups) {
+      ctx.save();
+      ctx.globalAlpha = pop.alpha;
+      ctx.fillStyle = '#FFD700';
+      ctx.font = 'bold 16px "Fredoka", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(pop.text, pop.x, pop.y + pop.dy);
+      ctx.restore();
     }
 
     // Drop guide
@@ -418,6 +500,11 @@ const Game = (() => {
       ctx.globalAlpha = 0.65;
       drawFruit(ctx, dropX, DANGER_LINE_Y - 20, currentLevel, 0);
       ctx.globalAlpha = 1.0;
+    }
+
+    // End screen shake
+    if (shakeIntensity > 0) {
+      ctx.restore();
     }
   }
 
