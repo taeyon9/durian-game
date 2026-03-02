@@ -5,3 +5,4 @@ ios/
 *.keystore
 keystore.properties
 .DS_Store
+.worktrees/
