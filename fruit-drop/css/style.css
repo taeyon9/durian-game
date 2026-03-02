@@ -17,7 +17,7 @@
   --radius: 16px;
   --radius-sm: 10px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-top: env(safe-area-inset-top, 36px);
+  --safe-top: max(env(safe-area-inset-top, 0px), 48px);
 }
 
 html, body {
@@ -141,8 +141,18 @@ html, body {
   justify-content: space-between;
   align-items: flex-start;
   padding: 4px 12px 8px;
-  background: none;
+  background: linear-gradient(180deg, #041E1A 0%, rgba(4,30,26,0.85) 70%, transparent 100%);
+  padding-top: 0;
+  margin-top: 0;
   pointer-events: auto;
+}
+.hud-bar::before {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--safe-top));
+  left: 0; right: 0;
+  height: var(--safe-top);
+  background: #041E1A;
 }
 .hud-left, .hud-right { text-align: center; min-width: 60px; }
 .hud-center { text-align: center; flex: 1; }
@@ -247,11 +257,10 @@ html, body {
 }
 .bokeh {
   position: absolute;
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  background: rgba(255,215,0,0.08);
-  filter: blur(30px);
+  background: radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%);
   animation: bokeh-float 12s ease-in-out var(--delay, 0s) infinite;
 }
 @keyframes bokeh-float {

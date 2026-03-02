@@ -24,6 +24,7 @@ const Game = (() => {
   let maxMergedLevel = 0;
   let lastTime = 0;
   let pointerDown = false;
+  let bgGrad = null;
 
   // Combo tracking
   let comboCount = 0;
@@ -39,6 +40,7 @@ const Game = (() => {
   const BASE_HEIGHT = 700;
 
   function init() {
+    console.log('[FD] Game.init() called');
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
 
@@ -130,6 +132,7 @@ const Game = (() => {
   // ===== INPUT (canvas only, for gameplay) =====
 
   function onPointerDown(e) {
+    console.log('[FD] onPointerDown, gameState:', gameState, 'canDrop:', canDrop);
     if (gameState !== 'playing') return;
     SoundManager.resume();
     pointerDown = true;
@@ -142,6 +145,7 @@ const Game = (() => {
   }
 
   function onPointerUp(e) {
+    console.log('[FD] onPointerUp, gameState:', gameState, 'pointerDown:', pointerDown, 'canDrop:', canDrop);
     if (gameState !== 'playing') return;
     if (pointerDown && canDrop) dropFruit();
     pointerDown = false;
@@ -155,10 +159,12 @@ const Game = (() => {
   // ===== GAME FLOW =====
 
   function startGame() {
+    console.log('[FD] startGame() called, tickets:', TicketManager.hasTickets());
     if (!TicketManager.hasTickets()) return;
     TicketManager.useTicket();
     resetGame();
     gameState = 'playing';
+    console.log('[FD] gameState set to playing');
     UI.showScreen('playing');
     UI.updateHUD(0, highScore);
     UI.updateNextFruit(nextLevel);
@@ -203,6 +209,7 @@ const Game = (() => {
   }
 
   function dropFruit() {
+    console.log('[FD] dropFruit() called, canDrop:', canDrop, 'dropX:', dropX);
     if (!canDrop) return;
     const body = Physics.createFruit(dropX, DANGER_LINE_Y - 20, currentLevel);
     if (!body) return;
@@ -460,10 +467,12 @@ const Game = (() => {
     ctx.fillStyle = '#041E1A';
     ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
-    // Subtle gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, BASE_HEIGHT);
-    bgGrad.addColorStop(0, 'rgba(13,80,70,0.3)');
-    bgGrad.addColorStop(1, 'rgba(4,30,26,0)');
+    // Subtle gradient (cached)
+    if (!bgGrad) {
+      bgGrad = ctx.createLinearGradient(0, 0, 0, BASE_HEIGHT);
+      bgGrad.addColorStop(0, 'rgba(13,80,70,0.3)');
+      bgGrad.addColorStop(1, 'rgba(4,30,26,0)');
+    }
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
@@ -556,8 +565,6 @@ const Game = (() => {
       ctx.fillStyle = '#FFD700';
       ctx.font = 'bold 16px "Fredoka", sans-serif';
       ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0,0,0,0.5)';
-      ctx.shadowBlur = 4;
       ctx.fillText(pop.text, pop.x, pop.y + pop.dy);
       ctx.restore();
     }
@@ -585,8 +592,6 @@ const Game = (() => {
       ctx.save();
       ctx.strokeStyle = `rgba(255, 215, 0, ${comboBorderAlpha})`;
       ctx.lineWidth = 4;
-      ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
-      ctx.shadowBlur = 15;
       ctx.strokeRect(2, DANGER_LINE_Y, BASE_WIDTH - 4, BASE_HEIGHT - DANGER_LINE_Y - 2);
       ctx.restore();
     }

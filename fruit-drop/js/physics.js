@@ -14,6 +14,7 @@ const Physics = (() => {
 
     engine = Engine.create({
       gravity: { x: 0, y: 1.8 },
+      enableSleeping: true,
     });
     world = engine.world;
 
