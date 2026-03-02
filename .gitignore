@@ -2,7 +2,30 @@ node_modules/
 www/
 android/
 ios/
-*.keystore
-keystore.properties
 .DS_Store
 .worktrees/
+
+# ===== 보안: 절대 원격 저장소에 올리지 말 것 =====
+# 키/인증서
+*.keystore
+*.jks
+keystore.properties
+google-services.json
+GoogleService-Info.plist
+
+# 환경 변수 / 시크릿
+.env
+.env.*
+*.secret
+
+# Firebase / API 설정 (실제 키가 포함된 경우)
+firebase-config.js
+firebase-config.json
+
+# AdMob 실제 ID 파일
+admob-config.json
+
+# 서명 관련
+release-signing.properties
+*.p12
+*.pem

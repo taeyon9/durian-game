@@ -31,6 +31,15 @@ game/
 - localStorage만으로 오프라인 게임 데이터 관리 충분
 - 티켓 시스템 + 보상형 광고 조합이 기본 수익화 모델
 
+## 보안 (원격 저장소 업로드 금지 항목)
+- **API 키/시크릿**: Firebase config, AdMob 실제 ID 등 절대 코드에 하드코딩 금지
+  - 코드 내 placeholder(`YOUR_API_KEY` 등)는 OK, 실제 값은 별도 파일이나 환경변수로 관리
+  - 실제 키가 들어간 파일은 `.gitignore`에 등록 필수
+- **서명 관련**: keystore, 서명 비밀번호, release 인증서 (`.keystore`, `.jks`, `.p12`, `.pem`)
+- **환경 파일**: `.env`, `google-services.json`, `GoogleService-Info.plist`
+- **금전 관련**: AdMob 실제 광고 단위 ID, 결제 관련 설정
+- `.gitignore`에 위 항목이 모두 포함되어 있는지 커밋 전 확인할 것
+
 ## 빌드 & 배포
 - JDK 21 + Android SDK (`~/android-sdk`)
 - `npm run build` → `npx cap sync` → `./gradlew assembleDebug`
