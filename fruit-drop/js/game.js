@@ -34,13 +34,16 @@ const Game = (() => {
   // Game over rank
   let gameOverRank = -1;
 
+  // Ad optimization: time tracking + continue
+  let gameStartTime = 0;
+  let continuedThisGame = false;
+
   // Scale
   let scale = 1;
   const BASE_WIDTH = 390;
   const BASE_HEIGHT = 700;
 
   function init() {
-    console.log('[FD] Game.init() called');
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
 
@@ -52,6 +55,7 @@ const Game = (() => {
     UI.init({
       onPlay: startGame,
       onWatchAd: watchAdForTicket,
+      onContinue: watchAdToContinue,
     });
 
     // Firebase init
@@ -132,7 +136,6 @@ const Game = (() => {
   // ===== INPUT (canvas only, for gameplay) =====
 
   function onPointerDown(e) {
-    console.log('[FD] onPointerDown, gameState:', gameState, 'canDrop:', canDrop);
     if (gameState !== 'playing') return;
     SoundManager.resume();
     pointerDown = true;
@@ -145,7 +148,6 @@ const Game = (() => {
   }
 
   function onPointerUp(e) {
-    console.log('[FD] onPointerUp, gameState:', gameState, 'pointerDown:', pointerDown, 'canDrop:', canDrop);
     if (gameState !== 'playing') return;
     if (pointerDown && canDrop) dropFruit();
     pointerDown = false;
@@ -159,12 +161,12 @@ const Game = (() => {
   // ===== GAME FLOW =====
 
   function startGame() {
-    console.log('[FD] startGame() called, tickets:', TicketManager.hasTickets());
     if (!TicketManager.hasTickets()) return;
     TicketManager.useTicket();
     resetGame();
     gameState = 'playing';
-    console.log('[FD] gameState set to playing');
+    gameStartTime = performance.now();
+    continuedThisGame = false;
     UI.showScreen('playing');
     UI.updateHUD(0, highScore);
     UI.updateNextFruit(nextLevel);
@@ -202,6 +204,27 @@ const Game = (() => {
     }
   }
 
+  async function watchAdToContinue() {
+    if (typeof AdMobManager !== 'undefined') {
+      const rewarded = await AdMobManager.showRewarded();
+      if (rewarded) continueGame();
+    }
+  }
+
+  function continueGame() {
+    continuedThisGame = true;
+    // Push danger-zone fruits down to give breathing room
+    for (const body of fruitBodies) {
+      if (body.position.y - FRUITS[body.fruitLevel].radius < DANGER_LINE_Y + 30) {
+        Matter.Body.setPosition(body, { x: body.position.x, y: body.position.y + 60 });
+      }
+    }
+    dangerTimer = 0;
+    gameState = 'playing';
+    UI.showScreen('playing');
+    UI.updateHUD(score, highScore);
+  }
+
   // ===== GAME LOGIC =====
 
   function randomDropLevel() {
@@ -209,7 +232,6 @@ const Game = (() => {
   }
 
   function dropFruit() {
-    console.log('[FD] dropFruit() called, canDrop:', canDrop, 'dropX:', dropX);
     if (!canDrop) return;
     const body = Physics.createFruit(dropX, DANGER_LINE_Y - 20, currentLevel);
     if (!body) return;
@@ -336,6 +358,7 @@ const Game = (() => {
 
   function triggerGameOver() {
     gameState = 'gameover';
+    const gameDurationMs = performance.now() - gameStartTime;
     const isNewBest = score > highScore;
 
     if (isNewBest) {
@@ -359,12 +382,16 @@ const Game = (() => {
     SoundManager.playGameOver();
     Haptic.gameOver();
 
-    // Show interstitial
+    // Show interstitial (with frequency cap + duration filter)
     if (typeof AdMobManager !== 'undefined') {
-      AdMobManager.showInterstitial();
+      AdMobManager.showInterstitial(gameDurationMs);
     }
 
-    UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel);
+    // Can continue if: not already continued this game + rewarded ad available
+    const canContinue = !continuedThisGame &&
+      (typeof AdMobManager !== 'undefined' && AdMobManager.isRewardedReady());
+
+    UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel, canContinue);
   }
 
   // ===== GAME LOOP =====

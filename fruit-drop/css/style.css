@@ -203,6 +203,7 @@ html, body {
   margin-top: 2px;
 }
 .hud-settings-btn {
+  display: none;
   position: absolute;
   top: calc(var(--safe-top) + 70px); right: 8px;
   background: none;
@@ -299,6 +300,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  padding-top: 24px;
   position: relative;
   z-index: 1;
 }
@@ -557,6 +559,21 @@ html, body {
   color: var(--gold);
   text-align: center;
   border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Continue button */
+.btn-continue {
+  background: linear-gradient(180deg, #FFE066, #FFD700 40%, #E5A800);
+  color: #2D1B0E;
+  font-size: 18px;
+  padding: 16px 28px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(255,215,0,0.35);
+  animation: continuePulse 2s ease-in-out infinite;
+}
+@keyframes continuePulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(255,215,0,0.35); }
+  50%      { box-shadow: 0 4px 30px rgba(255,215,0,0.6); }
 }
 
 /* Game over buttons */

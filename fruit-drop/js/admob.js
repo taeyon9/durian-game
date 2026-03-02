@@ -10,6 +10,11 @@ const AdMobManager = (() => {
   let interstitialLoaded = false;
   let rewardedLoaded = false;
 
+  // Interstitial frequency cap
+  let gamesSinceLastInterstitial = 0;
+  const INTERSTITIAL_EVERY_N_GAMES = 2;
+  const MIN_GAME_DURATION_MS = 30000;
+
   async function init() {
     // Check if running inside Capacitor native app
     if (typeof window.Capacitor === 'undefined' || !window.Capacitor.isNativePlatform()) {
@@ -74,11 +79,20 @@ const AdMobManager = (() => {
     }
   }
 
-  async function showInterstitial() {
+  async function showInterstitial(gameDurationMs) {
+    gamesSinceLastInterstitial++;
+
+    // Skip if game was too short (accidental/instant game over)
+    if (typeof gameDurationMs === 'number' && gameDurationMs < MIN_GAME_DURATION_MS) return;
+
+    // Frequency cap: show every N games
+    if (gamesSinceLastInterstitial < INTERSTITIAL_EVERY_N_GAMES) return;
+
     if (!AdMob || !interstitialLoaded) return;
 
     try {
       await AdMob.showInterstitial();
+      gamesSinceLastInterstitial = 0;
       interstitialLoaded = false;
       await loadInterstitial();
     } catch (err) {

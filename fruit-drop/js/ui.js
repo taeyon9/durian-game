@@ -7,10 +7,12 @@ const UI = (() => {
   let currentScreen = 'menu'; // menu | playing | gameover | leaderboard
   let onPlayCallback = null;
   let onWatchAdCallback = null;
+  let onContinueCallback = null;
 
   function init(callbacks) {
     onPlayCallback = callbacks.onPlay;
     onWatchAdCallback = callbacks.onWatchAd;
+    onContinueCallback = callbacks.onContinue;
 
     // Cache all elements
     els = {
@@ -27,8 +29,6 @@ const UI = (() => {
       hudScore: document.getElementById('hudScore'),
       hudBest: document.getElementById('hudBest'),
       hudNextCanvas: document.getElementById('hudNextCanvas'),
-      hudSettingsBtn: document.getElementById('hudSettingsBtn'),
-
       // Menu
       menuPlayBtn: document.getElementById('menuPlayBtn'),
       menuRankingBtn: document.getElementById('menuRankingBtn'),
@@ -54,6 +54,7 @@ const UI = (() => {
       goViewAll: document.getElementById('goViewAll'),
       goRankReveal: document.getElementById('goRankReveal'),
       goRankText: document.getElementById('goRankText'),
+      goContinue: document.getElementById('goContinue'),
       goPlayAgain: document.getElementById('goPlayAgain'),
       goShareBtn: document.getElementById('goShareBtn'),
       goWatchAd: document.getElementById('goWatchAd'),
@@ -97,10 +98,8 @@ const UI = (() => {
     els.menuRankingBtn.addEventListener('click', () => showScreen('leaderboard'));
     els.menuSettingsBtn.addEventListener('click', () => showModal('settings'));
 
-    // HUD
-    els.hudSettingsBtn.addEventListener('click', () => showModal('settings'));
-
     // Game Over
+    els.goContinue.addEventListener('click', handleContinue);
     els.goPlayAgain.addEventListener('click', handlePlay);
     els.goShareBtn.addEventListener('click', () => showModal('share'));
     els.goWatchAd.addEventListener('click', handleWatchAd);
@@ -287,7 +286,7 @@ const UI = (() => {
 
   let lastMaxFruitLevel = 0;
 
-  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel) {
+  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel, canContinue) {
     lastMaxFruitLevel = maxFruitLevel || 0;
     els.goScore.textContent = score;
     els.goNewBest.style.display = isNewBest ? '' : 'none';
@@ -302,6 +301,9 @@ const UI = (() => {
       // First time → blurred board + nickname prompt
       showFirstTimeGameOver(score);
     }
+
+    // Continue button (rewarded ad to resume game)
+    els.goContinue.style.display = canContinue ? '' : 'none';
 
     // Ticket display on play again button
     const tickets = TicketManager.getTickets();
@@ -583,6 +585,10 @@ const UI = (() => {
 
   function handleWatchAd() {
     if (onWatchAdCallback) onWatchAdCallback();
+  }
+
+  function handleContinue() {
+    if (onContinueCallback) onContinueCallback();
   }
 
   // ===== TUTORIAL =====
