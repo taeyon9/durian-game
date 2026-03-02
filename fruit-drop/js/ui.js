@@ -226,17 +226,21 @@ const UI = (() => {
   }
 
   function renderMenuFruits() {
-    // Render sample fruits on small canvases
-    const levels = [0, 2, 4, 6, 9];
+    // Show 3 hero fruits: Mango (4), Pineapple (8), Dragon Fruit (5)
+    const levels = [4, 8, 5];
+    const sizes = [70, 100, 70]; // center biggest
     els.menuFruits.innerHTML = '';
-    levels.forEach(level => {
+    levels.forEach((level, i) => {
+      const size = sizes[i];
       const c = document.createElement('canvas');
-      c.width = 80; c.height = 80;
+      c.width = size * 2; c.height = size * 2;
+      c.className = 'menu-hero-fruit';
+      c.style.animationDelay = (i * 0.4) + 's';
       const fctx = c.getContext('2d');
       const fruit = FRUITS[level];
-      const s = 35 / fruit.radius;
+      const s = (size * 0.85) / fruit.radius;
       fctx.save();
-      fctx.translate(40, 40);
+      fctx.translate(size, size);
       fctx.scale(s, s);
       drawFruit(fctx, 0, 0, level, 0);
       fctx.restore();

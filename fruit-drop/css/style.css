@@ -289,13 +289,30 @@ html, body {
 }
 .menu-fruits {
   display: flex;
-  gap: 6px;
+  gap: 0;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
-.menu-fruits canvas {
-  width: 44px; height: 44px;
+.menu-hero-fruit {
   border-radius: 50%;
+  animation: fruit-float 3s ease-in-out infinite;
+}
+.menu-hero-fruit:nth-child(1) { width: 70px; height: 70px; animation-name: fruit-float-left; }
+.menu-hero-fruit:nth-child(2) { width: 100px; height: 100px; margin: 0 -8px; z-index: 1; }
+.menu-hero-fruit:nth-child(3) { width: 70px; height: 70px; animation-name: fruit-float-right; }
+
+@keyframes fruit-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+@keyframes fruit-float-left {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50%      { transform: translateY(-8px) rotate(-8deg); }
+}
+@keyframes fruit-float-right {
+  0%, 100% { transform: translateY(0) rotate(8deg); }
+  50%      { transform: translateY(-8px) rotate(8deg); }
 }
 .menu-title {
   font-size: 42px;
