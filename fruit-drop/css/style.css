@@ -17,6 +17,7 @@
   --radius: 16px;
   --radius-sm: 10px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 36px);
 }
 
 html, body {
@@ -53,6 +54,7 @@ html, body {
   align-items: center;
   background: var(--bg-dark);
   padding: 16px;
+  padding-top: calc(var(--safe-top) + 8px);
   padding-bottom: calc(60px + var(--safe-bottom));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -137,7 +139,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 8px 12px;
+  padding: var(--safe-top) 12px 8px;
   background: linear-gradient(180deg, rgba(13,40,24,0.95) 0%, rgba(13,40,24,0) 100%);
   pointer-events: auto;
 }
@@ -169,7 +171,7 @@ html, body {
 }
 .hud-settings-btn {
   position: absolute;
-  top: 60px; right: 8px;
+  top: calc(var(--safe-top) + 70px); right: 8px;
   background: none;
   border: none;
   font-size: 18px;
@@ -204,7 +206,7 @@ html, body {
 }
 
 /* ===== MENU SCREEN ===== */
-.menu-settings { position: absolute; top: 12px; right: 12px; }
+.menu-settings { position: absolute; top: calc(var(--safe-top) + 4px); right: 12px; }
 
 .menu-content {
   flex: 1;
@@ -459,7 +461,7 @@ html, body {
 
 /* ===== LEADERBOARD FULL ===== */
 #leaderboardScreen {
-  padding-top: 0;
+  padding-top: var(--safe-top);
   gap: 0;
 }
 .lb-header {

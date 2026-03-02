@@ -21,6 +21,7 @@ const Game = (() => {
   let dropTrails = [];
   let trailFrame = 0;
   let comboBorderAlpha = 0;
+  let maxMergedLevel = 0;
   let lastTime = 0;
   let pointerDown = false;
 
@@ -182,6 +183,7 @@ const Game = (() => {
     nextLevel = randomDropLevel();
     dropX = BASE_WIDTH / 2;
     gameOverRank = -1;
+    maxMergedLevel = 0;
   }
 
   async function watchAdForTicket() {
@@ -248,6 +250,7 @@ const Game = (() => {
 
       // Album unlock
       FruitAlbum.unlock(level + 1);
+      if (level + 1 > maxMergedLevel) maxMergedLevel = level + 1;
 
       // Score
       const points = FRUITS[level + 1].score;
@@ -354,7 +357,7 @@ const Game = (() => {
       AdMobManager.showInterstitial();
     }
 
-    UI.showGameOver(score, highScore, isNewBest, gameOverRank);
+    UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel);
   }
 
   // ===== GAME LOOP =====
