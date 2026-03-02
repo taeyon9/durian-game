@@ -15,7 +15,7 @@ const RankingManager = (() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(board));
   }
 
-  function addScore(nickname, score) {
+  function addScore(nickname, score, userId) {
     if (score <= 0) return -1;
 
     const board = getLeaderboard();
@@ -23,19 +23,18 @@ const RankingManager = (() => {
       name: nickname || 'Player',
       score: score,
       date: new Date().toISOString().split('T')[0],
+      userId: userId || '',
     };
 
     board.push(entry);
     board.sort((a, b) => b.score - a.score);
 
-    // Keep only top entries
     if (board.length > MAX_ENTRIES) {
       board.length = MAX_ENTRIES;
     }
 
     save(board);
 
-    // Return rank (1-based)
     return board.findIndex(e => e === entry) + 1;
   }
 
@@ -53,5 +52,18 @@ const RankingManager = (() => {
     return rank;
   }
 
-  return { addScore, getTopScores, getRank };
+  function updateNickname(userId, newName) {
+    if (!userId) return;
+    const board = getLeaderboard();
+    let changed = false;
+    for (const entry of board) {
+      if (entry.userId === userId) {
+        entry.name = newName;
+        changed = true;
+      }
+    }
+    if (changed) save(board);
+  }
+
+  return { addScore, getTopScores, getRank, updateNickname };
 })();

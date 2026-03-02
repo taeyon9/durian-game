@@ -336,10 +336,11 @@ const Game = (() => {
     // Save to leaderboard (only if has name already)
     const name = NicknameManager.getName();
     if (name) {
-      gameOverRank = RankingManager.addScore(name, score);
+      const userId = NicknameManager.getUserId();
+      gameOverRank = RankingManager.addScore(name, score, userId);
       // Submit to Firebase
       if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
-        FirebaseLeaderboard.submitScore(name, score);
+        FirebaseLeaderboard.submitScore(name, score, userId);
       }
     } else {
       gameOverRank = RankingManager.getRank(score);

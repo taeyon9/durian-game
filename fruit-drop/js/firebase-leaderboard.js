@@ -2,17 +2,14 @@
 const FirebaseLeaderboard = (() => {
   let db = null;
   let userCountry = 'XX';
+  const COUNTRY_CACHE_KEY = 'fruitDropCountry';
 
   function init(firebaseConfig) {
     try {
-      // Skip if placeholder config
       if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith('YOUR_')) return;
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
-      // Detect country from locale
-      const lang = navigator.language || 'en-US';
-      const parts = lang.split('-');
-      userCountry = (parts[1] || parts[0]).toUpperCase().slice(0, 2);
+      detectCountry();
     } catch (e) {
       console.warn('Firebase init failed, using local leaderboard:', e);
     }
@@ -26,6 +23,35 @@ const FirebaseLeaderboard = (() => {
     return userCountry;
   }
 
+  async function detectCountry() {
+    // Check cache first
+    const cached = localStorage.getItem(COUNTRY_CACHE_KEY);
+    if (cached) {
+      userCountry = cached;
+      return;
+    }
+
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.country_code) {
+          userCountry = data.country_code;
+          localStorage.setItem(COUNTRY_CACHE_KEY, userCountry);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('GeoIP failed, falling back to navigator.language:', e);
+    }
+
+    // Fallback to navigator.language
+    const lang = navigator.language || 'en-US';
+    const parts = lang.split('-');
+    userCountry = (parts[1] || parts[0]).toUpperCase().slice(0, 2);
+    localStorage.setItem(COUNTRY_CACHE_KEY, userCountry);
+  }
+
   // Country code → flag emoji
   function countryFlag(code) {
     if (!code || code.length !== 2) return '🌍';
@@ -36,18 +62,43 @@ const FirebaseLeaderboard = (() => {
     );
   }
 
-  async function submitScore(name, score) {
+  async function submitScore(name, score, userId) {
     if (!db) return null;
     try {
       await db.collection('scores').add({
         name: name,
         score: score,
         country: userCountry,
+        userId: userId || '',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
       return true;
     } catch (e) {
       console.warn('Failed to submit score:', e);
+      return false;
+    }
+  }
+
+  async function updateNickname(userId, newName) {
+    if (!db || !userId) return false;
+    try {
+      const snapshot = await db.collection('scores')
+        .where('userId', '==', userId)
+        .get();
+
+      if (snapshot.empty) return false;
+
+      // Firestore batch limit is 500 writes
+      const BATCH_LIMIT = 500;
+      for (let i = 0; i < snapshot.docs.length; i += BATCH_LIMIT) {
+        const chunk = snapshot.docs.slice(i, i + BATCH_LIMIT);
+        const batch = db.batch();
+        chunk.forEach(doc => batch.update(doc.ref, { name: newName }));
+        await batch.commit();
+      }
+      return true;
+    } catch (e) {
+      console.warn('Failed to update nickname in Firebase:', e);
       return false;
     }
   }
@@ -96,5 +147,5 @@ const FirebaseLeaderboard = (() => {
     }
   }
 
-  return { init, isAvailable, getCountry, countryFlag, submitScore, getScores };
+  return { init, isAvailable, getCountry, countryFlag, submitScore, updateNickname, getScores };
 })();
