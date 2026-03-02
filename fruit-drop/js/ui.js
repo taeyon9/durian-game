@@ -278,7 +278,10 @@ const UI = (() => {
 
   // ===== GAME OVER =====
 
-  function showGameOver(score, highScore, isNewBest, rank) {
+  let lastMaxFruitLevel = 0;
+
+  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel) {
+    lastMaxFruitLevel = maxFruitLevel || 0;
     els.goScore.textContent = score;
     els.goNewBest.style.display = isNewBest ? '' : 'none';
     els.shareScore.textContent = score;
@@ -445,14 +448,14 @@ const UI = (() => {
     const name = prompt('Edit nickname (max 12 chars):', current);
     if (name && name.trim() && name.trim() !== current) {
       const userId = NicknameManager.getUserId();
-      NicknameManager.setName(name.trim());
+      const result = NicknameManager.setName(name.trim());
 
-      // Update local rankings
-      RankingManager.updateNickname(userId, name.trim());
+      // Update local rankings (use truncated name from setName)
+      RankingManager.updateNickname(userId, result.newName);
 
       // Update Firebase rankings
       if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
-        FirebaseLeaderboard.updateNickname(userId, name.trim());
+        FirebaseLeaderboard.updateNickname(userId, result.newName);
       }
 
       updateSettingsPanel();
@@ -547,7 +550,8 @@ const UI = (() => {
 
   function handleShare(platform) {
     const score = els.shareScore.textContent;
-    const text = `🍉 I scored ${score} in Fruit Drop! Can you beat me? 🔥`;
+    const fruitName = FRUITS[lastMaxFruitLevel] ? FRUITS[lastMaxFruitLevel].name : 'Lychee';
+    const text = `🍉 I scored ${score} pts and merged up to ${fruitName} in Fruit Drop! Can you beat me? 🔥`;
     
     if (platform === 'share' && navigator.share) {
       navigator.share({ title: 'Fruit Drop', text }).catch(() => {});
@@ -580,7 +584,7 @@ const UI = (() => {
   function showTutorial() {
     if (localStorage.getItem('fruitDropTutorialDone')) return;
     tutorialStep = 1;
-    els.tutorialMsg.textContent = '좌우로 드래그해서 위치를 정하세요!';
+    els.tutorialMsg.textContent = 'Drag left or right to aim!';
     els.tutorial.style.display = '';
   }
 
@@ -588,7 +592,7 @@ const UI = (() => {
     if (tutorialStep === 1) {
       tutorialStep = 2;
       els.tutorialHand.style.display = 'none';
-      els.tutorialMsg.textContent = '같은 과일끼리 합치면 진화! 🎯';
+      els.tutorialMsg.textContent = 'Merge same fruits to evolve! 🎯';
       setTimeout(() => {
         els.tutorial.style.display = 'none';
         localStorage.setItem('fruitDropTutorialDone', 'true');

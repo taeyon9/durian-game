@@ -88,11 +88,14 @@ const FirebaseLeaderboard = (() => {
 
       if (snapshot.empty) return false;
 
-      const batch = db.batch();
-      snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, { name: newName });
-      });
-      await batch.commit();
+      // Firestore batch limit is 500 writes
+      const BATCH_LIMIT = 500;
+      for (let i = 0; i < snapshot.docs.length; i += BATCH_LIMIT) {
+        const chunk = snapshot.docs.slice(i, i + BATCH_LIMIT);
+        const batch = db.batch();
+        chunk.forEach(doc => batch.update(doc.ref, { name: newName }));
+        await batch.commit();
+      }
       return true;
     } catch (e) {
       console.warn('Failed to update nickname in Firebase:', e);
