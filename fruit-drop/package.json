@@ -1,7 +1,7 @@
 {
-  "name": "fruit-drop",
+  "name": "durian-merge",
   "version": "1.0.0",
-  "description": "Southeast Asian Fruit Drop Game - Suika-style merge puzzle",
+  "description": "Southeast Asian Durian Merge Game - Suika-style tropical fruit puzzle",
   "main": "index.html",
   "scripts": {
     "start": "npx serve .",

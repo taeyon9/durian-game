@@ -1,8 +1,8 @@
 // Nickname System — UUID identification + weekly change limit
 const NicknameManager = (() => {
-  const STORAGE_KEY = 'fruitDropNickname';
-  const USER_ID_KEY = 'fruitDropUserId';
-  const CHANGED_AT_KEY = 'fruitDropNickChangedAt';
+  const STORAGE_KEY = 'durianMergeNickname';
+  const USER_ID_KEY = 'durianMergeUserId';
+  const CHANGED_AT_KEY = 'durianMergeNickChangedAt';
   const CHANGE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   let currentName = '';

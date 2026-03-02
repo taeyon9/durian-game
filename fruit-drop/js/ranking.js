@@ -1,6 +1,6 @@
 // Ranking/Leaderboard System - Local storage based
 const RankingManager = (() => {
-  const STORAGE_KEY = 'fruitDropLeaderboard';
+  const STORAGE_KEY = 'durianMergeLeaderboard';
   const MAX_ENTRIES = 20;
 
   function getLeaderboard() {

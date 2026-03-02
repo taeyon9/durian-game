@@ -1,7 +1,7 @@
 // Ticket/Lives System — 5 daily free plays
 const TicketManager = (() => {
   const DAILY_TICKETS = 5;
-  const STORAGE_KEY = 'fruitDropTickets';
+  const STORAGE_KEY = 'durianMergeTickets';
 
   function getData() {
     try {

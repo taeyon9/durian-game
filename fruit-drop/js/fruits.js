@@ -20,7 +20,7 @@ const MAX_DROP_LEVEL = 4;
 
 // Track which fruits the player has seen (for album)
 const FruitAlbum = (() => {
-  const KEY = 'fruitDropAlbum';
+  const KEY = 'durianMergeAlbum';
 
   function getUnlocked() {
     try {

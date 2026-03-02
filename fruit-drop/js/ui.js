@@ -209,7 +209,7 @@ const UI = (() => {
   function updateMenu() {
     const tickets = TicketManager.getTickets();
     const name = NicknameManager.getName();
-    const best = parseInt(localStorage.getItem('fruitDropHighScore') || '0');
+    const best = parseInt(localStorage.getItem('durianMergeHighScore') || '0');
 
     els.menuTickets.textContent = tickets;
     els.menuBestScore.textContent = best;
@@ -542,7 +542,7 @@ const UI = (() => {
       sfx: els.toggleSfx.checked,
       haptic: els.toggleHaptic.checked,
     };
-    localStorage.setItem('fruitDropSettings', JSON.stringify(settings));
+    localStorage.setItem('durianMergeSettings', JSON.stringify(settings));
 
     SoundManager.sfxMuted = !settings.sfx;
     Haptic.enabled = settings.haptic;
@@ -550,7 +550,7 @@ const UI = (() => {
 
   function loadSettings() {
     try {
-      const raw = localStorage.getItem('fruitDropSettings');
+      const raw = localStorage.getItem('durianMergeSettings');
       if (!raw) return;
       const s = JSON.parse(raw);
       els.toggleSfx.checked = s.sfx !== false;
@@ -600,7 +600,7 @@ const UI = (() => {
   let tutorialStep = 0;
 
   function showTutorial() {
-    if (localStorage.getItem('fruitDropTutorialDone')) return;
+    if (localStorage.getItem('durianMergeTutorialDone')) return;
     tutorialStep = 1;
     els.tutorialMsg.textContent = 'Drag left or right to aim!';
     els.tutorial.style.display = '';
@@ -613,7 +613,7 @@ const UI = (() => {
       els.tutorialMsg.textContent = 'Merge same fruits to evolve! 🎯';
       setTimeout(() => {
         els.tutorial.style.display = 'none';
-        localStorage.setItem('fruitDropTutorialDone', 'true');
+        localStorage.setItem('durianMergeTutorialDone', 'true');
         tutorialStep = 0;
       }, 2000);
     }

@@ -2,7 +2,7 @@
 const FirebaseLeaderboard = (() => {
   let db = null;
   let userCountry = 'XX';
-  const COUNTRY_CACHE_KEY = 'fruitDropCountry';
+  const COUNTRY_CACHE_KEY = 'durianMergeCountry';
 
   function init(firebaseConfig) {
     try {

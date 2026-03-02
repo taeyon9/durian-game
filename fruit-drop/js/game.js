@@ -47,7 +47,7 @@ const Game = (() => {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
 
-    highScore = parseInt(localStorage.getItem('fruitDropHighScore') || '0');
+    highScore = parseInt(localStorage.getItem('durianMergeHighScore') || '0');
     NicknameManager.init();
     Haptic.init();
 
@@ -371,7 +371,7 @@ const Game = (() => {
 
     if (isNewBest) {
       highScore = score;
-      localStorage.setItem('fruitDropHighScore', highScore.toString());
+      localStorage.setItem('durianMergeHighScore', highScore.toString());
     }
 
     // Save to leaderboard (only if has name already)
