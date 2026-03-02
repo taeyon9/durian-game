@@ -12,6 +12,11 @@
 </head>
 <body>
 
+  <!-- Web Splash Screen -->
+  <div id="webSplash" class="web-splash">
+    <img src="assets/splash-portrait.png" alt="Fruit Drop" class="web-splash-img">
+  </div>
+
   <!-- Game Canvas (gameplay rendering only) -->
   <canvas id="gameCanvas"></canvas>
 
@@ -48,6 +53,21 @@
 
   <!-- ===== MENU SCREEN ===== -->
   <div id="menuScreen" class="screen overlay">
+    <!-- Decorations -->
+    <div class="menu-sparkles">
+      <span class="sparkle" style="top:8%;left:12%;--delay:0s;--size:10px;"></span>
+      <span class="sparkle" style="top:5%;left:65%;--delay:0.8s;--size:14px;"></span>
+      <span class="sparkle" style="top:12%;right:18%;--delay:1.6s;--size:8px;"></span>
+      <span class="sparkle" style="bottom:18%;left:20%;--delay:0.4s;--size:12px;"></span>
+      <span class="sparkle" style="bottom:12%;right:15%;--delay:1.2s;--size:10px;"></span>
+      <span class="sparkle" style="top:30%;left:8%;--delay:2.0s;--size:6px;"></span>
+      <span class="sparkle" style="bottom:25%;right:10%;--delay:0.6s;--size:8px;"></span>
+    </div>
+    <div class="menu-bokeh">
+      <span class="bokeh" style="top:15%;left:-10%;--delay:0s;"></span>
+      <span class="bokeh" style="bottom:20%;right:-15%;--delay:5s;"></span>
+      <span class="bokeh" style="top:50%;right:5%;--delay:10s;"></span>
+    </div>
     <button class="icon-btn menu-settings" id="menuSettingsBtn">⚙️</button>
 
     <div class="menu-content">
