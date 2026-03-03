@@ -89,11 +89,20 @@ const UI = (() => {
       nickModalCount: document.getElementById('nickModalCount'),
       nickModalConfirm: document.getElementById('nickModalConfirm'),
       nickModalCancel: document.getElementById('nickModalCancel'),
+
+      // Help
+      menuHelpBtn: document.getElementById('menuHelpBtn'),
     };
 
     bindEvents();
     renderMenuFruits();
     loadSettings();
+
+    // Tutorial: auto-show on first visit
+    TutorialManager.init();
+    if (!TutorialManager.isDone()) {
+      TutorialManager.show();
+    }
   }
 
   function bindEvents() {
@@ -101,6 +110,7 @@ const UI = (() => {
     els.menuPlayBtn.addEventListener('click', handlePlay);
     els.menuRankingBtn.addEventListener('click', () => showScreen('leaderboard'));
     els.menuSettingsBtn.addEventListener('click', () => showModal('settings'));
+    els.menuHelpBtn.addEventListener('click', () => TutorialManager.show());
 
     // HUD
     els.hudSettingsBtn.addEventListener('click', () => showModal('settings'));
