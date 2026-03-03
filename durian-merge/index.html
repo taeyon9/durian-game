@@ -193,6 +193,22 @@
     </div>
   </div>
 
+  <!-- ===== NICKNAME EDIT MODAL ===== -->
+  <div id="nickModal" class="modal-bg" style="display:none;">
+    <div class="nick-modal-panel">
+      <div class="nick-modal-title">Edit Nickname</div>
+      <div class="nick-modal-input-wrap">
+        <input type="text" class="nick-modal-input" id="nickModalInput"
+               placeholder="Player" maxlength="12" autocomplete="off">
+        <div class="nick-modal-counter"><span id="nickModalCount">0</span>/12</div>
+      </div>
+      <div class="nick-modal-buttons">
+        <button class="btn btn-outline nick-modal-cancel" id="nickModalCancel">Cancel</button>
+        <button class="btn btn-gold nick-modal-confirm" id="nickModalConfirm">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Banner ad placeholder -->
   <div id="bannerAd" class="banner-ad"><span>AD</span></div>
 

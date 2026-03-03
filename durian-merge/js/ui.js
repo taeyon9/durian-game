@@ -83,6 +83,12 @@ const UI = (() => {
       // Combo
       comboText: document.getElementById('comboText'),
 
+      // Nickname modal
+      nickModal: document.getElementById('nickModal'),
+      nickModalInput: document.getElementById('nickModalInput'),
+      nickModalCount: document.getElementById('nickModalCount'),
+      nickModalConfirm: document.getElementById('nickModalConfirm'),
+      nickModalCancel: document.getElementById('nickModalCancel'),
     };
 
     bindEvents();
@@ -131,6 +137,22 @@ const UI = (() => {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) hideModal(modal.id === 'settingsOverlay' ? 'settings' : 'share');
       });
+    });
+
+    // Nickname modal
+    els.nickModalInput.addEventListener('input', updateNickCounter);
+    els.nickModalConfirm.addEventListener('click', handleNickModalConfirm);
+    els.nickModalCancel.addEventListener('click', () => hideModal('nickname'));
+    els.nickModalInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleNickModalConfirm();
+    });
+    els.nickModal.addEventListener('click', (e) => {
+      if (e.target === els.nickModal) hideModal('nickname');
+    });
+
+    // Menu player name tap to edit nickname
+    els.menuPlayer.addEventListener('click', () => {
+      if (NicknameManager.hasName()) handleNickEdit();
     });
 
     // Share
@@ -185,11 +207,21 @@ const UI = (() => {
       els.shareFruit.textContent = fruitName ? `Merged up to ${fruitName}!` : '';
       els.share.style.display = '';
     }
+    if (name === 'nickname') {
+      els.nickModal.style.display = '';
+      // Delay focus to avoid mobile keyboard scroll jump
+      setTimeout(() => els.nickModalInput.focus(), 100);
+    }
   }
 
   function hideModal(name) {
     if (name === 'settings') els.settings.style.display = 'none';
     if (name === 'share') els.share.style.display = 'none';
+    if (name === 'nickname') {
+      els.nickModal.style.display = 'none';
+      els.nickModalInput.blur();
+      nickModalResolve = null;
+    }
   }
 
   function goBack() {
@@ -446,6 +478,32 @@ const UI = (() => {
     }, 400);
   }
 
+  // Nickname modal state
+  let nickModalResolve = null;
+
+  function updateNickCounter() {
+    const len = els.nickModalInput.value.length;
+    els.nickModalCount.textContent = len;
+    if (len >= 12) {
+      els.nickModalCount.classList.add('limit-warn');
+    } else {
+      els.nickModalCount.classList.remove('limit-warn');
+    }
+  }
+
+  function openNicknameModal(currentName) {
+    els.nickModalInput.value = currentName || '';
+    updateNickCounter();
+    showModal('nickname');
+  }
+
+  function handleNickModalConfirm() {
+    const val = els.nickModalInput.value.trim();
+    const finalVal = val || 'Player';
+    hideModal('nickname');
+    if (nickModalResolve) nickModalResolve(finalVal);
+  }
+
   function handleNickEdit() {
     if (!NicknameManager.canChangeName()) {
       const nextDate = NicknameManager.getNextChangeDate();
@@ -455,21 +513,24 @@ const UI = (() => {
     }
 
     const current = NicknameManager.getName() || '';
-    const name = prompt('Edit nickname (max 12 chars):', current);
-    if (name && name.trim() && name.trim() !== current) {
-      const userId = NicknameManager.getUserId();
-      const result = NicknameManager.setName(name.trim());
+    openNicknameModal(current);
+    nickModalResolve = (name) => {
+      if (name && name !== current) {
+        const userId = NicknameManager.getUserId();
+        const result = NicknameManager.setName(name);
 
-      // Update local rankings (use truncated name from setName)
-      RankingManager.updateNickname(userId, result.newName);
+        // Update local rankings (use truncated name from setName)
+        RankingManager.updateNickname(userId, result.newName);
 
-      // Update Firebase rankings
-      if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
-        FirebaseLeaderboard.updateNickname(userId, result.newName);
+        // Update Firebase rankings
+        if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
+          FirebaseLeaderboard.updateNickname(userId, result.newName);
+        }
+
+        updateSettingsPanel();
+        updateMenu();
       }
-
-      updateSettingsPanel();
-    }
+    };
   }
 
   // ===== LEADERBOARD FULL =====
