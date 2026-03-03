@@ -150,6 +150,13 @@ html, body {
 .icon-bars::before { top: -6px; }
 .icon-bars::after { top: 6px; }
 
+/* Icon: gear */
+.icon-gear {
+  font-size: 20px;
+  color: var(--gold-dim);
+  line-height: 1;
+}
+
 /* ===== HUD ===== */
 #hud {
   z-index: 15;

@@ -3,6 +3,8 @@ const SoundManager = (() => {
   let audioCtx = null;
   let _sfxMuted = false;
 
+  const STORAGE_KEY = 'durianMergeSoundEnabled';
+
   function getCtx() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -15,6 +17,39 @@ const SoundManager = (() => {
       audioCtx.resume();
     }
   }
+
+  function loadSetting() {
+    try {
+      const val = localStorage.getItem(STORAGE_KEY);
+      if (val !== null) {
+        _sfxMuted = val === 'false';
+      }
+    } catch {}
+  }
+
+  function saveSetting() {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(!_sfxMuted));
+    } catch {}
+  }
+
+  function mute() {
+    _sfxMuted = true;
+    saveSetting();
+  }
+
+  function unmute() {
+    _sfxMuted = false;
+    saveSetting();
+  }
+
+  function toggleMute() {
+    if (_sfxMuted) { unmute(); } else { mute(); }
+    return !_sfxMuted;
+  }
+
+  // Load saved preference on init
+  loadSetting();
 
   // ===== SFX =====
 
@@ -389,8 +424,12 @@ const SoundManager = (() => {
 
   return {
     resume, playDrop, playMerge, playCombo, playGameOver, playBounce,
+    mute, unmute, toggleMute,
     get sfxMuted() { return _sfxMuted; },
-    set sfxMuted(v) { _sfxMuted = v; },
+    set sfxMuted(v) {
+      _sfxMuted = v;
+      saveSetting();
+    },
     bgmPlay, bgmStop, bgmSetVolume,
     get bgmMuted() { return _bgmMuted; },
     set bgmMuted(v) {

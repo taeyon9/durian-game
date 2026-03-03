@@ -4,7 +4,7 @@ const UI = (() => {
   let els = {};
   
   // State
-  let currentScreen = 'menu'; // menu | playing | gameover | leaderboard
+  let currentScreen = 'menu'; // menu | playing | gameover | leaderboard | settings
   let onPlayCallback = null;
   let onWatchAdCallback = null;
   let onContinueCallback = null;
@@ -120,7 +120,13 @@ const UI = (() => {
     });
 
     // Settings
-    els.settingsClose.addEventListener('click', () => hideModal('settings'));
+    els.settingsClose.addEventListener('click', () => {
+      if (currentScreen === 'settings') {
+        goBack();
+      } else {
+        hideModal('settings');
+      }
+    });
     els.settingsNickEdit.addEventListener('click', handleNickEdit);
     // Toggle persistence
     [els.toggleSfx, els.toggleHaptic].forEach(t => {
@@ -129,7 +135,13 @@ const UI = (() => {
     // Close modals on backdrop click
     [els.settings, els.share].forEach(modal => {
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) hideModal(modal.id === 'settingsOverlay' ? 'settings' : 'share');
+        if (e.target === modal) {
+          if (modal.id === 'settingsOverlay' && currentScreen === 'settings') {
+            goBack();
+          } else {
+            hideModal(modal.id === 'settingsOverlay' ? 'settings' : 'share');
+          }
+        }
       });
     });
 
@@ -148,13 +160,26 @@ const UI = (() => {
 
   // ===== SCREEN MANAGEMENT =====
 
+  let previousScreen = 'menu';
+
   function showScreen(name) {
+    if (name === 'settings') {
+      previousScreen = currentScreen;
+    }
     currentScreen = name;
     els.menu.style.display = name === 'menu' ? '' : 'none';
     els.hud.style.display = name === 'playing' ? '' : 'none';
     els.gameover.style.display = name === 'gameover' ? '' : 'none';
     els.leaderboard.style.display = name === 'leaderboard' ? '' : 'none';
-    
+
+    // Settings overlay: show/hide
+    if (name === 'settings') {
+      updateSettingsPanel();
+      els.settings.style.display = '';
+    } else {
+      els.settings.style.display = 'none';
+    }
+
     // Canvas visibility
     const canvas = document.getElementById('gameCanvas');
     canvas.style.display = (name === 'playing') ? '' : 'none';
@@ -181,7 +206,9 @@ const UI = (() => {
   }
 
   function goBack() {
-    if (currentScreen === 'leaderboard') {
+    if (currentScreen === 'settings') {
+      showScreen(previousScreen);
+    } else if (currentScreen === 'leaderboard') {
       showScreen('menu');
     }
   }
@@ -528,18 +555,36 @@ const UI = (() => {
     };
     localStorage.setItem('durianMergeSettings', JSON.stringify(settings));
 
-    SoundManager.sfxMuted = !settings.sfx;
+    if (settings.sfx) {
+      SoundManager.unmute();
+    } else {
+      SoundManager.mute();
+    }
     Haptic.enabled = settings.haptic;
   }
 
   function loadSettings() {
     try {
+      // Check dedicated sound key first, fall back to combined settings
+      const soundEnabled = localStorage.getItem('durianMergeSoundEnabled');
       const raw = localStorage.getItem('durianMergeSettings');
-      if (!raw) return;
-      const s = JSON.parse(raw);
-      els.toggleSfx.checked = s.sfx !== false;
-      els.toggleHaptic.checked = s.haptic !== false;
-      SoundManager.sfxMuted = !els.toggleSfx.checked;
+
+      if (raw) {
+        const s = JSON.parse(raw);
+        els.toggleSfx.checked = s.sfx !== false;
+        els.toggleHaptic.checked = s.haptic !== false;
+      }
+
+      // Override sfx toggle if dedicated key exists
+      if (soundEnabled !== null) {
+        els.toggleSfx.checked = soundEnabled !== 'false';
+      }
+
+      if (els.toggleSfx.checked) {
+        SoundManager.unmute();
+      } else {
+        SoundManager.mute();
+      }
       Haptic.enabled = els.toggleHaptic.checked;
     } catch {}
   }
