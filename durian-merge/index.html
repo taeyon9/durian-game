@@ -74,7 +74,10 @@
       <div class="menu-tickets">
         🎟️ <span id="menuTickets">5</span> plays left today
       </div>
-      <div class="menu-ranking-link" id="menuRankingBtn">🏆 Ranking →</div>
+      <div class="menu-sub-links">
+        <div class="menu-ranking-link" id="menuRankingBtn">🏆 Ranking →</div>
+        <div class="menu-ranking-link" id="missionBtn">📋 Missions <span class="mission-badge" id="missionBadge" style="display:none;">0</span></div>
+      </div>
     </div>
   </div>
 
@@ -193,6 +196,19 @@
     </div>
   </div>
 
+  <!-- ===== MISSIONS OVERLAY ===== -->
+  <div id="missionOverlay" class="modal-bg" style="display:none;">
+    <div class="mission-panel">
+      <div class="mission-header">
+        <h3>📋 Daily Missions</h3>
+        <button class="settings-close" id="missionClose">✕</button>
+      </div>
+      <div class="mission-subtitle">Complete missions to earn bonus plays!</div>
+      <div class="mission-list" id="missionList"></div>
+      <div class="mission-reset-info" id="missionResetInfo"></div>
+    </div>
+  </div>
+
   <!-- Banner ad placeholder -->
   <div id="bannerAd" class="banner-ad"><span>AD</span></div>
 
@@ -206,6 +222,7 @@
   <script src="js/haptic.js"></script>
   <script src="js/physics.js"></script>
   <script src="js/tickets.js"></script>
+  <script src="js/missions.js"></script>
   <script src="js/nickname.js"></script>
   <script src="js/ranking.js"></script>
   <script src="js/ui.js"></script>
