@@ -54,6 +54,7 @@
       <span class="bokeh" style="bottom:20%;right:-15%;--delay:5s;"></span>
       <span class="bokeh" style="top:50%;right:5%;--delay:10s;"></span>
     </div>
+    <button class="icon-btn menu-help" id="menuHelpBtn">?</button>
     <button class="icon-btn menu-settings" id="menuSettingsBtn"><span class="icon-bars"></span></button>
 
     <div class="menu-content">
@@ -193,6 +194,21 @@
     </div>
   </div>
 
+  <!-- ===== TUTORIAL OVERLAY ===== -->
+  <div id="tutorialOverlay" class="tut-overlay" style="display:none;">
+    <button class="tut-skip" id="tutorialSkip">Skip</button>
+    <div class="tut-slides" id="tutorialSlides"></div>
+    <div class="tut-dots" id="tutorialDots"></div>
+    <div class="tut-nav">
+      <button class="tut-nav-btn" id="tutorialPrev">Prev</button>
+      <button class="tut-nav-btn tut-nav-primary" id="tutorialNext">Next</button>
+    </div>
+    <label class="tut-dontshow">
+      <input type="checkbox" id="tutorialDontShow">
+      <span>Don't show again</span>
+    </label>
+  </div>
+
   <!-- Banner ad placeholder -->
   <div id="bannerAd" class="banner-ad"><span>AD</span></div>
 
@@ -208,6 +224,7 @@
   <script src="js/tickets.js"></script>
   <script src="js/nickname.js"></script>
   <script src="js/ranking.js"></script>
+  <script src="js/tutorial.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/firebase-leaderboard.js"></script>
   <script src="js/game.js"></script>
