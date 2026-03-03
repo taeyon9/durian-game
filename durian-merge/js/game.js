@@ -29,7 +29,12 @@ const Game = (() => {
   // Combo tracking
   let comboCount = 0;
   let comboTimer = 0;
-  const COMBO_WINDOW_MS = 1200;
+  const COMBO_WINDOW_MS = 2000;
+  let maxCombo = 0;
+  let bestCombo = parseInt(localStorage.getItem('durianMergeBestCombo') || '0');
+
+  // Canvas combo display
+  let comboDisplay = null; // { text, alpha, scale, x, y }
 
   // Game over rank
   let gameOverRank = -1;
@@ -185,6 +190,8 @@ const Game = (() => {
     dangerTimer = 0;
     comboCount = 0;
     comboTimer = 0;
+    maxCombo = 0;
+    comboDisplay = null;
     canDrop = true;
     dropCooldown = 0;
     currentLevel = randomDropLevel();
@@ -286,22 +293,51 @@ const Game = (() => {
       FruitAlbum.unlock(level + 1);
       if (level + 1 > maxMergedLevel) maxMergedLevel = level + 1;
 
-      // Score
+      // Score + Combo
       const points = FRUITS[level + 1].score;
-      score += points;
-
-      // Combo
       comboCount++;
       comboTimer = COMBO_WINDOW_MS;
+
       if (comboCount >= 2) {
-        const bonus = Math.floor(points * comboCount * 0.3);
-        score += bonus;
+        // Multiplier: x1.5, x2, x2.5, x3 (capped)
+        const multiplier = Math.min(1 + comboCount * 0.5, 3);
+        const totalPoints = Math.floor(points * multiplier);
+        score += totalPoints;
+
+        if (comboCount > maxCombo) maxCombo = comboCount;
+
+        // Canvas combo text animation
+        comboDisplay = {
+          text: comboCount + 'x COMBO!',
+          subText: 'x' + multiplier.toFixed(1),
+          alpha: 1,
+          scale: 2.0,
+          x: mx,
+          y: Math.max(my - 40, DANGER_LINE_Y + 40),
+        };
+
         UI.showCombo(comboCount);
         SoundManager.playCombo(comboCount);
         Haptic.combo();
         comboBorderAlpha = 0.6;
+
+        // Larger score popup for combo
+        scorePopups.push({
+          x: mx, y: my,
+          text: '+' + totalPoints + ' (x' + multiplier.toFixed(1) + ')',
+          alpha: 1,
+          dy: 0,
+        });
       } else {
+        score += points;
         Haptic.merge();
+
+        scorePopups.push({
+          x: mx, y: my,
+          text: '+' + points,
+          alpha: 1,
+          dy: 0,
+        });
       }
 
       // Merge effect
@@ -323,13 +359,6 @@ const Game = (() => {
         color: FRUITS[level + 1].color,
         glowRadius: 0,
         particles,
-      });
-
-      scorePopups.push({
-        x: mx, y: my,
-        text: '+' + points,
-        alpha: 1,
-        dy: 0,
       });
 
       // Screen shake for high-level merges
@@ -371,6 +400,12 @@ const Game = (() => {
       localStorage.setItem('durianMergeHighScore', highScore.toString());
     }
 
+    // Save best combo
+    if (maxCombo > bestCombo) {
+      bestCombo = maxCombo;
+      localStorage.setItem('durianMergeBestCombo', bestCombo.toString());
+    }
+
     // Save to leaderboard (only if has name already)
     const name = NicknameManager.getName();
     if (name) {
@@ -396,7 +431,7 @@ const Game = (() => {
     const canContinue = !continuedThisGame &&
       (typeof AdMobManager !== 'undefined' && AdMobManager.isRewardedReady());
 
-    UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel, canContinue);
+    UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel, canContinue, maxCombo, bestCombo);
   }
 
   // ===== GAME LOOP =====
@@ -476,6 +511,13 @@ const Game = (() => {
       if (comboBorderAlpha > 0) {
         comboBorderAlpha -= delta / 500;
         if (comboBorderAlpha < 0) comboBorderAlpha = 0;
+      }
+
+      // Combo display animation
+      if (comboDisplay) {
+        comboDisplay.alpha -= delta / 800;
+        comboDisplay.scale += (1.0 - comboDisplay.scale) * 0.15; // ease toward 1.0
+        if (comboDisplay.alpha <= 0) comboDisplay = null;
       }
 
       render();
@@ -625,6 +667,55 @@ const Game = (() => {
       ctx.strokeStyle = `rgba(255, 215, 0, ${comboBorderAlpha})`;
       ctx.lineWidth = 4;
       ctx.strokeRect(2, DANGER_LINE_Y, BASE_WIDTH - 4, BASE_HEIGHT - DANGER_LINE_Y - 2);
+      ctx.restore();
+    }
+
+    // Combo timer bar
+    if (comboTimer > 0 && comboCount >= 1) {
+      const barW = 120;
+      const barH = 6;
+      const barX = (BASE_WIDTH - barW) / 2;
+      const barY = DANGER_LINE_Y + 8;
+      const progress = comboTimer / COMBO_WINDOW_MS;
+
+      // Background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW, barH, 3);
+      ctx.fill();
+
+      // Fill — color shifts from gold to red as time runs out
+      const r = Math.round(255);
+      const g = Math.round(215 * progress);
+      const b = Math.round(0);
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.9)`;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW * progress, barH, 3);
+      ctx.fill();
+    }
+
+    // Canvas combo text animation
+    if (comboDisplay && comboDisplay.alpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = comboDisplay.alpha;
+      ctx.translate(BASE_WIDTH / 2, comboDisplay.y);
+      ctx.scale(comboDisplay.scale, comboDisplay.scale);
+
+      // Main combo text
+      ctx.font = 'bold 32px "Fredoka", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.lineWidth = 4;
+      ctx.strokeText(comboDisplay.text, 0, 0);
+      ctx.fillStyle = '#FFD700';
+      ctx.fillText(comboDisplay.text, 0, 0);
+
+      // Multiplier sub-text
+      ctx.font = 'bold 18px "Fredoka", sans-serif';
+      ctx.fillStyle = '#FFA500';
+      ctx.fillText(comboDisplay.subText, 0, 24);
+
       ctx.restore();
     }
 

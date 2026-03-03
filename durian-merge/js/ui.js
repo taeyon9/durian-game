@@ -24,6 +24,9 @@ const UI = (() => {
       settings: document.getElementById('settingsOverlay'),
       share: document.getElementById('shareOverlay'),
       combo: document.getElementById('comboPopup'),
+      goComboStats: document.getElementById('goComboStats'),
+      goMaxCombo: document.getElementById('goMaxCombo'),
+      goBestCombo: document.getElementById('goBestCombo'),
 
       // HUD
       hudScore: document.getElementById('hudScore'),
@@ -344,11 +347,26 @@ const UI = (() => {
 
   let lastMaxFruitLevel = 0;
 
-  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel, canContinue) {
+  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel, canContinue, maxCombo, bestCombo) {
     lastMaxFruitLevel = maxFruitLevel || 0;
     els.goScore.textContent = score;
     els.goNewBest.style.display = isNewBest ? '' : 'none';
     els.shareScore.textContent = score;
+
+    // Combo stats
+    if (maxCombo && maxCombo >= 2) {
+      els.goComboStats.style.display = '';
+      els.goMaxCombo.textContent = maxCombo + 'x';
+      if (bestCombo && maxCombo >= bestCombo) {
+        els.goBestCombo.textContent = ' BEST!';
+        els.goBestCombo.style.display = '';
+      } else {
+        els.goBestCombo.textContent = bestCombo ? ' (Best: ' + bestCombo + 'x)' : '';
+        els.goBestCombo.style.display = bestCombo ? '' : 'none';
+      }
+    } else {
+      els.goComboStats.style.display = 'none';
+    }
 
     const hasName = NicknameManager.hasName();
 
