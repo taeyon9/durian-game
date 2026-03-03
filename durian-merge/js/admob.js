@@ -18,7 +18,6 @@ const AdMobManager = (() => {
   async function init() {
     // Check if running inside Capacitor native app
     if (typeof window.Capacitor === 'undefined' || !window.Capacitor.isNativePlatform()) {
-      console.log('AdMob: Not running in Capacitor, ads disabled');
       return;
     }
 
@@ -27,16 +26,13 @@ const AdMobManager = (() => {
     try {
       const admobPlugin = window.Capacitor.Plugins.AdMob;
       if (!admobPlugin) {
-        console.log('AdMob: Plugin not available');
         return;
       }
       AdMob = admobPlugin;
 
       await AdMob.initialize({
-        initializeForTesting: true,
+        initializeForTesting: true, // TODO: 릴리스 전 false로 변경
       });
-
-      console.log('AdMob: Initialized successfully');
 
       await showBanner();
       await loadInterstitial();
@@ -55,11 +51,10 @@ const AdMobManager = (() => {
         adSize: 'BANNER',
         position: 'BOTTOM_CENTER',
         margin: 0,
-        isTesting: true,
+        isTesting: true, // TODO: 릴리스 전 false로 변경
       });
 
       document.body.classList.add('has-banner');
-      console.log('AdMob: Banner shown');
     } catch (err) {
       console.error('AdMob: Banner error', err);
     }
@@ -71,7 +66,7 @@ const AdMobManager = (() => {
     try {
       await AdMob.prepareInterstitial({
         adId: INTERSTITIAL_ID,
-        isTesting: true,
+        isTesting: true, // TODO: 릴리스 전 false로 변경
       });
       interstitialLoaded = true;
     } catch (err) {
@@ -109,10 +104,9 @@ const AdMobManager = (() => {
     try {
       await AdMob.prepareRewardVideoAd({
         adId: REWARDED_ID,
-        isTesting: true,
+        isTesting: true, // TODO: 릴리스 전 false로 변경
       });
       rewardedLoaded = true;
-      console.log('AdMob: Rewarded ad loaded');
     } catch (err) {
       console.error('AdMob: Rewarded load error', err);
     }
@@ -129,7 +123,6 @@ const AdMobManager = (() => {
     try {
       const result = await AdMob.showRewardVideoAd();
       rewardedLoaded = false;
-      console.log('AdMob: Rewarded ad completed', result);
       await loadRewarded();
       return true;
     } catch (err) {

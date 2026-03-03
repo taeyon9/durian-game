@@ -634,8 +634,7 @@ const Game = (() => {
     }
   }
 
-  // DEBUG: triggerGameOver 노출 (릴리스 전 제거 → return { init })
-  return { init, triggerGameOver };
+  return { init };
 })();
 
 window.addEventListener('load', () => Game.init());

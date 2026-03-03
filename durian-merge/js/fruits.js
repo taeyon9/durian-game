@@ -64,7 +64,6 @@ function loadFruitImages() {
       loaded++;
       if (loaded === total) {
         imagesLoaded = true;
-        console.log('All fruit images loaded');
       }
     };
     img.onerror = () => {
