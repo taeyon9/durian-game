@@ -55,6 +55,7 @@ const Game = (() => {
     ctx = canvas.getContext('2d');
 
     highScore = parseInt(localStorage.getItem('durianMergeHighScore') || '0');
+    if (typeof SkinManager !== 'undefined') SkinManager.init();
     NicknameManager.init();
     Haptic.init();
 
@@ -461,6 +462,7 @@ const Game = (() => {
       gameOverRank = RankingManager.getRank(score);
     }
 
+    if (typeof SkinManager !== 'undefined') SkinManager.recordGameEnd(score);
     SoundManager.playGameOver();
     Haptic.gameOver();
 

@@ -78,6 +78,9 @@ const UI = (() => {
       toggleSfx: document.getElementById('toggleSfx'),
       toggleHaptic: document.getElementById('toggleHaptic'),
 
+      // Skins
+      skinsList: document.getElementById('settingsSkinsList'),
+
       // Share
       shareScore: document.getElementById('shareScore'),
       shareFruit: document.getElementById('shareFruit'),
@@ -635,6 +638,67 @@ const UI = (() => {
     } else {
       els.settingsNickSection.style.display = 'none';
     }
+
+    renderSkinSelector();
+  }
+
+  function renderSkinSelector() {
+    if (!els.skinsList || typeof SkinManager === 'undefined') return;
+
+    const skins = SkinManager.getAllSkins();
+    const currentId = SkinManager.getCurrentSkinId();
+    let html = '';
+
+    skins.forEach(skin => {
+      const unlocked = SkinManager.isUnlocked(skin.id);
+      const isActive = skin.id === currentId;
+      const cls = isActive ? 'skin-card active' : (unlocked ? 'skin-card' : 'skin-card locked');
+
+      // Preview dots (first 4 fruit colors)
+      let dots = '';
+      for (let i = 0; i < 4; i++) {
+        const d = skin.data[i];
+        if (skin.type === 'emoji' && d.emoji) {
+          dots += '<span class="skin-dot" style="font-size:12px;display:flex;align-items:center;justify-content:center;">' + d.emoji + '</span>';
+        } else {
+          dots += '<span class="skin-dot" style="background:' + d.color + ';"></span>';
+        }
+      }
+
+      let extra = '';
+      if (!unlocked) {
+        const prog = SkinManager.getUnlockProgress(skin.id);
+        if (prog) {
+          const pct = Math.min(100, Math.round(prog.current / prog.target * 100));
+          extra = '<div class="skin-progress"><div class="skin-progress-bar" style="width:' + pct + '%;"></div></div>';
+        }
+      }
+
+      const check = isActive ? '<span class="skin-check">&#10003;</span>' : (unlocked ? '' : '<span class="skin-check">&#128274;</span>');
+
+      html += '<div class="' + cls + '" data-skin="' + skin.id + '">'
+        + '<div class="skin-preview">' + dots + '</div>'
+        + '<div class="skin-info">'
+        + '<div class="skin-name">' + escHtml(skin.name) + '</div>'
+        + '<div class="skin-desc">' + escHtml(skin.description) + '</div>'
+        + extra
+        + '</div>'
+        + check
+        + '</div>';
+    });
+
+    els.skinsList.innerHTML = html;
+
+    // Bind click events
+    els.skinsList.querySelectorAll('.skin-card:not(.locked)').forEach(card => {
+      card.addEventListener('click', () => {
+        const skinId = card.dataset.skin;
+        if (SkinManager.selectSkin(skinId)) {
+          renderSkinSelector();
+          renderMenuFruits();
+        }
+      });
+    });
   }
 
   function saveSettings() {

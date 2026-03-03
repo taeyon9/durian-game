@@ -805,6 +805,87 @@ html, body {
   transform: translateX(18px);
 }
 
+/* ===== SKIN SELECTOR ===== */
+.settings-skins {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.settings-skins-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.settings-skins-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.skin-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.04);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.skin-card:active { filter: brightness(0.9); }
+.skin-card.active {
+  border-color: var(--gold);
+  background: rgba(255,215,0,0.08);
+}
+.skin-card.locked {
+  opacity: 0.5;
+  cursor: default;
+}
+.skin-card.locked:active { filter: none; }
+.skin-preview {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.skin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+.skin-info {
+  flex: 1;
+  min-width: 0;
+}
+.skin-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+}
+.skin-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+.skin-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.skin-progress-bar {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+.skin-check {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
 .settings-ver {
   text-align: center;
   font-size: 11px;
