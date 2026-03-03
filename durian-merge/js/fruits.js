@@ -101,25 +101,75 @@ function drawFruit(ctx, x, y, level, angle) {
       ctx.shadowBlur = 0;
     }
   } else {
-    // Fallback: simple colored circle
-    ctx.beginPath();
-    ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+    // Fallback: simple colored circle (skin-aware)
+    const skin = typeof SkinManager !== 'undefined' ? SkinManager.getCurrentSkin() : null;
+    const skinData = skin ? skin.data[level] : null;
+    const skinType = skin ? skin.type : 'default';
+    const baseColor = (skinData && skinData.color) ? skinData.color : fruit.color;
 
-    const grad = ctx.createRadialGradient(
-      -fruit.radius * 0.3, -fruit.radius * 0.3, fruit.radius * 0.1,
-      0, 0, fruit.radius
-    );
-    grad.addColorStop(0, lightenColor(fruit.color, 40));
-    grad.addColorStop(0.7, fruit.color);
-    grad.addColorStop(1, darkenColor(fruit.color, 30));
-    ctx.fillStyle = grad;
-    ctx.fill();
+    if (skinType === 'emoji' && skinData && skinData.emoji) {
+      // Emoji skin: colored circle + emoji text
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      const eGrad = ctx.createRadialGradient(
+        -fruit.radius * 0.3, -fruit.radius * 0.3, fruit.radius * 0.1,
+        0, 0, fruit.radius
+      );
+      eGrad.addColorStop(0, lightenColor(baseColor, 40));
+      eGrad.addColorStop(0.7, baseColor);
+      eGrad.addColorStop(1, darkenColor(baseColor, 30));
+      ctx.fillStyle = eGrad;
+      ctx.fill();
 
-    // Highlight
-    ctx.beginPath();
-    ctx.arc(-fruit.radius * 0.25, -fruit.radius * 0.25, fruit.radius * 0.3, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.fill();
+      ctx.font = `${fruit.radius * 1.1}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(skinData.emoji, 0, fruit.radius * 0.08);
+    } else if (skinType === 'recolor' && skinData && skinData.accent) {
+      // Jewel skin: faceted look with accent highlight
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      const jGrad = ctx.createRadialGradient(
+        -fruit.radius * 0.3, -fruit.radius * 0.3, fruit.radius * 0.1,
+        0, 0, fruit.radius
+      );
+      jGrad.addColorStop(0, skinData.accent);
+      jGrad.addColorStop(0.5, baseColor);
+      jGrad.addColorStop(1, darkenColor(baseColor, 50));
+      ctx.fillStyle = jGrad;
+      ctx.fill();
+
+      // Gem sparkle highlight
+      ctx.beginPath();
+      ctx.arc(-fruit.radius * 0.2, -fruit.radius * 0.2, fruit.radius * 0.25, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(fruit.radius * 0.15, -fruit.radius * 0.3, fruit.radius * 0.1, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fill();
+    } else {
+      // Default / tropical skin
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+
+      const grad = ctx.createRadialGradient(
+        -fruit.radius * 0.3, -fruit.radius * 0.3, fruit.radius * 0.1,
+        0, 0, fruit.radius
+      );
+      grad.addColorStop(0, lightenColor(baseColor, 40));
+      grad.addColorStop(0.7, baseColor);
+      grad.addColorStop(1, darkenColor(baseColor, 30));
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Highlight
+      ctx.beginPath();
+      ctx.arc(-fruit.radius * 0.25, -fruit.radius * 0.25, fruit.radius * 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.fill();
+    }
   }
 
   ctx.restore();
