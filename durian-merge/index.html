@@ -54,6 +54,7 @@
       <span class="bokeh" style="bottom:20%;right:-15%;--delay:5s;"></span>
       <span class="bokeh" style="top:50%;right:5%;--delay:10s;"></span>
     </div>
+    <button class="icon-btn menu-stats" id="menuStatsBtn">&#x1F4CA;</button>
     <button class="icon-btn menu-settings" id="menuSettingsBtn"><span class="icon-bars"></span></button>
 
     <div class="menu-content">
@@ -193,6 +194,59 @@
     </div>
   </div>
 
+  <!-- ===== STATS OVERLAY ===== -->
+  <div id="statsOverlay" class="modal-bg" style="display:none;">
+    <div class="stats-panel">
+      <div class="stats-header">
+        <h3>Statistics</h3>
+        <button class="settings-close" id="statsClose">&#10005;</button>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotalPlays">0</div>
+          <div class="stat-label">Total Plays</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statPlayTime">0s</div>
+          <div class="stat-label">Play Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statHighScore">0</div>
+          <div class="stat-label">Best Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statAvgScore">0</div>
+          <div class="stat-label">Avg Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statLowestScore">0</div>
+          <div class="stat-label">Lowest</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statMaxFruit">None</div>
+          <div class="stat-label">Best Fruit</div>
+        </div>
+      </div>
+
+      <!-- Merge Counts -->
+      <div class="stats-section">
+        <div class="stats-section-title">Merge Counts</div>
+        <div class="stat-merge-list" id="statMergeList"></div>
+      </div>
+
+      <!-- Daily Records -->
+      <div class="stats-section">
+        <div class="stats-section-title">Recent (7 days)</div>
+        <div class="stat-daily-header">
+          <span>Date</span><span>Plays</span><span>Best</span>
+        </div>
+        <div class="stat-daily-list" id="statDailyList"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Banner ad placeholder -->
   <div id="bannerAd" class="banner-ad"><span>AD</span></div>
 
@@ -209,6 +263,7 @@
   <script src="js/nickname.js"></script>
   <script src="js/ranking.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/analytics.js"></script>
   <script src="js/firebase-leaderboard.js"></script>
   <script src="js/game.js"></script>
   <script src="js/admob.js"></script>
