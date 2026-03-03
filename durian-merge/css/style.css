@@ -367,6 +367,11 @@ html, body {
   margin-bottom: 8px;
   position: relative;
   z-index: 1;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.menu-player:active {
+  border-color: var(--gold);
 }
 .menu-player-name { font-weight: 600; font-size: 14px; color: var(--gold); }
 .menu-player-best { font-size: 12px; color: var(--text-dim); }
@@ -851,6 +856,68 @@ html, body {
   color: var(--text-dim);
   cursor: pointer;
   padding: 8px;
+}
+
+/* ===== NICKNAME EDIT MODAL ===== */
+.nick-modal-panel {
+  background: var(--bg-panel);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 320px;
+  padding: 24px;
+  animation: slideUp 0.25s ease-out;
+}
+#nickModal {
+  align-items: center;
+}
+.nick-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  text-align: center;
+  margin-bottom: 16px;
+}
+.nick-modal-input-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+.nick-modal-input {
+  width: 100%;
+  padding: 14px 16px;
+  padding-right: 50px;
+  border-radius: 12px;
+  border: 2px solid var(--gold-dim);
+  background: rgba(0,0,0,0.3);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.nick-modal-input::placeholder { color: var(--text-dim); }
+.nick-modal-input:focus { border-color: var(--gold); }
+.nick-modal-counter {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.nick-modal-counter .limit-warn { color: var(--red); }
+.nick-modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+.nick-modal-cancel {
+  flex: 1;
+}
+.nick-modal-confirm {
+  flex: 1;
 }
 
 /* ===== BANNER AD ===== */
