@@ -488,6 +488,34 @@ const Game = (() => {
         shakeIntensity = Math.max(shakeIntensity, Math.min(7, 4 + (comboCount - 5) * 0.8));
       }
 
+      // Durian merge special effects (level 9 = Durian)
+      if (newLevel === 9) {
+        shakeIntensity = 12;
+        screenFlash = 0.8;
+
+        // Extra golden particles
+        for (let i = 0; i < 10; i++) {
+          const angle = (i / 10) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+          particles.push({
+            angle,
+            dist: 0,
+            speed: 0.1 + Math.random() * 0.12,
+            size: 3 + Math.random() * 4,
+            isStar: true,
+            color: '#FFD700',
+            rotSpeed: (Math.random() - 0.5) * 0.15,
+            rot: Math.random() * Math.PI * 2,
+          });
+        }
+
+        // Override score popup with special style
+        const lastPop = scorePopups[scorePopups.length - 1];
+        if (lastPop) {
+          lastPop.fontSize = 28;
+          lastPop.color = '#FFD700';
+        }
+      }
+
       SoundManager.playMerge(level);
       UI.updateHUD(score, highScore);
     }
@@ -682,6 +710,12 @@ const Game = (() => {
       if (shakeIntensity > 0) {
         shakeIntensity -= delta * 0.02;
         if (shakeIntensity < 0) shakeIntensity = 0;
+      }
+
+      // Screen flash decay (durian merge)
+      if (screenFlash > 0) {
+        screenFlash -= delta / 300;
+        if (screenFlash < 0) screenFlash = 0;
       }
 
       // Score popup decay
@@ -911,6 +945,34 @@ const Game = (() => {
       ctx.globalAlpha = 0.65;
       drawFruit(ctx, dropX, DANGER_LINE_Y - 20, currentLevel, 0);
       ctx.globalAlpha = 1.0;
+    } else {
+      // Cooldown: show dimmed preview fruit
+      ctx.globalAlpha = 0.25;
+      drawFruit(ctx, dropX, DANGER_LINE_Y - 20, currentLevel, 0);
+      ctx.globalAlpha = 1.0;
+
+      // Cooldown circular progress ring
+      const elapsed = performance.now() - lastDropTime;
+      const progress = Math.min(elapsed / DROP_COOLDOWN_MS, 1);
+      const ringRadius = 12;
+      const ringX = dropX;
+      const ringY = DANGER_LINE_Y - 20 + FRUITS[currentLevel].radius + ringRadius + 6;
+
+      // Background ring
+      ctx.beginPath();
+      ctx.arc(ringX, ringY, ringRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Progress arc
+      const startAngle = -Math.PI / 2;
+      const endAngle = startAngle + progress * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(ringX, ringY, ringRadius, startAngle, endAngle);
+      ctx.strokeStyle = 'rgba(255, 215, 0, 0.7)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
 
     // Combo border pulse
@@ -981,6 +1043,12 @@ const Game = (() => {
       ctx.fillText(comboDisplay.subText, 0, 24);
 
       ctx.restore();
+    }
+
+    // Screen flash (durian merge special effect)
+    if (screenFlash > 0) {
+      ctx.fillStyle = `rgba(255, 255, 200, ${screenFlash})`;
+      ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
     }
 
     // End screen shake
