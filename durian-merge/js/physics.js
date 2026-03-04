@@ -1,6 +1,6 @@
 // Physics engine setup using Matter.js
 const Physics = (() => {
-  const { Engine, World, Bodies, Body, Events, Composite } = Matter;
+  const { Engine, World, Bodies, Body, Events, Composite, Sleeping } = Matter;
 
   let engine, world;
   let walls = [];
@@ -96,7 +96,13 @@ const Physics = (() => {
 
   function onCollision(callback) {
     Events.on(engine, 'collisionStart', callback);
-    Events.on(engine, 'collisionActive', callback);
+    // collisionActive: only wake sleeping bodies (merge logic handled by collisionStart)
+    Events.on(engine, 'collisionActive', (event) => {
+      for (const pair of event.pairs) {
+        if (pair.bodyA.isSleeping) Sleeping.set(pair.bodyA, false);
+        if (pair.bodyB.isSleeping) Sleeping.set(pair.bodyB, false);
+      }
+    });
   }
 
   function getAllBodies() {

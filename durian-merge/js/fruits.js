@@ -21,29 +21,32 @@ const MAX_DROP_LEVEL = 4;
 // Track which fruits the player has seen (for album)
 const FruitAlbum = (() => {
   const KEY = 'durianMergeAlbum';
+  let _cache = null;
 
   function getUnlocked() {
+    if (_cache) return _cache;
     try {
-      return JSON.parse(localStorage.getItem(KEY) || '[]');
-    } catch { return []; }
+      _cache = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
+    } catch { _cache = new Set(); }
+    return _cache;
   }
 
   function unlock(level) {
-    const arr = getUnlocked();
-    if (!arr.includes(level)) {
-      arr.push(level);
-      localStorage.setItem(KEY, JSON.stringify(arr));
+    const set = getUnlocked();
+    if (!set.has(level)) {
+      set.add(level);
+      localStorage.setItem(KEY, JSON.stringify([...set]));
       return true; // newly unlocked
     }
     return false;
   }
 
   function isUnlocked(level) {
-    return getUnlocked().includes(level);
+    return getUnlocked().has(level);
   }
 
   function count() {
-    return getUnlocked().length;
+    return getUnlocked().size;
   }
 
   return { unlock, isUnlocked, count, getUnlocked };

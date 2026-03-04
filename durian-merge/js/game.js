@@ -471,7 +471,7 @@ const Game = (() => {
         // UI.showCombo(comboCount); // removed: Canvas comboDisplay already shows combo at merge location
         SoundManager.playCombo(comboCount);
         Haptic.combo(comboCount);
-        comboBorderAlpha = 0.6;
+        comboBorderAlpha = 0.3;
 
         // Larger score popup for combo
         scorePopups.push({
@@ -730,7 +730,7 @@ const Game = (() => {
 
       // Combo border decay
       if (comboBorderAlpha > 0) {
-        comboBorderAlpha -= delta / 500;
+        comboBorderAlpha -= delta / 300;
         if (comboBorderAlpha < 0) comboBorderAlpha = 0;
       }
 
@@ -771,24 +771,15 @@ const Game = (() => {
     ctx.fillStyle = `rgba(180, 0, 0, ${tintAlpha})`;
     ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
-    // 4. 빨간 비네팅 (가장자리)
+    // 4. 빨간 비네팅 (가장자리 — 단순 border)
     const vignetteAlpha = Math.min(progress * 0.6, 0.4);
-    const cx = BASE_WIDTH / 2;
-    const cy = BASE_HEIGHT / 2;
-    const maxR = Math.sqrt(cx * cx + cy * cy);
-    const vignetteGrad = ctx.createRadialGradient(cx, cy, maxR * 0.3, cx, cy, maxR);
-    vignetteGrad.addColorStop(0, 'rgba(180, 0, 0, 0)');
-    vignetteGrad.addColorStop(0.6, `rgba(140, 0, 0, ${vignetteAlpha * 0.3})`);
-    vignetteGrad.addColorStop(1, `rgba(100, 0, 0, ${vignetteAlpha})`);
-    ctx.fillStyle = vignetteGrad;
-    ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+    ctx.strokeStyle = `rgba(120, 0, 0, ${vignetteAlpha})`;
+    ctx.lineWidth = 30;
+    ctx.strokeRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
-    // 5. 상단에서 내려오는 빨간 바 (데인저라인 확장 느낌)
+    // 5. 상단에서 내려오는 빨간 바
     const barHeight = progress * (BASE_HEIGHT * 0.15);
-    const barGrad = ctx.createLinearGradient(0, 0, 0, barHeight);
-    barGrad.addColorStop(0, `rgba(200, 30, 30, ${Math.min(progress * 0.8, 0.5)})`);
-    barGrad.addColorStop(1, 'rgba(200, 30, 30, 0)');
-    ctx.fillStyle = barGrad;
+    ctx.fillStyle = `rgba(200, 30, 30, ${Math.min(progress * 0.5, 0.3)})`;
     ctx.fillRect(0, 0, BASE_WIDTH, barHeight);
 
     // 6. 어둡게 (progress > 0.5 이후)
