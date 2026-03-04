@@ -620,7 +620,10 @@ const Game = (() => {
   }
 
   function triggerGameOver() {
-    gameState = 'gameover';
+    // 애니메이션 상태로 전환 (즉시 게임오버 화면으로 가지 않음)
+    gameState = 'gameoverAnim';
+    gameOverAnimTimer = 0;
+
     const gameDurationMs = performance.now() - gameStartTime;
     const isNewBest = score > highScore;
 
@@ -649,8 +652,27 @@ const Game = (() => {
     }
 
     if (typeof SkinManager !== 'undefined') SkinManager.recordGameEnd(score);
+
+    // 사운드/진동은 애니메이션 시작 시 즉시 재생
     SoundManager.playGameOver();
     Haptic.gameOver();
+
+    // BGM fade out during animation
+    if (typeof SoundManager.fadeOutBGM === 'function') {
+      SoundManager.fadeOutBGM(1200);
+    }
+
+    // 애니메이션 종료 후 사용할 데이터 저장
+    gameOverAnimData = {
+      gameDurationMs,
+      isNewBest,
+    };
+  }
+
+  function finishGameOver() {
+    gameState = 'gameover';
+
+    const { gameDurationMs, isNewBest } = gameOverAnimData;
 
     // Show interstitial (with frequency cap + duration filter)
     if (typeof AdMobManager !== 'undefined') {
@@ -665,6 +687,7 @@ const Game = (() => {
     flushSaves();
 
     UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel, canContinue, maxCombo, bestCombo);
+    gameOverAnimData = null;
   }
 
   // ===== GAME LOOP =====
@@ -851,7 +874,92 @@ const Game = (() => {
       render();
     }
 
+    // ===== GAME OVER ANIMATION STATE =====
+    if (gameState === 'gameoverAnim') {
+      gameOverAnimTimer += delta;
+      Physics.update(16.67); // 물리는 계속 (과일이 자연스럽게 정지)
+      renderGameOverAnim();
+      if (gameOverAnimTimer >= GAMEOVER_ANIM_DURATION) {
+        finishGameOver();
+      }
+    }
+
     requestAnimationFrame(gameLoop);
+  }
+
+  // ===== GAME OVER ANIMATION RENDERING =====
+
+  function renderGameOverAnim() {
+    // 1. 기존 씬 렌더 (과일, 벽, 바닥 등)
+    render();
+
+    // 2. 진행도 계산
+    const progress = Math.min(gameOverAnimTimer / GAMEOVER_ANIM_DURATION, 1);
+
+    // 3. 과일에 붉은 틴트 오버레이
+    const tintAlpha = Math.min(progress * 0.3, 0.15);
+    ctx.fillStyle = `rgba(180, 0, 0, ${tintAlpha})`;
+    ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+
+    // 4. 빨간 비네팅 (가장자리)
+    const vignetteAlpha = Math.min(progress * 0.6, 0.4);
+    const cx = BASE_WIDTH / 2;
+    const cy = BASE_HEIGHT / 2;
+    const maxR = Math.sqrt(cx * cx + cy * cy);
+    const vignetteGrad = ctx.createRadialGradient(cx, cy, maxR * 0.3, cx, cy, maxR);
+    vignetteGrad.addColorStop(0, 'rgba(180, 0, 0, 0)');
+    vignetteGrad.addColorStop(0.6, `rgba(140, 0, 0, ${vignetteAlpha * 0.3})`);
+    vignetteGrad.addColorStop(1, `rgba(100, 0, 0, ${vignetteAlpha})`);
+    ctx.fillStyle = vignetteGrad;
+    ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+
+    // 5. 상단에서 내려오는 빨간 바 (데인저라인 확장 느낌)
+    const barHeight = progress * (BASE_HEIGHT * 0.15);
+    const barGrad = ctx.createLinearGradient(0, 0, 0, barHeight);
+    barGrad.addColorStop(0, `rgba(200, 30, 30, ${Math.min(progress * 0.8, 0.5)})`);
+    barGrad.addColorStop(1, 'rgba(200, 30, 30, 0)');
+    ctx.fillStyle = barGrad;
+    ctx.fillRect(0, 0, BASE_WIDTH, barHeight);
+
+    // 6. 어둡게 (progress > 0.5 이후)
+    if (progress > 0.5) {
+      const darkProgress = (progress - 0.5) / 0.5; // 0~1
+      const darkAlpha = darkProgress * 0.7;
+      ctx.fillStyle = `rgba(0, 0, 0, ${Math.min(darkAlpha, 0.7)})`;
+      ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+    }
+
+    // 7. "GAME OVER" 텍스트 (progress > 0.3 이후)
+    if (progress > 0.3) {
+      const textProgress = (progress - 0.3) / 0.7; // 0~1
+      const scaleVal = 1 + (1 - Math.min(textProgress * 2, 1)) * 2; // 3x -> 1x
+      const alpha = Math.min(textProgress * 2, 1);
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(BASE_WIDTH / 2, BASE_HEIGHT * 0.4);
+      ctx.scale(scaleVal, scaleVal);
+
+      // Text shadow/glow
+      ctx.shadowColor = 'rgba(255, 50, 50, 0.8)';
+      ctx.shadowBlur = 20;
+
+      ctx.font = 'bold 42px "Fredoka", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Outline
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.lineWidth = 6;
+      ctx.strokeText('GAME OVER', 0, 0);
+
+      // Fill
+      ctx.fillStyle = '#FF3333';
+      ctx.fillText('GAME OVER', 0, 0);
+
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
   }
 
   // ===== RENDERING (gameplay only — no UI) =====
