@@ -469,15 +469,14 @@ const Game = (() => {
 
   function checkGameOver(delta) {
     let anyAbove = false;
-    let allExempt = true; // true if only exempted (mergedAt/droppedAt) fruits are above
+    let hasExemptAbove = false;
+    const now = performance.now();
     for (const body of fruitBodies) {
       if (body.isMerging) continue;
       if (body.position.y - FRUITS[body.fruitLevel].radius < DANGER_LINE_Y) {
-        const now = performance.now();
-        if (body.droppedAt && now - body.droppedAt < 1500) continue;
-        if (body.mergedAt && now - body.mergedAt < 2000) continue;
+        if (body.droppedAt && now - body.droppedAt < 1500) { hasExemptAbove = true; continue; }
+        if (body.mergedAt && now - body.mergedAt < 2000) { hasExemptAbove = true; continue; }
         anyAbove = true;
-        allExempt = false;
         break;
       }
     }
@@ -485,11 +484,12 @@ const Game = (() => {
     if (anyAbove) {
       dangerTimer += delta;
       if (dangerTimer >= DANGER_TIMEOUT) triggerGameOver();
-    } else if (!allExempt || dangerTimer === 0) {
-      // Only decrease timer when no fruits above at all (not just exempted ones)
+    } else if (hasExemptAbove && dangerTimer > 0) {
+      // Exempted fruits only in danger zone: hold timer (no increase, no decrease)
+    } else {
+      // No fruits above danger line: decrease timer
       dangerTimer = Math.max(0, dangerTimer - delta);
     }
-    // If allExempt && dangerTimer > 0: timer holds (no increase, no decrease)
   }
 
   function triggerGameOver() {
