@@ -1,14 +1,14 @@
-# Fruit Drop - Product Requirements Document (PRD)
+# Durian Merge - Product Requirements Document (PRD)
 
 ## 1. 제품 개요
 
 | 항목 | 내용 |
 |------|------|
-| **제품명** | Fruit Drop - Merge Puzzle Game |
+| **제품명** | Durian Merge - Tropical Fruit Puzzle Game |
 | **장르** | 캐주얼 퍼즐 (수박게임 / Suika 스타일) |
 | **플랫폼** | Android (Capacitor 8) / 모바일 웹 |
 | **기술 스택** | Vanilla JS, Matter.js 물리엔진, Canvas 2D, Web Audio API |
-| **앱 ID** | com.fruitdrop.game |
+| **앱 ID** | com.durianmerge.game |
 | **기본 해상도** | 390 × 700 (반응형 스케일링) |
 | **수익 모델** | AdMob (배너 + 전면 + 보상형 광고) |
 
@@ -52,20 +52,35 @@
 
 ---
 
-## 3. 현재 구현된 화면 구조
+## 3. 게임 상태(State) & 화면 구조
 
-### 3.1 게임 상태(State) 흐름
+### 3.1 상태 머신
 
 ```
-[닉네임 입력] → [메뉴] → [플레이] → [게임오버] → [메뉴]
-                                         ↓
-                                    [리더보드]
+[닉네임 입력]
+    ↓
+[메뉴] ← ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐
+    ↓                           │
+[플레이]                        │
+    ↓                           │
+[일시정지] ←──────────────┐    │
+    ↓                    │    │
+[게임오버애니메이션]      │    │
+    ↓                    │    │
+[게임오버]               │    │
+    ├─ [리더보드]        │    │
+    ├─ [설정]            │    │
+    └─ [재시작/광고] ────┼────┘
+
+게임 상태: 'menu' | 'playing' | 'paused' | 'gameoverAnim' | 'gameover'
 ```
+
+### 3.2 주요 게임 메커닉
 
 ### 3.2 화면별 상세
 
 #### 화면 1: 메뉴 (Menu)
-- **타이틀**: "Fruit Drop" + 서브타이틀 "Tropical Fruit Merge"
+- **타이틀**: "Durian Merge" + 서브타이틀 "Tropical Fruit Puzzle"
 - **과일 프리뷰**: 5개 샘플 과일 (Lv 0, 2, 4, 6, 9) 표시
 - **PLAY 버튼** (빨간색): 티켓 있을 때
 - **WATCH AD 버튼** (초록색): 티켓 없을 때
@@ -127,31 +142,55 @@
 | 유형 | 위치 | 타이밍 |
 |------|------|--------|
 | **배너** | 화면 하단 | 게임플레이 중 상시 |
-| **전면(Interstitial)** | 전체 화면 | 게임오버 시 |
-| **보상형(Rewarded)** | 전체 화면 | 사용자 선택 시 |
+| **전면(Interstitial)** | 전체 화면 | 게임오버 시 자동 표시 |
+| **보상형(Rewarded)** | 전체 화면 | 사용자 선택 (+1 티켓 리워드) |
 
 ### 5.2 티켓(플레이 횟수) 시스템
 - **매일 무료 2회** 제공 (자정 기준 리셋)
 - 보상형 광고 시청 → **+1회** 추가
+- **일일 미션 완료** → **+1회** 추가
 - 게임 시작 시 1회 소모
 - localStorage에 날짜와 함께 저장
 
+### 5.3 미션 & 일일 챌린지
+- **3개 일일 미션**: 매일 자정 자동 갱신
+- 미션 유형:
+  - 점수 목표 (300/500/1000점)
+  - 합체 목표 (망고 3개, 용과, 파파야, 두리안)
+  - 콤보 목표 (3x, 5x 콤보)
+  - 플레이 목표 (3게임)
+  - 합체 누적 (5/15회)
+- 완료 시 티켓 리워드
+
 ---
 
-## 6. 데이터 저장 (모두 localStorage)
+## 6. 데이터 저장 (모두 localStorage + Firebase Firestore)
+
+### 6.1 localStorage (로컬 데이터)
 
 | 키 | 데이터 |
 |----|--------|
-| `fruitDropHighScore` | 최고 점수 |
-| `fruitDropTickets` | 남은 횟수 + 날짜 |
-| `fruitDropNickname` | 플레이어 닉네임 |
-| `fruitDropUserId` | 유저 고유 UUID (내부 식별, UI 비노출) |
-| `fruitDropNickChangedAt` | 닉네임 마지막 변경 일시 (ISO 타임스탬프) |
-| `fruitDropCountry` | 국가 코드 (GeoIP 캐시) |
-| `fruitDropLeaderboard` | 상위 20개 기록 (이름, 점수, 날짜, userId) |
+| `durianMergeHighScore` | 최고 점수 |
+| `durianMergeTickets` | 남은 횟수 + 날짜 |
+| `durianMergeNickname` | 플레이어 닉네임 |
+| `durianMergeUserId` | 유저 고유 UUID (내부 식별) |
+| `durianMergeLeaderboard` | 로컬 리더보드 상위 20개 |
+| `durianMergeBestCombo` | 최고 콤보 수 |
+| `durianMergeTutorialDone` | 튜토리얼 완료 여부 |
+| `durianMergeAnalytics` | 통계 (총 플레이, 플레이 시간, 합체 횟수) |
+| `durianMergeMissions` | 현재 일일 미션 & 진행도 |
+| `durianMergeSkin` | 선택된 스킨 ID |
+| `durianMergeSkinUnlocks` | 언락된 스킨 목록 |
 
-- 서버/백엔드 없음 — 완전 오프라인
-- 클라우드 동기화 없음
+### 6.2 Firebase Firestore (클라우드 리더보드)
+
+- **글로벌 리더보드**: 모든 플레이어 상위 점수 (실시간 동기화)
+- **사용자 프로필**: 닉네임, 최고 점수, 통계
+
+### 6.3 데이터 구조
+- **오프라인**: localStorage만으로 완전 자동 저장
+- **온라인**: Firebase Firestore에 선택적 동기화
+- 서버 동기화 없음 (클라이언트 중심)
 
 ---
 
@@ -175,8 +214,9 @@
 - 프로시저럴 과일 렌더링: 그라데이션, 패턴, 디테일
 
 ### 7.3 타이포그래피
-- 폰트: "Segoe UI", sans-serif
+- 폰트: "Fredoka" (Google Fonts), sans-serif fallback
 - 크기: 9~38px (용도별 상이)
+- 가중치: 400, 500, 600, 700
 
 ---
 
@@ -206,16 +246,16 @@
 ## 9. 현재 미구현 / 개선 필요 항목
 
 ### UI/UX 개선 필요
-- [ ] 사운드 ON/OFF 토글 버튼
-- [ ] 튜토리얼 / 도움말 화면
-- [ ] 닉네임 입력 UI (현재 브라우저 prompt → 인게임 커스텀 UI 필요)
-- [ ] 설정 화면 없음
-- [ ] BGM 없음
-- [ ] 과일 드롭 시 시각 이펙트 부족
-- [ ] 트레일/파티클 이펙트 추가 가능
-- [ ] 과일 합체 시 더 화려한 연출 가능
-- [ ] 콤보 시스템 없음 (연속 합체 보너스)
-- [ ] 진동/햅틱 피드백 없음
+- [x] 사운드 ON/OFF 토글 버튼 (일시정지 패널에 구현)
+- [x] 튜토리얼 / 도움말 화면 (ui.js에 구현)
+- [x] 닉네임 입력 UI (인게임 커스텀 UI 구현)
+- [x] 설정 화면 (일시정지 패널에 통합)
+- [ ] BGM (프로시저럴 생성 가능)
+- [x] 과일 드롭 시 시각 이펙트 (트레일/파티클 구현)
+- [x] 트레일/파티클 이펙트 구현 완료
+- [x] 과일 합체 시 화려한 연출 (확장 링 + 스파클)
+- [x] 콤보 시스템 구현 (연속 합체 보너스, COMBO_WINDOW_MS = 1200ms)
+- [x] 진동/햅틱 피드백 구현 (haptic.js)
 
 ### 기능 확장 가능
 - [ ] iOS 버전 (Capacitor iOS)
@@ -227,61 +267,193 @@
 
 ---
 
-## 10. 파일 구조
+## 10. 파일 구조 & 모듈 설명
 
 ```
-apple-game/
-├── index.html                    # 메인 진입점
-├── css/style.css                 # 스타일시트
+durian-merge/
+├── index.html                    # 메인 진입점 (Canvas + HTML UI 오버레이)
+├── css/style.css                 # UI 스타일시트
 ├── js/
-│   ├── game.js                   # 핵심 게임 로직 (~870줄)
-│   ├── fruits.js                 # 과일 정의 + 렌더링 (~530줄)
-│   ├── physics.js                # Matter.js 래퍼 (~100줄)
-│   ├── sounds.js                 # Web Audio 합성 (~110줄)
-│   ├── admob.js                  # AdMob 연동 (~140줄)
-│   ├── tickets.js                # 플레이 횟수 시스템 (~70줄)
-│   ├── nickname.js               # 닉네임 관리 (~46줄)
-│   └── ranking.js                # 리더보드 (~116줄)
-├── assets/
-│   ├── images/                   # 과일 이미지 (PNG/SVG)
-│   └── store-listing/            # 스토어 에셋
+│   ├── game.js                   # 핵심 게임 루프 (1074줄)
+│   │   ├─ 물리 시뮬레이션 & 입력 처리
+│   │   ├─ 충돌/합체 로직
+│   │   ├─ 이펙트 & 파티클 시스템
+│   │   ├─ 게임오버 애니메이션
+│   │   └─ 콤보 시스템 (COMBO_WINDOW_MS = 1200ms)
+│   │
+│   ├── fruits.js                 # 과일 정의 11종 + Canvas 프로시저럴 렌더링
+│   ├── physics.js                # Matter.js 엔진 래퍼 (130줄)
+│   ├── sounds.js                 # Web Audio 프로시저럴 합성 SFX + BGM (622줄)
+│   ├── haptic.js                 # 진동 피드백 (Capacitor + navigator.vibrate)
+│   ├── tickets.js                # 일일 플레이 횟수 시스템 (localStorage)
+│   ├── nickname.js               # 닉네임 관리 (localStorage)
+│   ├── ranking.js                # 로컬 리더보드 (상위 20개, localStorage)
+│   │
+│   ├── ui.js                     # HTML 기반 UI 매니저 (983줄)
+│   │   ├─ 화면 전환 (menu/playing/paused/gameover/leaderboard/settings)
+│   │   ├─ 일시정지 패널 (음소거, 진동, 튜토리얼)
+│   │   ├─ 닉네임 입력 커스텀 UI
+│   │   └─ 게임오버 패널 & 팝업
+│   │
+│   ├── firebase-leaderboard.js   # Firebase Firestore 글로벌 리더보드 (151줄)
+│   ├── analytics.js              # 로컬 통계 트래킹 (268줄)
+│   │   ├─ 총 플레이 수, 플레이 시간, 과일별 합체 통계
+│   │   └─ 일일 기록
+│   │
+│   ├── missions.js               # 일일 미션 시스템 (283줄)
+│   │   ├─ 점수, 합체, 콤보 미션
+│   │   ├─ 매일 3개 랜덤 선택 (시드 기반)
+│   │   └─ 완료 시 티켓 리워드
+│   │
+│   ├── skins.js                  # 과일 스킨 시스템 (186줄)
+│   │   ├─ Tropical (기본)
+│   │   ├─ Jewels (5000점 이상 언락)
+│   │   ├─ Emoji 등 테마
+│   │   └─ 언락 조건 & 선택
+│   │
+│   ├── tutorial.js               # 튜토리얼 & 도움말 (164줄)
+│   ├── admob.js                  # AdMob 광고 (147줄)
+│   │   └─ 배너, 전면, 보상형 광고
+│   │
+├── assets/fruits_clean/          # 과일 PNG 11개 (256x256)
 ├── android/                      # Capacitor Android 프로젝트
-├── www/                          # 빌드 출력 디렉토리
+├── www/                          # 빌드 출력 디렉토리 (npm run build)
 ├── capacitor.config.json         # Capacitor 설정
 ├── package.json                  # NPM 의존성
-├── fruitdrop-release.keystore    # 서명 키
-└── keystore.properties           # 서명 설정
+├── durian-merge-release.keystore # 서명 키
+└── CLAUDE.md                     # 프로젝트 가이드
 ```
+
+**총 코드량**: ~4,500줄 (JS 기준)
 
 ---
 
 ## 11. 게임 루프 플로우
 
 ```
-1. 초기화
-   └── 이미지 로드 → 물리엔진 초기화 → 닉네임 확인 → 메뉴 표시
+【 초기화 단계 】
+1. HTML 로드
+   └── Firebase CDN → Matter.js CDN → 모듈 JS 로드 (순서 중요)
 
-2. 메뉴
-   └── 타이틀 표시 → 티켓 확인 → 탭 대기
+2. Game.init()
+   ├─ Canvas 초기화
+   ├─ 과일 이미지 로드
+   ├─ 물리엔진 초기화
+   ├─ localStorage 복구 (점수, 티켓, 닉네임)
+   ├─ 튜토리얼 상태 확인
+   └─ UI 초기화
 
-3. 게임 시작
-   └── 티켓 소모 → 드롭 레벨 랜덤화 → Playing 상태 진입
+【 메뉴 상태 】
+3. showScreen('menu')
+   ├─ 타이틀 & 게임 소개 표시
+   ├─ 티켓 확인 (부족 시 WATCH AD 버튼)
+   ├─ 토글: 최고점수 / 일일 미션 탭
+   └─ 탭 대기
 
-4. 플레이 루프 (매 프레임)
-   ├── 입력: 드래그 → dropX 업데이트
-   ├── 릴리즈: 과일 드롭 → 500ms 쿨다운
-   ├── 물리: 충돌 감지 → 같은 과일 합체 → 점수 추가
-   ├── 위험선 체크: 초과 시 2초 타이머
-   └── 렌더: 배경 → 벽 → 과일 → 이펙트 → UI → 드롭 가이드
+【 게임 플레이 】
+4. showScreen('playing')
+   ├─ 티켓 -1 소비
+   ├─ HUD 표시 (점수, 최고점수, 다음 과일)
+   ├─ 드롭 레벨 랜덤화 (Lv 0~4)
+   └─ 루프 시작
 
-5. 게임 오버
-   └── 최고점수 확인 → 리더보드 저장 → 전면광고 → 결과 패널
+5. 메인 게임 루프 (requestAnimationFrame)
+   ├─ 입력 처리:
+   │  ├─ pointerdown → dropX 업데이트
+   │  ├─ pointermove → dropX 업데이트
+   │  └─ pointerup → 과일 드롭 (쿨다운 확인)
+   │
+   ├─ 물리 업데이트 (60fps):
+   │  ├─ Matter.js step()
+   │  ├─ 충돌 감지 (collision + collisionActive)
+   │  └─ 합체 로직 (같은 레벨끼리만)
+   │
+   ├─ 게임 상태 체크:
+   │  ├─ 합체 시 점수, 콤보, 이펙트 생성
+   │  ├─ 위험선(Y=100) 체크 → 2초 타이머 → 게임오버
+   │  └─ 높은 레벨 도달 시 토스트 팝업
+   │
+   └─ 렌더링:
+      ├─ 배경 그라데이션
+      ├─ 벽/바닥 (골드)
+      ├─ 물리 체가 (과일)
+      ├─ 파티클/이펙트
+      ├─ 점수 팝업
+      ├─ 콤보 표시
+      └─ 드롭 가이드 (세로 점선 + 미리보기)
 
-6. 게임 후
-   └── 재시작(티켓 있으면) 또는 광고 시청 → 메뉴로 복귀
+6. 게임 오버
+   ├─ 1.5초 감소 애니메이션 (gameoverAnim)
+   ├─ 최고점수 갱신 확인 (NEW BEST!)
+   ├─ 순위 계산 (로컬 리더보드)
+   ├─ 미션 진행도 업데이트
+   ├─ localStorage 저장 (점수, 통계, 미션)
+   ├─ 전면 광고 자동 표시 (AdMob)
+   └─ showScreen('gameover')
+
+【 게임 오버 화면 】
+7. 결과 패널
+   ├─ 최종 점수 표시
+   ├─ 새 최고점수 표시 (있으면)
+   ├─ 순위 표시
+   ├─ 단계적 버튼 활성화:
+   │  ├─ PLAY AGAIN (티켓 1 이상)
+   │  ├─ WATCH AD (보상형 광고)
+   │  ├─ RANKING (로컬 + 글로벌 리더보드)
+   │  └─ HOME (메뉴로 돌아가기)
+   └─ 탭 대기
+
+【 추가 화면 】
+8. 일시정지 (showScreen('paused'))
+   ├─ 사운드 ON/OFF 토글
+   ├─ 진동 ON/OFF 토글
+   ├─ 닉네임 변경
+   ├─ 스킨 선택
+   ├─ 도움말 보기
+   └─ 메뉴로 이동
+
+9. 리더보드 (showScreen('leaderboard'))
+   ├─ 로컬 리더보드 (상위 20)
+   ├─ 글로벌 리더보드 (Firebase, 탭)
+   └─ BACK 버튼
+
+10. 튜토리얼 (showScreen('tutorial'))
+    ├─ 슬라이드 기반 5단계
+    └─ SKIP / NEXT 버튼
+
+11. 설정 (showScreen('settings'))
+    ├─ 닉네임 변경
+    ├─ 스킨 선택 & 언락 조건
+    ├─ 사운드/진동 설정
+    ├─ 데이터 초기화 옵션
+    └─ BACK 버튼
 ```
 
 ---
 
-*이 PRD는 2026-03-01 기준 현재 구현 상태를 반영합니다.*
-*UI/UX 리디자인 논의를 위한 기초 자료로 활용됩니다.*
+## 12. 성능 & 최적화
+
+### 12.1 프레임 타겟
+- **60 FPS** (16.67ms per frame)
+- 프레임 throttling 구현 (고주사율 기기 대응)
+- 모바일 저사양(A17 등)에서도 안정적
+
+### 12.2 최적화 기법
+- **파티클 풀링**: 300개 파티클 재사용 (GC 압력 감소)
+- **배치 저장**: 한 프레임 내 여러 localStorage 쓰기 → 마지막에 flush()
+- **이벤트 위임**: Canvas 입력 한 곳에서 처리
+- **물리 연산 캐싱**: Matter.js body 재사용
+- **렌더링 최적화**:
+  - 배경 그라데이션 캐시
+  - 불필요한 redraw 회피
+  - 캔버스 크기 조정 최소화
+
+### 12.3 메모리 관리
+- 파티클 풀 사용 → 동적 할당 최소화
+- 이펙트 제거 시 생성/업데이트/렌더 3곳 모두 정리
+- FruitAlbum 캐싱 (Set) → localStorage 접근 최소화
+
+---
+
+*이 PRD는 2026-03-05 기준 현재 구현 상태를 반영합니다.*
+*실제 구현: game.js(1074줄), ui.js(983줄), sounds.js(622줄) 등 총 ~4,500줄*

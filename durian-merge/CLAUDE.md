@@ -28,8 +28,15 @@ durian-merge/
 
 ## JS 로드 순서 (의존성)
 ```
-Firebase CDN → matter.js (CDN) → fruits.js → sounds.js → haptic.js → physics.js
-→ tickets.js → nickname.js → ranking.js → ui.js → firebase-leaderboard.js → game.js → admob.js
+Firebase CDN → matter.js (CDN)
+  ↓
+skins.js → fruits.js → sounds.js → haptic.js → physics.js
+  ↓
+tickets.js → missions.js → nickname.js → ranking.js → tutorial.js
+  ↓
+ui.js → analytics.js → firebase-leaderboard.js
+  ↓
+game.js → admob.js
 ```
 
 ## 핵심 아키텍처
@@ -48,10 +55,20 @@ Firebase CDN → matter.js (CDN) → fruits.js → sounds.js → haptic.js → p
 - ui.js: `// DEBUG:` 주석 블록 (BEST 5탭 → 강제 게임오버)
 - game.js: `triggerGameOver`를 return에서 제거 (`return { init }` 으로 복원)
 
-## 로컬 테스트
+## 테스트
+- **사용자(황태용)**: Galaxy A17 실기기 연결 시 항상 앱(`npm run deploy`)으로 테스트
+- **Claude**: 웹(`npx serve .`) 또는 Playwright E2E로 테스트 가능
+- 변경사항 확인 요청 시 → `npm run deploy`로 실기기 배포 우선
+
 ```bash
-# 간단한 방법
-cd durian-merge && npx serve .
-# 또는
-python3 -m http.server 8000
+# 자동화 테스트
+npm test              # 로직 테스트 (Node.js)
+npm run test:e2e      # E2E 테스트 (Playwright + Chromium)
+npm run test:all      # 전체
+
+# 로컬 웹 테스트
+npx serve .
+
+# 실기기 배포
+npm run deploy
 ```
