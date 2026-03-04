@@ -135,8 +135,8 @@ const UI = (() => {
     els.menuSettingsBtn.addEventListener('click', () => showModal('settings'));
     els.menuHelpBtn.addEventListener('click', () => TutorialManager.show());
 
-    // HUD
-    els.hudSettingsBtn.addEventListener('click', () => showModal('settings'));
+    // HUD (hudSettingsBtn may not exist in HTML — guard)
+    if (els.hudSettingsBtn) els.hudSettingsBtn.addEventListener('click', () => showModal('settings'));
 
     // Game Over
     els.goContinue.addEventListener('click', handleContinue);

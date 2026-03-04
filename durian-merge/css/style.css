@@ -160,7 +160,12 @@ html, body {
 }
 
 /* ===== HUD ===== */
+/* NOTE: #hud no longer uses .screen class (removed from HTML).
+   Android WebView ignores pointer-events:none for z-index passthrough,
+   so we avoid full-screen overlay. Only the bar + pause btn exist. */
 #hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
   z-index: 15;
   pointer-events: none;
   background: none;
