@@ -25,6 +25,7 @@ const Game = (() => {
   let maxMergedLevel = 0;
   let landingEffects = [];
   let rainbowRings = [];
+  let screenFlash = 0; // 0~1, 1이면 최대 밝기 (두리안 합성 플래시)
   let lastTime = 0;
   let pointerDown = false;
   let bgGrad = null;
@@ -196,6 +197,7 @@ const Game = (() => {
     mergeEffects = [];
     scorePopups = [];
     shakeIntensity = 0;
+    screenFlash = 0;
     dropTrails = [];
     landingEffects = [];
     rainbowRings = [];
@@ -357,21 +359,41 @@ const Game = (() => {
       comboTimer = COMBO_WINDOW_MS;
 
       if (comboCount >= 2) {
-        // Multiplier: x1.5, x2, x2.5, x3 (capped)
-        const multiplier = Math.min(1 + comboCount * 0.5, 3);
+        // Multiplier: x1.5, x2, x2.5, x3, x3.5, x4.0 (capped)
+        const multiplier = Math.min(1 + comboCount * 0.5, 4);
         const totalPoints = Math.floor(points * multiplier);
         score += totalPoints;
 
         if (comboCount > maxCombo) maxCombo = comboCount;
 
+        // Tiered combo text and color
+        let comboText, comboColor;
+        if (comboCount >= 6) {
+          comboText = 'MAX!!';
+          comboColor = null; // rainbow — handled in render
+        } else if (comboCount === 5) {
+          comboText = 'FEVER!';
+          comboColor = '#9B30FF';
+        } else if (comboCount === 4) {
+          comboText = 'GREAT!';
+          comboColor = '#FF4500';
+        } else if (comboCount === 3) {
+          comboText = 'NICE!!';
+          comboColor = '#FF8C00';
+        } else {
+          comboText = 'COMBO!';
+          comboColor = '#FFD700';
+        }
+
         // Canvas combo text animation
         comboDisplay = {
-          text: comboCount + 'x COMBO!',
+          text: comboCount + 'x ' + comboText,
           subText: 'x' + multiplier.toFixed(1),
           alpha: 1,
           scale: 2.0,
           x: mx,
           y: Math.max(my - 40, DANGER_LINE_Y + 40),
+          color: comboColor, // null = rainbow
         };
 
         UI.showCombo(comboCount);
@@ -460,6 +482,10 @@ const Game = (() => {
       }
       if (comboCount >= 3) {
         shakeIntensity = Math.max(shakeIntensity, Math.min(5, comboCount * 1.2));
+      }
+      // Extra shake for high combos (5x+)
+      if (comboCount >= 5) {
+        shakeIntensity = Math.max(shakeIntensity, Math.min(7, 4 + (comboCount - 5) * 0.8));
       }
 
       SoundManager.playMerge(level);
@@ -612,7 +638,10 @@ const Game = (() => {
       // Combo timer
       if (comboTimer > 0) {
         comboTimer -= delta;
-        if (comboTimer <= 0) comboCount = 0;
+        if (comboTimer <= 0) {
+          if (comboCount >= 2) SoundManager.playComboBreak();
+          comboCount = 0;
+        }
       }
 
       checkGameOver(delta);
@@ -931,12 +960,24 @@ const Game = (() => {
       ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.lineWidth = 4;
       ctx.strokeText(comboDisplay.text, 0, 0);
-      ctx.fillStyle = '#FFD700';
+
+      // Tiered color — rainbow hsl cycle for MAX (color === null)
+      if (comboDisplay.color === null) {
+        const hue = (performance.now() * 0.3) % 360;
+        ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+      } else {
+        ctx.fillStyle = comboDisplay.color;
+      }
       ctx.fillText(comboDisplay.text, 0, 0);
 
       // Multiplier sub-text
       ctx.font = 'bold 18px "Fredoka", sans-serif';
-      ctx.fillStyle = '#FFA500';
+      if (comboDisplay.color === null) {
+        const hue = ((performance.now() * 0.3) + 180) % 360;
+        ctx.fillStyle = `hsl(${hue}, 100%, 65%)`;
+      } else {
+        ctx.fillStyle = '#FFA500';
+      }
       ctx.fillText(comboDisplay.subText, 0, 24);
 
       ctx.restore();

@@ -176,19 +176,95 @@ const SoundManager = (() => {
   function playCombo(count) {
     if (_sfxMuted) return;
     const ctx = getCtx();
-    // Rising arpeggio — pitch goes up with combo count
     const baseFreq = 500 + count * 80;
-    for (let i = 0; i < 3; i++) {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.connect(g); g.connect(ctx.destination);
-      osc.type = 'sine';
-      const t = ctx.currentTime + i * 0.06;
-      osc.frequency.setValueAtTime(baseFreq + i * 120, t);
-      g.gain.setValueAtTime(0.2, t);
-      g.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
-      osc.start(t); osc.stop(t + 0.12);
+
+    // Determine tier from combo count
+    // tier 1: count 2-3, tier 2: count 4, tier 3: count 5, tier 4: count 6+
+    let tier;
+    if (count <= 3) tier = 1;
+    else if (count <= 4) tier = 2;
+    else if (count <= 5) tier = 3;
+    else tier = 4;
+
+    if (tier <= 2) {
+      // Tier 1-2: 2-note sine arpeggio
+      const noteCount = 2;
+      for (let i = 0; i < noteCount; i++) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = 'sine';
+        const t = ctx.currentTime + i * 0.07;
+        osc.frequency.setValueAtTime(baseFreq + i * 150, t);
+        g.gain.setValueAtTime(0.22, t);
+        g.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+        osc.start(t); osc.stop(t + 0.12);
+      }
+    } else if (tier <= 3) {
+      // Tier 3-4: 3-note triangle + harmonic overlay
+      for (let i = 0; i < 3; i++) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = 'triangle';
+        const t = ctx.currentTime + i * 0.06;
+        osc.frequency.setValueAtTime(baseFreq + i * 130, t);
+        g.gain.setValueAtTime(0.22, t);
+        g.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+        osc.start(t); osc.stop(t + 0.15);
+      }
+      // Harmonic shimmer
+      const hOsc = ctx.createOscillator();
+      const hG = ctx.createGain();
+      hOsc.connect(hG); hG.connect(ctx.destination);
+      hOsc.type = 'sine';
+      hOsc.frequency.setValueAtTime(baseFreq * 2, ctx.currentTime);
+      hOsc.frequency.exponentialRampToValueAtTime(baseFreq * 3, ctx.currentTime + 0.2);
+      hG.gain.setValueAtTime(0.1, ctx.currentTime);
+      hG.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      hOsc.start(ctx.currentTime); hOsc.stop(ctx.currentTime + 0.2);
+    } else {
+      // Tier 5+: 4-note arpeggio + short echo (delay feedback)
+      for (let i = 0; i < 4; i++) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = 'triangle';
+        const t = ctx.currentTime + i * 0.055;
+        osc.frequency.setValueAtTime(baseFreq + i * 140, t);
+        g.gain.setValueAtTime(0.22, t);
+        g.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+        osc.start(t); osc.stop(t + 0.18);
+      }
+      // Echo effect: quieter repeat after short delay
+      const echoDelay = 0.28;
+      for (let i = 0; i < 4; i++) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = 'sine';
+        const t = ctx.currentTime + echoDelay + i * 0.055;
+        osc.frequency.setValueAtTime(baseFreq + i * 140, t);
+        g.gain.setValueAtTime(0.08, t);
+        g.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+        osc.start(t); osc.stop(t + 0.12);
+      }
     }
+  }
+
+  function playComboBreak() {
+    if (_sfxMuted) return;
+    const ctx = getCtx();
+    // Short "thud" sound — low frequency blip
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.1);
   }
 
   function playGameOver() {
@@ -521,7 +597,7 @@ const SoundManager = (() => {
 
   return {
     resume, suspendCtx, resumeCtx,
-    playDrop, playMerge, playCombo, playGameOver, playBounce,
+    playDrop, playMerge, playCombo, playComboBreak, playGameOver, playBounce,
     mute, unmute, toggleMute,
     get sfxMuted() { return _sfxMuted; },
     set sfxMuted(v) {
