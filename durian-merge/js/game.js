@@ -497,7 +497,7 @@ const Game = (() => {
       const fruitColor = FRUITS[newLevel].color;
       const fruitRadius = FRUITS[newLevel].radius;
       const isHighLevel = newLevel >= 7; // Coconut+
-      const particleCount = isHighLevel ? 20 : 16;
+      const particleCount = isHighLevel ? 14 : 10;
       const particles = [];
       for (let i = 0; i < particleCount; i++) {
         const p = acquireParticle();
@@ -516,7 +516,7 @@ const Game = (() => {
         particles.push(p);
       }
       // Inner burst particles (small fast fragments)
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 4; i++) {
         const p = acquireParticle();
         if (!p) break;
         p.angle = Math.random() * Math.PI * 2;
@@ -540,37 +540,14 @@ const Game = (() => {
         level: newLevel,
       });
 
-      // Screen shake — enhanced, level-proportional
+      // Screen shake — level-proportional, capped at 5
       if (level >= 3) {
-        shakeIntensity = Math.min(8, (level - 2) * 1.5);
-      }
-      if (comboCount >= 3) {
-        shakeIntensity = Math.max(shakeIntensity, Math.min(5, comboCount * 1.2));
-      }
-      // Extra shake for high combos (5x+)
-      if (comboCount >= 5) {
-        shakeIntensity = Math.max(shakeIntensity, Math.min(7, 4 + (comboCount - 5) * 0.8));
+        shakeIntensity = Math.min(5, (level - 2) * 1.2);
       }
 
       // Durian merge special effects (level 9 = Durian)
       if (newLevel === 9) {
         shakeIntensity = 12;
-
-        // Extra golden particles
-        for (let i = 0; i < 10; i++) {
-          const p = acquireParticle();
-          if (!p) break;
-          p.angle = (i / 10) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-          p.dist = 0;
-          p.speed = 0.1 + Math.random() * 0.12;
-          p.size = 3 + Math.random() * 4;
-          p.isStar = true;
-          p.color = '#FFD700';
-          p.rotSpeed = (Math.random() - 0.5) * 0.15;
-          p.rot = Math.random() * Math.PI * 2;
-          p.x = 0; p.y = 0; p.vx = 0; p.vy = 0; p.alpha = 0;
-          particles.push(p);
-        }
 
         // Override score popup with special style
         const lastPop = scorePopups[scorePopups.length - 1];
@@ -930,20 +907,12 @@ const Game = (() => {
 
     // Merge effects
     for (const effect of mergeEffects) {
-      // Glow — layered circles instead of createRadialGradient
+      // Glow — single circle
       const glowMult = effect.level >= 7 ? 0.6 : 0.4;
       ctx.fillStyle = effect.color;
-      ctx.globalAlpha = effect.alpha * glowMult * 0.15;
-      ctx.beginPath();
-      ctx.arc(effect.x, effect.y, effect.glowRadius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = effect.alpha * glowMult * 0.25;
+      ctx.globalAlpha = effect.alpha * glowMult * 0.3;
       ctx.beginPath();
       ctx.arc(effect.x, effect.y, effect.glowRadius * 0.6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = effect.alpha * glowMult * 0.35;
-      ctx.beginPath();
-      ctx.arc(effect.x, effect.y, effect.glowRadius * 0.3, 0, Math.PI * 2);
       ctx.fill();
 
       // Ring — thicker for high level

@@ -90,14 +90,11 @@ function drawFruit(ctx, x, y, level, angle) {
     const size = fruit.radius * 2;
     ctx.drawImage(fruit.img, -fruit.radius, -fruit.radius, size, size);
 
-    // Legendary glow effect
+    // Legendary glow effect (subtle overlay, no shadowBlur)
     if (fruit.legendary) {
-      ctx.shadowColor = '#FFD700';
-      ctx.shadowBlur = 15;
-      ctx.globalAlpha = 0.3 + Math.sin(Date.now() / 300) * 0.15;
-      ctx.drawImage(fruit.img, -fruit.radius - 3, -fruit.radius - 3, size + 6, size + 6);
+      ctx.globalAlpha = 0.25 + Math.sin(Date.now() / 300) * 0.1;
+      ctx.drawImage(fruit.img, -fruit.radius - 2, -fruit.radius - 2, size + 4, size + 4);
       ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
     }
   } else {
     // Fallback: simple colored circle (skin-aware)
