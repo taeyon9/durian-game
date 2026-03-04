@@ -2,21 +2,98 @@
 const SoundManager = (() => {
   let audioCtx = null;
   let _sfxMuted = false;
+  let _iosUnlocked = false;
+  let _lastBgmType = null; // Track last BGM type for auto-restart after resume
 
   const STORAGE_KEY = 'durianMergeSoundEnabled';
 
   function getCtx() {
-    if (!audioCtx) {
+    if (!audioCtx || audioCtx.state === 'closed') {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     return audioCtx;
   }
 
+  // iOS Safari unlock: play silent buffer on first touch to unlock AudioContext
+  function _iosUnlock() {
+    if (_iosUnlocked) return;
+    const ctx = getCtx();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    ctx.resume().then(() => { _iosUnlocked = true; });
+  }
+
   function resume() {
+    // Re-create context if it was closed (e.g. after long background)
+    if (audioCtx && audioCtx.state === 'closed') {
+      audioCtx = null;
+      getCtx(); // creates fresh context
+      // Restart BGM if it was playing before
+      if (_lastBgmType) {
+        const type = _lastBgmType;
+        _bgmCurrent = null; // clear stale reference
+        setTimeout(() => bgmPlay(type), 50);
+      }
+      return;
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => {
+        // If BGM was playing but interval died, restart it
+        _bgmTryRestart();
+      });
+    }
+    // iOS unlock attempt
+    _iosUnlock();
+  }
+
+  // Explicitly suspend context (for pause/background)
+  function suspendCtx() {
+    if (audioCtx && audioCtx.state === 'running') {
+      audioCtx.suspend();
+    }
+    // Stop BGM timer so it doesn't keep scheduling notes
+    if (_bgmCurrent && _bgmCurrent.timer) {
+      clearInterval(_bgmCurrent.timer);
+      _bgmCurrent._timerCleared = true;
+    }
+  }
+
+  // Explicitly resume context (for unpause/foreground)
+  function resumeCtx() {
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
+    // Restart BGM loop timer if it was cleared
+    if (_bgmCurrent && _bgmCurrent._timerCleared) {
+      _bgmCurrent._timerCleared = false;
+      const type = _bgmCurrent.type;
+      const gainNode = _bgmCurrent.gainNode;
+      if (type === 'gameplay') {
+        const loopLen = 8 * 0.3;
+        _bgmCurrent.timer = setInterval(() => {
+          if (!_bgmCurrent || _bgmCurrent.type !== 'gameplay') return;
+          _bgmGameplayLoop(gainNode);
+        }, loopLen * 1000);
+      } else if (type === 'menu') {
+        const loopLen = 16 * 0.28;
+        _bgmCurrent.timer = setInterval(() => {
+          if (!_bgmCurrent || _bgmCurrent.type !== 'menu') return;
+          _bgmMenuLoop(gainNode);
+        }, loopLen * 1000);
+      }
+    }
   }
+
+  // Auto-resume on visibility change (tab switch, screen lock/unlock)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      // Small delay to let OS fully restore audio
+      setTimeout(() => resume(), 100);
+    }
+  });
 
   function loadSetting() {
     try {
@@ -176,6 +253,18 @@ const SoundManager = (() => {
     gainNode.gain.setValueAtTime(gainNode.gain.value, ctx.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.001, ctx.currentTime + FADE_MS / 1000);
     if (cb) setTimeout(cb, FADE_MS);
+  }
+
+  // Try to restart BGM if it was playing but audio nodes died after suspend
+  function _bgmTryRestart() {
+    if (!_bgmCurrent) return;
+    // If context is running but the timer is gone, the BGM loop is dead
+    const ctx = getCtx();
+    if (ctx.state === 'running' && _bgmCurrent.type && !_bgmCurrent.timer && _bgmCurrent.type !== 'gameover') {
+      const type = _bgmCurrent.type;
+      _bgmStopCurrent();
+      setTimeout(() => bgmPlay(type), 50);
+    }
   }
 
   function _bgmStopCurrent() {
@@ -368,14 +457,21 @@ const SoundManager = (() => {
     const ctx = getCtx();
     resume();
 
+    // Track last requested BGM type for auto-restart after resume
+    _lastBgmType = type;
+
     // Already playing the requested type
     if (_bgmCurrent && _bgmCurrent.type === type) return;
 
-    // Stop current BGM with fade
+    // Stop current BGM with fade (clear timer first to prevent duplicates)
+    const hadPrevious = _bgmCurrent !== null;
     _bgmStopCurrent();
 
     // Slight delay to let fadeout begin
     setTimeout(() => {
+      // Guard: if bgmPlay was called again during the timeout, bail out
+      if (_bgmCurrent !== null) return;
+
       const gainNode = _bgmCreateGain();
       let result;
 
@@ -401,10 +497,11 @@ const SoundManager = (() => {
       };
 
       _bgmFadeIn(gainNode);
-    }, _bgmCurrent === null ? 0 : FADE_MS);
+    }, hadPrevious ? FADE_MS : 0);
   }
 
   function bgmStop() {
+    _lastBgmType = null;
     _bgmStopCurrent();
   }
 
@@ -423,7 +520,8 @@ const SoundManager = (() => {
   }
 
   return {
-    resume, playDrop, playMerge, playCombo, playGameOver, playBounce,
+    resume, suspendCtx, resumeCtx,
+    playDrop, playMerge, playCombo, playGameOver, playBounce,
     mute, unmute, toggleMute,
     get sfxMuted() { return _sfxMuted; },
     set sfxMuted(v) {

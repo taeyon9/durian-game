@@ -10,6 +10,7 @@ const Game = (() => {
   let dropX = 0;
   let canDrop = true;
   let dropCooldown = 0;
+  let lastDropTime = 0;
   const DROP_COOLDOWN_MS = 500;
   const DANGER_LINE_Y = 100; // Slightly less since HUD is now HTML overlay
   let dangerTimer = 0;
@@ -90,6 +91,9 @@ const Game = (() => {
     canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
     canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
+    // Global audio resume — touch anywhere (menu, gameover, etc.) unlocks AudioContext
+    document.addEventListener('pointerdown', () => SoundManager.resume(), { passive: true });
+
     // Load fruit images
     if (typeof loadFruitImages === 'function') loadFruitImages();
 
@@ -158,8 +162,9 @@ const Game = (() => {
 
   function onPointerUp(e) {
     if (gameState !== 'playing') return;
-    if (pointerDown && canDrop) dropFruit();
+    if (!pointerDown) return;
     pointerDown = false;
+    if (canDrop) dropFruit();
   }
 
   function clampX(x) {
@@ -199,6 +204,7 @@ const Game = (() => {
     comboDisplay = null;
     canDrop = true;
     dropCooldown = 0;
+    lastDropTime = 0;
     currentLevel = randomDropLevel();
     nextLevel = randomDropLevel();
     dropX = BASE_WIDTH / 2;
@@ -238,6 +244,7 @@ const Game = (() => {
     dangerTimer = 0;
     canDrop = true;
     dropCooldown = 0;
+    lastDropTime = 0;
     gameState = 'playing';
     UI.showScreen('playing');
     UI.updateHUD(score, highScore);
@@ -261,6 +268,7 @@ const Game = (() => {
     SoundManager.playDrop();
     Haptic.drop();
     canDrop = false;
+    lastDropTime = performance.now();
     dropCooldown = DROP_COOLDOWN_MS;
 
     currentLevel = nextLevel;
@@ -292,6 +300,7 @@ const Game = (() => {
 
       const newBody = Physics.createFruit(mx, my, level + 1);
       newBody.droppedAt = 0;
+      newBody.mergedAt = performance.now();
       fruitBodies.push(newBody);
 
       // Album unlock
@@ -416,11 +425,15 @@ const Game = (() => {
 
   function checkGameOver(delta) {
     let anyAbove = false;
+    let allExempt = true; // true if only exempted (mergedAt/droppedAt) fruits are above
     for (const body of fruitBodies) {
       if (body.isMerging) continue;
-      if (body.droppedAt && performance.now() - body.droppedAt < 1500) continue;
       if (body.position.y - FRUITS[body.fruitLevel].radius < DANGER_LINE_Y) {
+        const now = performance.now();
+        if (body.droppedAt && now - body.droppedAt < 1500) continue;
+        if (body.mergedAt && now - body.mergedAt < 2000) continue;
         anyAbove = true;
+        allExempt = false;
         break;
       }
     }
@@ -428,9 +441,11 @@ const Game = (() => {
     if (anyAbove) {
       dangerTimer += delta;
       if (dangerTimer >= DANGER_TIMEOUT) triggerGameOver();
-    } else {
-      dangerTimer = 0;
+    } else if (!allExempt || dangerTimer === 0) {
+      // Only decrease timer when no fruits above at all (not just exempted ones)
+      dangerTimer = Math.max(0, dangerTimer - delta);
     }
+    // If allExempt && dangerTimer > 0: timer holds (no increase, no decrease)
   }
 
   function triggerGameOver() {
@@ -543,8 +558,10 @@ const Game = (() => {
       }
 
       if (!canDrop) {
-        dropCooldown -= delta;
-        if (dropCooldown <= 0) canDrop = true;
+        if (performance.now() - lastDropTime >= DROP_COOLDOWN_MS) {
+          canDrop = true;
+          dropCooldown = 0;
+        }
       }
 
       // Combo timer
