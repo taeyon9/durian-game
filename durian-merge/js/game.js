@@ -376,7 +376,7 @@ const Game = (() => {
 
         UI.showCombo(comboCount);
         SoundManager.playCombo(comboCount);
-        Haptic.combo();
+        Haptic.combo(comboCount);
         comboBorderAlpha = 0.6;
 
         // Larger score popup for combo
@@ -388,7 +388,7 @@ const Game = (() => {
         });
       } else {
         score += points;
-        Haptic.merge();
+        Haptic.merge(level + 1);
 
         scorePopups.push({
           x: mx, y: my,
@@ -483,6 +483,7 @@ const Game = (() => {
 
     if (anyAbove) {
       dangerTimer += delta;
+      if (dangerTimer > 1000) Haptic.dangerWarning();
       if (dangerTimer >= DANGER_TIMEOUT) triggerGameOver();
     } else if (hasExemptAbove && dangerTimer > 0) {
       // Exempted fruits only in danger zone: hold timer (no increase, no decrease)
