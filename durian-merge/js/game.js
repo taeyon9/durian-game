@@ -363,6 +363,16 @@ const Game = (() => {
       flushSaves();
     }
   });
+  // iOS Safari fallback
+  window.addEventListener('pagehide', () => {
+    if (gameState === 'playing') pauseGame();
+    flushSaves();
+  });
+  // Chrome freeze event
+  document.addEventListener('freeze', () => {
+    if (gameState === 'playing') pauseGame();
+    flushSaves();
+  });
   window.addEventListener('beforeunload', flushSaves);
 
   // ===== GAME LOGIC =====
@@ -464,7 +474,7 @@ const Game = (() => {
           color: comboColor, // null = rainbow
         };
 
-        UI.showCombo(comboCount);
+        // UI.showCombo(comboCount); // removed: Canvas comboDisplay already shows combo at merge location
         SoundManager.playCombo(comboCount);
         Haptic.combo(comboCount);
         comboBorderAlpha = 0.6;
@@ -589,6 +599,7 @@ const Game = (() => {
       }
 
       SoundManager.playMerge(level);
+      if (score > highScore) highScore = score;
       UI.updateHUD(score, highScore);
     }
   }
@@ -1010,9 +1021,9 @@ const Game = (() => {
     ctx.fillRect(0, BASE_HEIGHT - 4, BASE_WIDTH, 4);
 
     // Danger line
-    const flash = dangerTimer > 0 ? Math.sin(dangerTimer / 100) * 0.3 + 0.5 : 0.15;
+    const flash = dangerTimer > 0 ? Math.sin(dangerTimer / 100) * 0.3 + 0.5 : 0.30;
     ctx.strokeStyle = `rgba(255, 80, 80, ${flash})`;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2;
     ctx.setLineDash([8, 8]);
     ctx.beginPath();
     ctx.moveTo(4, DANGER_LINE_Y);
