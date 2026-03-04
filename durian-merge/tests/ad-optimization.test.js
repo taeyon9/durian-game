@@ -177,6 +177,39 @@ describe('AdMob — Runtime Behavior', () => {
 
 
 // ============================
+//  2a. AdMob — ID Consistency
+// ============================
+describe('AdMob — ID Consistency', () => {
+  const admobSrc = readSrc('js/admob.js');
+  const manifestSrc = readSrc('android/app/src/main/AndroidManifest.xml');
+
+  it('all ad unit IDs should have the same publisher prefix', () => {
+    const idPattern = /ca-app-pub-(\d+)\/\d+/g;
+    const prefixes = new Set();
+    let match;
+    while ((match = idPattern.exec(admobSrc)) !== null) {
+      prefixes.add(match[1]);
+    }
+    assert.equal(prefixes.size, 1, `Expected 1 publisher prefix, found ${prefixes.size}: ${[...prefixes].join(', ')}`);
+  });
+
+  it('AndroidManifest app ID should match ad unit publisher prefix', () => {
+    const manifestMatch = manifestSrc.match(/ca-app-pub-(\d+)~/);
+    const adUnitMatch = admobSrc.match(/ca-app-pub-(\d+)\//);
+    assert.ok(manifestMatch, 'AndroidManifest should contain app ID');
+    assert.ok(adUnitMatch, 'admob.js should contain ad unit ID');
+    assert.equal(manifestMatch[1], adUnitMatch[1],
+      `Manifest prefix ${manifestMatch[1]} !== ad unit prefix ${adUnitMatch[1]}`);
+  });
+
+  it('should not use test ad IDs (ca-app-pub-3940256099942544)', () => {
+    assert.ok(!admobSrc.includes('3940256099942544'), 'admob.js still has test ad IDs');
+    assert.ok(!manifestSrc.includes('3940256099942544'), 'AndroidManifest still has test app ID');
+  });
+});
+
+
+// ============================
 //  2. AdMob — Source Contract
 // ============================
 describe('AdMob — Source Code Contract', () => {

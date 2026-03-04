@@ -1,6 +1,6 @@
 // Ticket/Lives System — 5 daily free plays
 const TicketManager = (() => {
-  const DAILY_TICKETS = 5;
+  const DAILY_TICKETS = 100;
   const STORAGE_KEY = 'durianMergeTickets';
 
   function getData() {
@@ -23,7 +23,7 @@ const TicketManager = (() => {
   function getTickets() {
     let data = getData();
     const today = getTodayStr();
-    if (!data || data.date !== today) {
+    if (!data || data.date !== today || data.tickets <= 0) {
       data = { tickets: DAILY_TICKETS, date: today };
       save(data);
     }

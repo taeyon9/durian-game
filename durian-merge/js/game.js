@@ -11,7 +11,7 @@ const Game = (() => {
   let canDrop = true;
   let dropCooldown = 0;
   let lastDropTime = 0;
-  const DROP_COOLDOWN_MS = 500;
+  const DROP_COOLDOWN_MS = 350;
   const DANGER_LINE_Y = 100; // Slightly less since HUD is now HTML overlay
   let dangerTimer = 0;
   const DANGER_TIMEOUT = 2000;
@@ -88,7 +88,7 @@ const Game = (() => {
   // Combo tracking
   let comboCount = 0;
   let comboTimer = 0;
-  const COMBO_WINDOW_MS = 2000;
+  const COMBO_WINDOW_MS = 1200;
   let maxCombo = 0;
   let bestCombo = parseInt(localStorage.getItem('durianMergeBestCombo') || '0');
 
@@ -746,6 +746,7 @@ const Game = (() => {
 
     // ===== GAME OVER ANIMATION STATE =====
     if (gameState === 'gameoverAnim') {
+      const delta = Math.min(rawDelta, 33);
       gameOverAnimTimer += delta;
       Physics.update(16.67); // 물리는 계속 (과일이 자연스럽게 정지)
       renderGameOverAnim();
@@ -1023,29 +1024,6 @@ const Game = (() => {
       ctx.strokeRect(2, DANGER_LINE_Y, BASE_WIDTH - 4, BASE_HEIGHT - DANGER_LINE_Y - 2);
     }
 
-    // Combo timer bar — with roundRect polyfill
-    if (comboTimer > 0 && comboCount >= 1) {
-      const barW = 120;
-      const barH = 6;
-      const barX = (BASE_WIDTH - barW) / 2;
-      const barY = DANGER_LINE_Y + 8;
-      const progress = comboTimer / COMBO_WINDOW_MS;
-
-      // Background
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-      ctx.beginPath();
-      _roundRect(ctx, barX, barY, barW, barH, 3);
-      ctx.fill();
-
-      // Fill — color shifts from gold to red as time runs out
-      const r = Math.round(255);
-      const g = Math.round(215 * progress);
-      const b = Math.round(0);
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.9)`;
-      ctx.beginPath();
-      _roundRect(ctx, barX, barY, barW * progress, barH, 3);
-      ctx.fill();
-    }
 
     // Canvas combo text animation
     if (comboDisplay && comboDisplay.alpha > 0) {
@@ -1090,7 +1068,7 @@ const Game = (() => {
     }
   }
 
-  return { init };
+  return { init, triggerGameOver };
 })();
 
 window.addEventListener('load', () => Game.init());

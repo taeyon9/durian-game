@@ -29,7 +29,7 @@ const Physics = (() => {
     groundY = height;
 
     engine = Engine.create({
-      gravity: { x: 0, y: 1.6 },
+      gravity: { x: 0, y: 1.8 },
       enableSleeping: true,
       positionIterations: 8,  // 기본 6 → 8 (충돌 정확도 향상)
       velocityIterations: 6,  // 기본 4 → 6

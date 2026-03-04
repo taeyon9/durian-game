@@ -1,9 +1,8 @@
 // AdMob integration for Capacitor
 const AdMobManager = (() => {
-  // Test Ad IDs (릴리스 전 실제 ID로 교체)
-  const BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';
-  const INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173712';
-  const REWARDED_ID = 'ca-app-pub-3940256099942544/5224354917';
+  const BANNER_ID = 'ca-app-pub-4865551267055448/4528413969';
+  const INTERSTITIAL_ID = 'ca-app-pub-4865551267055448/1902250624';
+  const REWARDED_ID = 'ca-app-pub-4865551267055448/1274042156';
 
   let isCapacitor = false;
   let AdMob = null;
@@ -31,7 +30,7 @@ const AdMobManager = (() => {
       AdMob = admobPlugin;
 
       await AdMob.initialize({
-        initializeForTesting: true, // TODO: 릴리스 전 false로 변경
+        initializeForTesting: false,
       });
 
       await showBanner();
@@ -51,7 +50,7 @@ const AdMobManager = (() => {
         adSize: 'BANNER',
         position: 'BOTTOM_CENTER',
         margin: 0,
-        isTesting: true, // TODO: 릴리스 전 false로 변경
+        isTesting: false,
       });
 
       document.body.classList.add('has-banner');
@@ -66,7 +65,7 @@ const AdMobManager = (() => {
     try {
       await AdMob.prepareInterstitial({
         adId: INTERSTITIAL_ID,
-        isTesting: true, // TODO: 릴리스 전 false로 변경
+        isTesting: false,
       });
       interstitialLoaded = true;
     } catch (err) {
@@ -104,7 +103,7 @@ const AdMobManager = (() => {
     try {
       await AdMob.prepareRewardVideoAd({
         adId: REWARDED_ID,
-        isTesting: true, // TODO: 릴리스 전 false로 변경
+        isTesting: false,
       });
       rewardedLoaded = true;
     } catch (err) {
