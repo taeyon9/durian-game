@@ -184,6 +184,16 @@ const UI = (() => {
       });
     });
 
+    // Missions & Stats backdrop close
+    ['missionOverlay', 'statsOverlay'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('click', (e) => {
+          if (e.target === el) el.style.display = 'none';
+        });
+      }
+    });
+
     // Nickname modal
     els.nickModalInput.addEventListener('input', updateNickCounter);
     els.nickModalConfirm.addEventListener('click', handleNickModalConfirm);
@@ -218,11 +228,35 @@ const UI = (() => {
     els.pauseResumeBtn.addEventListener('click', () => {
       if (onResumeCallback) onResumeCallback();
     });
+    // Pause confirm dialog elements
+    const pauseConfirm = document.getElementById('pauseConfirm');
+    const pauseConfirmMsg = document.getElementById('pauseConfirmMsg');
+    const pauseConfirmYes = document.getElementById('pauseConfirmYes');
+    const pauseConfirmNo = document.getElementById('pauseConfirmNo');
+    let _pendingPauseAction = null;
+
+    function showPauseConfirm(msg, action) {
+      pauseConfirmMsg.textContent = msg;
+      _pendingPauseAction = action;
+      pauseConfirm.style.display = '';
+    }
+    function hidePauseConfirm() {
+      if (pauseConfirm) pauseConfirm.style.display = 'none';
+      _pendingPauseAction = null;
+    }
+
     els.pauseRestartBtn.addEventListener('click', () => {
-      if (onRestartFromPauseCallback) onRestartFromPauseCallback();
+      showPauseConfirm('Restart? Current progress will be lost.', 'restart');
     });
     els.pauseMenuBtn.addEventListener('click', () => {
-      if (onMenuFromPauseCallback) onMenuFromPauseCallback();
+      showPauseConfirm('Quit to menu? Current progress will be lost.', 'menu');
+    });
+    pauseConfirmNo.addEventListener('click', hidePauseConfirm);
+    pauseConfirmYes.addEventListener('click', () => {
+      const action = _pendingPauseAction;
+      hidePauseConfirm();
+      if (action === 'restart' && onRestartFromPauseCallback) onRestartFromPauseCallback();
+      if (action === 'menu' && onMenuFromPauseCallback) onMenuFromPauseCallback();
     });
     // Pause overlay quick toggles
     els.pauseToggleSfx.addEventListener('change', () => {
@@ -232,6 +266,13 @@ const UI = (() => {
     els.pauseToggleHaptic.addEventListener('change', () => {
       els.toggleHaptic.checked = els.pauseToggleHaptic.checked;
       saveSettings();
+    });
+
+    // Pause backdrop click to resume
+    els.pauseOverlay.addEventListener('click', (e) => {
+      if (e.target === els.pauseOverlay) {
+        if (onResumeCallback) onResumeCallback();
+      }
     });
 
   }
@@ -252,6 +293,10 @@ const UI = (() => {
 
     // Pause overlay
     els.pauseOverlay.style.display = name === 'paused' ? '' : 'none';
+    if (name !== 'paused') {
+      const pc = document.getElementById('pauseConfirm');
+      if (pc) pc.style.display = 'none';
+    }
     if (name === 'paused') {
       // Sync quick toggles with current settings
       els.pauseToggleSfx.checked = els.toggleSfx.checked;
@@ -292,13 +337,16 @@ const UI = (() => {
   }
 
   function hideModal(name) {
-    if (name === 'settings') els.settings.style.display = 'none';
-    if (name === 'share') els.share.style.display = 'none';
-    if (name === 'nickname') {
-      els.nickModal.style.display = 'none';
-      els.nickModalInput.blur();
-      nickModalResolve = null;
-    }
+    const modalMap = { settings: els.settings, share: els.share, nickname: els.nickModal };
+    const el = modalMap[name];
+    if (!el) return;
+    el.classList.add('hiding');
+    const cleanup = () => {
+      el.style.display = 'none';
+      el.classList.remove('hiding');
+      if (name === 'nickname') { els.nickModalInput.blur(); nickModalResolve = null; }
+    };
+    setTimeout(cleanup, 200);
   }
 
   function goBack() {
@@ -319,6 +367,10 @@ const UI = (() => {
     const best = parseInt(localStorage.getItem('durianMergeHighScore') || '0');
 
     els.menuTickets.textContent = tickets;
+    const ticketWrap = els.menuTickets.parentElement;
+    ticketWrap.classList.remove('low-tickets', 'no-tickets');
+    if (tickets === 0) ticketWrap.classList.add('no-tickets');
+    else if (tickets <= 1) ticketWrap.classList.add('low-tickets');
     els.menuBestScore.textContent = best;
 
     if (name) {
@@ -362,7 +414,12 @@ const UI = (() => {
   // ===== HUD (during gameplay) =====
 
   function updateHUD(score, highScore) {
-    els.hudScore.textContent = score;
+    if (els.hudScore.textContent !== String(score)) {
+      els.hudScore.textContent = score;
+      els.hudScore.classList.remove('pop');
+      void els.hudScore.offsetWidth;
+      els.hudScore.classList.add('pop');
+    }
     els.hudBest.textContent = highScore;
   }
 
@@ -405,6 +462,17 @@ const UI = (() => {
     lastIsNewBest = isNewBest;
     lastMaxCombo = maxCombo || 0;
     els.goScore.textContent = score;
+    // Best diff display
+    const diffEl = document.getElementById('goBestDiff');
+    if (diffEl) {
+      if (!isNewBest && highScore > 0) {
+        const diff = highScore - score;
+        diffEl.textContent = diff + ' pts to beat your best (' + highScore.toLocaleString() + ')';
+        diffEl.style.display = '';
+      } else {
+        diffEl.style.display = 'none';
+      }
+    }
     els.goNewBest.style.display = isNewBest ? '' : 'none';
     els.shareScore.textContent = score;
 
@@ -604,16 +672,21 @@ const UI = (() => {
 
   function handleNickModalConfirm() {
     const val = els.nickModalInput.value.trim();
-    const finalVal = val || 'Player';
+    if (!val) {
+      els.nickModalInput.style.borderColor = 'var(--red)';
+      els.nickModalInput.focus();
+      setTimeout(() => { els.nickModalInput.style.borderColor = ''; }, 1500);
+      return;
+    }
     hideModal('nickname');
-    if (nickModalResolve) nickModalResolve(finalVal);
+    if (nickModalResolve) nickModalResolve(val);
   }
 
   function handleNickEdit() {
     if (!NicknameManager.canChangeName()) {
       const nextDate = NicknameManager.getNextChangeDate();
       const days = Math.ceil((nextDate - Date.now()) / (1000 * 60 * 60 * 24));
-      alert('Nickname change available in ' + days + ' day' + (days !== 1 ? 's' : ''));
+      showToast('Nickname change in ' + days + ' day' + (days !== 1 ? 's' : ''), 3000);
       return;
     }
 
