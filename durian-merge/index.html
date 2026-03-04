@@ -27,10 +27,10 @@
       </div>
       <div class="hud-right">
         <div class="hud-next-label">NEXT</div>
-        <canvas id="hudNextCanvas" width="50" height="50"></canvas>
+        <canvas id="hudNextCanvas" width="80" height="80"></canvas>
       </div>
     </div>
-    <button class="hud-pause-btn" id="hudPauseBtn">⏸</button>
+    <button class="hud-pause-btn" id="hudPauseBtn" aria-label="Pause game">⏸</button>
   </div>
 
   <!-- ===== PAUSE OVERLAY ===== -->
@@ -53,6 +53,13 @@
         <button class="btn btn-play pause-resume-btn" id="pauseResumeBtn">▶ RESUME</button>
         <button class="btn btn-outline" id="pauseRestartBtn">🔄 RESTART</button>
         <button class="btn btn-outline" id="pauseMenuBtn">🏠 MAIN MENU</button>
+      </div>
+      <div class="pause-confirm" id="pauseConfirm" style="display:none;">
+        <div class="pause-confirm-msg" id="pauseConfirmMsg">Restart? Current progress will be lost.</div>
+        <div class="pause-confirm-btns">
+          <button class="btn btn-outline" id="pauseConfirmNo">Cancel</button>
+          <button class="btn btn-danger" id="pauseConfirmYes">Confirm</button>
+        </div>
       </div>
     </div>
   </div>
@@ -79,9 +86,9 @@
       <span class="bokeh" style="bottom:20%;right:-15%;--delay:5s;"></span>
       <span class="bokeh" style="top:50%;right:5%;--delay:10s;"></span>
     </div>
-    <button class="icon-btn menu-help" id="menuHelpBtn">?</button>
-    <button class="icon-btn menu-stats" id="menuStatsBtn">&#x1F4CA;</button>
-    <button class="icon-btn menu-settings" id="menuSettingsBtn"><span class="icon-gear">&#9881;</span></button>
+    <button class="icon-btn menu-help" id="menuHelpBtn" aria-label="How to play">?</button>
+    <button class="icon-btn menu-stats" id="menuStatsBtn" aria-label="Statistics">&#x1F4CA;</button>
+    <button class="icon-btn menu-settings" id="menuSettingsBtn" aria-label="Settings"><span class="icon-gear">&#9881;</span></button>
 
     <div class="menu-content">
       <div class="menu-fruits" id="menuFruits"></div>
@@ -102,8 +109,8 @@
         🎟️ <span id="menuTickets">5</span> plays left today
       </div>
       <div class="menu-sub-links">
-        <div class="menu-ranking-link" id="menuRankingBtn">🏆 Ranking →</div>
-        <div class="menu-ranking-link" id="missionBtn">📋 Missions <span class="mission-badge" id="missionBadge" style="display:none;">0</span></div>
+        <button class="menu-ranking-link" id="menuRankingBtn">🏆 Ranking</button>
+        <button class="menu-ranking-link" id="missionBtn">📋 Missions <span class="mission-badge" id="missionBadge" style="display:none;">0</span></button>
       </div>
     </div>
   </div>
@@ -114,6 +121,7 @@
       <div class="go-label">GAME OVER</div>
       <div class="go-newbest" id="goNewBest" style="display:none;">🎉 NEW BEST!</div>
       <div class="go-score" id="goScore">0</div>
+      <div class="go-best-diff" id="goBestDiff" style="display:none;font-size:13px;color:var(--text-dim);margin-top:4px;"></div>
       <div class="go-combo-stats" id="goComboStats" style="display:none;">
         <span class="go-combo-label">Max Combo</span>
         <span class="go-combo-value" id="goMaxCombo">0</span>
@@ -134,7 +142,7 @@
         <input type="text" class="go-nick-input" id="goNickInput"
                placeholder="Your name..." maxlength="12" autocomplete="off">
         <button class="btn btn-gold" id="goNickSubmit">🔓 UNLOCK RANKING</button>
-        <div class="go-nick-skip" id="goNickSkip">Skip for now</div>
+        <button class="go-nick-skip" id="goNickSkip">Skip for now</button>
       </div>
     </div>
 
@@ -158,17 +166,17 @@
       <button class="btn btn-continue" id="goContinue" style="display:none;">🎬 Watch Ad to Continue</button>
       <div class="go-btn-row">
         <button class="btn btn-play" id="goPlayAgain">▶ PLAY AGAIN</button>
-        <button class="btn btn-share" id="goShareBtn">📤</button>
+        <button class="btn btn-share" id="goShareBtn" aria-label="Share score">📤</button>
       </div>
       <button class="btn btn-ad" id="goWatchAd">📺 Watch Ad +1 Play</button>
-      <div class="go-back" id="goBackMenu">Back to Menu</div>
+      <button class="go-back" id="goBackMenu">Back to Menu</button>
     </div>
   </div>
 
   <!-- ===== LEADERBOARD FULL ===== -->
   <div id="leaderboardScreen" class="screen overlay" style="display:none;">
     <div class="lb-header">
-      <button class="lb-back" id="lbBack">←</button>
+      <button class="lb-back" id="lbBack" aria-label="Back">←</button>
       <h2 class="lb-title">🏆 Ranking</h2>
     </div>
     <div class="lb-tabs">
@@ -181,7 +189,7 @@
   </div>
 
   <!-- ===== SETTINGS MODAL ===== -->
-  <div id="settingsOverlay" class="modal-bg" style="display:none;">
+  <div id="settingsOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
     <div class="settings-panel">
       <div class="settings-header">
         <h3>Settings</h3>
@@ -192,7 +200,7 @@
           <div class="settings-nick-label">Nickname</div>
           <div class="settings-nick-name" id="settingsNickName"></div>
         </div>
-        <button class="settings-nick-edit" id="settingsNickEdit">✏️</button>
+        <button class="settings-nick-edit" id="settingsNickEdit" aria-label="Edit nickname">✏️</button>
       </div>
       <div class="settings-toggles">
         <label class="toggle-row">
@@ -215,7 +223,7 @@
   </div>
 
   <!-- ===== SHARE MODAL ===== -->
-  <div id="shareOverlay" class="modal-bg" style="display:none;">
+  <div id="shareOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
     <div class="share-panel">
       <div class="share-title">Share Your Score!</div>
       <div class="share-card" id="shareCard">
@@ -228,12 +236,12 @@
         <button class="share-btn" data-platform="copy">📋 Copy</button>
         <button class="share-btn" data-platform="share">📤 Share</button>
       </div>
-      <div class="share-close" id="shareClose">Close</div>
+      <button class="share-close" id="shareClose">Close</button>
     </div>
   </div>
 
   <!-- ===== NICKNAME EDIT MODAL ===== -->
-  <div id="nickModal" class="modal-bg" style="display:none;">
+  <div id="nickModal" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
     <div class="nick-modal-panel">
       <div class="nick-modal-title">Edit Nickname</div>
       <div class="nick-modal-input-wrap">
@@ -249,7 +257,7 @@
   </div>
 
   <!-- ===== STATS OVERLAY ===== -->
-  <div id="statsOverlay" class="modal-bg" style="display:none;">
+  <div id="statsOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
     <div class="stats-panel">
       <div class="stats-header">
         <h3>Statistics</h3>
@@ -317,7 +325,7 @@
   </div>
 
   <!-- ===== MISSIONS OVERLAY ===== -->
-  <div id="missionOverlay" class="modal-bg" style="display:none;">
+  <div id="missionOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
     <div class="mission-panel">
       <div class="mission-header">
         <h3>📋 Daily Missions</h3>
