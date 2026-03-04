@@ -141,7 +141,7 @@ const UI = (() => {
     // Game Over
     els.goContinue.addEventListener('click', handleContinue);
     els.goPlayAgain.addEventListener('click', handlePlay);
-    els.goShareBtn.addEventListener('click', () => showModal('share'));
+    els.goShareBtn.addEventListener('click', handleDirectShare);
     els.goWatchAd.addEventListener('click', handleWatchAd);
     els.goBackMenu.addEventListener('click', () => showScreen('menu'));
     els.goNickSubmit.addEventListener('click', handleNickSubmit);
@@ -397,9 +397,13 @@ const UI = (() => {
   // ===== GAME OVER =====
 
   let lastMaxFruitLevel = 0;
+  let lastIsNewBest = false;
+  let lastMaxCombo = 0;
 
   function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel, canContinue, maxCombo, bestCombo) {
     lastMaxFruitLevel = maxFruitLevel || 0;
+    lastIsNewBest = isNewBest;
+    lastMaxCombo = maxCombo || 0;
     els.goScore.textContent = score;
     els.goNewBest.style.display = isNewBest ? '' : 'none';
     els.shareScore.textContent = score;
@@ -440,6 +444,13 @@ const UI = (() => {
     } else {
       els.goPlayAgain.innerHTML = '📺 WATCH AD TO PLAY';
       els.goWatchAd.style.display = 'none';
+    }
+
+    // Pulse share button on new best
+    if (isNewBest) {
+      els.goShareBtn.classList.add('new-best');
+    } else {
+      els.goShareBtn.classList.remove('new-best');
     }
 
     showScreen('gameover');
@@ -790,18 +801,53 @@ const UI = (() => {
     } catch {}
   }
 
+  // ===== TOAST =====
+
+  function showToast(msg, duration) {
+    duration = duration || 2000;
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(function() { el.classList.remove('show'); }, duration);
+  }
+
   // ===== SHARE =====
 
-  function handleShare(platform) {
-    const score = els.shareScore.textContent;
+  function buildShareText() {
+    const score = els.goScore.textContent || els.shareScore.textContent;
     const fruitName = FRUITS[lastMaxFruitLevel] ? FRUITS[lastMaxFruitLevel].name : 'Lychee';
-    const text = `🍉 I scored ${score} pts and merged up to ${fruitName} in Durian Merge! Can you beat me? 🔥`;
-    
-    if (platform === 'share' && navigator.share) {
-      navigator.share({ title: 'Durian Merge', text }).catch(() => {});
+    let text = lastIsNewBest ? '🏆 NEW BEST! ' : '🍉 ';
+    text += 'I scored ' + score + ' pts';
+    if (fruitName) text += ' and merged up to ' + fruitName;
+    if (lastMaxCombo >= 2) text += ' (' + lastMaxCombo + 'x combo!)';
+    text += ' in Durian Merge! Can you beat me? 🔥';
+    return text;
+  }
+
+  function handleDirectShare() {
+    const text = buildShareText();
+    if (navigator.share) {
+      navigator.share({ title: 'Durian Merge', text: text }).catch(function() {});
     } else {
-      // Copy to clipboard
-      navigator.clipboard.writeText(text).catch(() => {});
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Copied to clipboard!');
+      }).catch(function() {
+        showToast('Could not copy');
+      });
+    }
+  }
+
+  function handleShare(platform) {
+    const text = buildShareText();
+
+    if (platform === 'share' && navigator.share) {
+      navigator.share({ title: 'Durian Merge', text: text }).catch(function() {});
+    } else {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Copied to clipboard!');
+      }).catch(function() {
+        showToast('Could not copy');
+      });
     }
     hideModal('share');
   }
@@ -843,5 +889,6 @@ const UI = (() => {
     updateMenu,
     showModal,
     hideModal,
+    showToast,
   };
 })();
