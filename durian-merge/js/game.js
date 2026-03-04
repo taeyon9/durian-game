@@ -6,7 +6,7 @@ const Game = (() => {
   let highScore = 0;
   let currentLevel = 0;
   let nextLevel = 0;
-  let gameState = 'menu'; // 'menu', 'playing', 'paused', 'gameover'
+  let gameState = 'menu'; // 'menu', 'playing', 'paused', 'gameoverAnim', 'gameover'
   let dropX = 0;
   let canDrop = true;
   let dropCooldown = 0;
@@ -26,9 +26,64 @@ const Game = (() => {
   let landingEffects = [];
   let rainbowRings = [];
   let screenFlash = 0; // 0~1, 1이면 최대 밝기 (두리안 합성 플래시)
+  let gameOverAnimTimer = 0;
+  const GAMEOVER_ANIM_DURATION = 1500; // 1.5초
+  let gameOverAnimData = null; // 애니메이션 중 저장할 데이터
   let lastTime = 0;
   let pointerDown = false;
   let bgGrad = null;
+
+  // ===== PARTICLE OBJECT POOL =====
+  const PARTICLE_POOL_SIZE = 300;
+  const particlePool = [];
+
+  function initPool() {
+    particlePool.length = 0;
+    for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+      particlePool.push({
+        _active: false,
+        // merge particle fields
+        angle: 0, dist: 0, speed: 0, size: 0,
+        isStar: false, color: '', rotSpeed: 0, rot: 0,
+        // trail / landing fields
+        x: 0, y: 0, vx: 0, vy: 0, alpha: 0,
+      });
+    }
+  }
+
+  function acquireParticle() {
+    for (let i = 0; i < particlePool.length; i++) {
+      if (!particlePool[i]._active) {
+        particlePool[i]._active = true;
+        return particlePool[i];
+      }
+    }
+    return null; // pool exhausted — drop this particle
+  }
+
+  function releaseParticle(p) {
+    p._active = false;
+  }
+
+  function releaseAllParticles() {
+    for (let i = 0; i < particlePool.length; i++) {
+      particlePool[i]._active = false;
+    }
+  }
+
+  // ===== DIRTY-TRACKING BATCH SAVE =====
+  let _pendingSave = {};
+
+  function markDirty(key, value) {
+    _pendingSave[key] = value;
+  }
+
+  function flushSaves() {
+    for (const [k, v] of Object.entries(_pendingSave)) {
+      try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch (e) { /* QuotaExceededError — silent fail */ }
+    }
+    _pendingSave = {};
+  }
 
   // Combo tracking
   let comboCount = 0;
@@ -56,6 +111,7 @@ const Game = (() => {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
 
+    initPool();
     highScore = parseInt(localStorage.getItem('durianMergeHighScore') || '0');
     if (typeof SkinManager !== 'undefined') SkinManager.init();
     NicknameManager.init();
@@ -201,6 +257,7 @@ const Game = (() => {
     dropTrails = [];
     landingEffects = [];
     rainbowRings = [];
+    releaseAllParticles();
     comboBorderAlpha = 0;
     score = 0;
     dangerTimer = 0;
@@ -216,6 +273,8 @@ const Game = (() => {
     dropX = BASE_WIDTH / 2;
     gameOverRank = -1;
     maxMergedLevel = 0;
+    gameOverAnimTimer = 0;
+    gameOverAnimData = null;
   }
 
   async function watchAdForTicket() {
@@ -290,12 +349,14 @@ const Game = (() => {
     UI.showScreen('menu');
   }
 
-  // Auto-pause on background (visibility change)
+  // Auto-pause on background (visibility change) + flush pending saves
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden' && gameState === 'playing') {
-      pauseGame();
+    if (document.visibilityState === 'hidden') {
+      if (gameState === 'playing') pauseGame();
+      flushSaves();
     }
   });
+  window.addEventListener('beforeunload', flushSaves);
 
   // ===== GAME LOGIC =====
 
@@ -428,32 +489,35 @@ const Game = (() => {
       const particleCount = isHighLevel ? 20 : 16;
       const particles = [];
       for (let i = 0; i < particleCount; i++) {
+        const p = acquireParticle();
+        if (!p) break;
         const angle = (i / particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
         const speed = 0.06 + Math.random() * 0.08;
-        particles.push({
-          angle,
-          dist: 0,
-          speed: isHighLevel ? speed * 1.5 : speed,
-          size: 2 + Math.random() * 3,
-          isStar: i % 3 === 0, // every 3rd particle is star-shaped
-          color: i % 2 === 0 ? fruitColor : '#FFFFC8', // alternate fruit color and sparkle
-          rotSpeed: (Math.random() - 0.5) * 0.1,
-          rot: Math.random() * Math.PI * 2,
-        });
+        p.angle = angle;
+        p.dist = 0;
+        p.speed = isHighLevel ? speed * 1.5 : speed;
+        p.size = 2 + Math.random() * 3;
+        p.isStar = i % 3 === 0;
+        p.color = i % 2 === 0 ? fruitColor : '#FFFFC8';
+        p.rotSpeed = (Math.random() - 0.5) * 0.1;
+        p.rot = Math.random() * Math.PI * 2;
+        p.x = 0; p.y = 0; p.vx = 0; p.vy = 0; p.alpha = 0;
+        particles.push(p);
       }
       // Inner burst particles (small fast fragments)
       for (let i = 0; i < 6; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        particles.push({
-          angle,
-          dist: 0,
-          speed: 0.15 + Math.random() * 0.1,
-          size: 1 + Math.random() * 1.5,
-          isStar: false,
-          color: fruitColor,
-          rotSpeed: 0,
-          rot: 0,
-        });
+        const p = acquireParticle();
+        if (!p) break;
+        p.angle = Math.random() * Math.PI * 2;
+        p.dist = 0;
+        p.speed = 0.15 + Math.random() * 0.1;
+        p.size = 1 + Math.random() * 1.5;
+        p.isStar = false;
+        p.color = fruitColor;
+        p.rotSpeed = 0;
+        p.rot = 0;
+        p.x = 0; p.y = 0; p.vx = 0; p.vy = 0; p.alpha = 0;
+        particles.push(p);
       }
       mergeEffects.push({
         x: mx, y: my,
@@ -495,17 +559,18 @@ const Game = (() => {
 
         // Extra golden particles
         for (let i = 0; i < 10; i++) {
-          const angle = (i / 10) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-          particles.push({
-            angle,
-            dist: 0,
-            speed: 0.1 + Math.random() * 0.12,
-            size: 3 + Math.random() * 4,
-            isStar: true,
-            color: '#FFD700',
-            rotSpeed: (Math.random() - 0.5) * 0.15,
-            rot: Math.random() * Math.PI * 2,
-          });
+          const p = acquireParticle();
+          if (!p) break;
+          p.angle = (i / 10) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+          p.dist = 0;
+          p.speed = 0.1 + Math.random() * 0.12;
+          p.size = 3 + Math.random() * 4;
+          p.isStar = true;
+          p.color = '#FFD700';
+          p.rotSpeed = (Math.random() - 0.5) * 0.15;
+          p.rot = Math.random() * Math.PI * 2;
+          p.x = 0; p.y = 0; p.vx = 0; p.vy = 0; p.alpha = 0;
+          particles.push(p);
         }
 
         // Override score popup with special style
@@ -554,13 +619,13 @@ const Game = (() => {
 
     if (isNewBest) {
       highScore = score;
-      localStorage.setItem('durianMergeHighScore', highScore.toString());
+      markDirty('durianMergeHighScore', highScore.toString());
     }
 
     // Save best combo
     if (maxCombo > bestCombo) {
       bestCombo = maxCombo;
-      localStorage.setItem('durianMergeBestCombo', bestCombo.toString());
+      markDirty('durianMergeBestCombo', bestCombo.toString());
     }
 
     // Save to leaderboard (only if has name already)
@@ -589,6 +654,9 @@ const Game = (() => {
     const canContinue = !continuedThisGame &&
       (typeof AdMobManager !== 'undefined' && AdMobManager.isRewardedReady());
 
+    // Flush pending saves (game over is low-frequency, safe to write now)
+    flushSaves();
+
     UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel, canContinue, maxCombo, bestCombo);
   }
 
@@ -616,13 +684,17 @@ const Game = (() => {
           // More trail particles at higher speed
           const trailCount = speed > 6 ? 2 : 1;
           for (let t = 0; t < trailCount; t++) {
-            dropTrails.push({
-              x: body.position.x + (Math.random() - 0.5) * fruit.radius * 0.6,
-              y: body.position.y + (Math.random() - 0.5) * fruit.radius * 0.3,
-              alpha: Math.min(0.6, 0.3 + speed * 0.03),
-              size: Math.min(5, 1.5 + speed * 0.3 + Math.random() * 1.5),
-              color: fruit.color,
-            });
+            const p = acquireParticle();
+            if (!p) break;
+            p.x = body.position.x + (Math.random() - 0.5) * fruit.radius * 0.6;
+            p.y = body.position.y + (Math.random() - 0.5) * fruit.radius * 0.3;
+            p.alpha = Math.min(0.6, 0.3 + speed * 0.03);
+            p.size = Math.min(5, 1.5 + speed * 0.3 + Math.random() * 1.5);
+            p.color = fruit.color;
+            p.vx = 0; p.vy = 0;
+            p.angle = 0; p.dist = 0; p.speed = 0;
+            p.isStar = false; p.rotSpeed = 0; p.rot = 0;
+            dropTrails.push(p);
           }
         }
       }
@@ -643,15 +715,19 @@ const Game = (() => {
           // Create dust particles
           const dustCount = Math.min(8, 3 + Math.floor(fruit.radius / 15));
           for (let d = 0; d < dustCount; d++) {
+            const p = acquireParticle();
+            if (!p) break;
             const side = d < dustCount / 2 ? -1 : 1;
-            landingEffects.push({
-              x: body.position.x + side * (Math.random() * fruit.radius * 0.8),
-              y: bottomY,
-              vx: side * (0.5 + Math.random() * 1.5),
-              vy: -(0.5 + Math.random() * 1.5),
-              alpha: 0.5 + Math.random() * 0.3,
-              size: 1.5 + Math.random() * 2,
-            });
+            p.x = body.position.x + side * (Math.random() * fruit.radius * 0.8);
+            p.y = bottomY;
+            p.vx = side * (0.5 + Math.random() * 1.5);
+            p.vy = -(0.5 + Math.random() * 1.5);
+            p.alpha = 0.5 + Math.random() * 0.3;
+            p.size = 1.5 + Math.random() * 2;
+            p.color = '';
+            p.angle = 0; p.dist = 0; p.speed = 0;
+            p.isStar = false; p.rotSpeed = 0; p.rot = 0;
+            landingEffects.push(p);
           }
         }
       }
@@ -684,7 +760,10 @@ const Game = (() => {
           p.dist += p.speed * delta;
           if (p.rotSpeed) p.rot += p.rotSpeed * delta;
         }
-        if (e.alpha <= 0) mergeEffects.splice(i, 1);
+        if (e.alpha <= 0) {
+          for (const p of e.particles) releaseParticle(p);
+          mergeEffects.splice(i, 1);
+        }
       }
 
       // Rainbow ring decay
@@ -703,7 +782,10 @@ const Game = (() => {
         l.y += l.vy;
         l.vy += 0.05; // gravity
         l.alpha -= delta / 400;
-        if (l.alpha <= 0) landingEffects.splice(i, 1);
+        if (l.alpha <= 0) {
+          releaseParticle(l);
+          landingEffects.splice(i, 1);
+        }
       }
 
       // Shake decay
@@ -728,7 +810,10 @@ const Game = (() => {
       // Drop trail decay
       for (let i = dropTrails.length - 1; i >= 0; i--) {
         dropTrails[i].alpha -= delta / 300;
-        if (dropTrails[i].alpha <= 0) dropTrails.splice(i, 1);
+        if (dropTrails[i].alpha <= 0) {
+          releaseParticle(dropTrails[i]);
+          dropTrails.splice(i, 1);
+        }
       }
 
       // Combo border decay
