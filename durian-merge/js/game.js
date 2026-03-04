@@ -752,6 +752,23 @@ const Game = (() => {
 
   // ===== RENDERING (gameplay only — no UI) =====
 
+  // roundRect polyfill for older Android WebView
+  function _roundRect(ctx, x, y, w, h, r) {
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.arcTo(x + w, y, x + w, y + r, r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+      ctx.lineTo(x + r, y + h);
+      ctx.arcTo(x, y + h, x, y + h - r, r);
+      ctx.lineTo(x, y + r);
+      ctx.arcTo(x, y, x + r, y, r);
+    }
+  }
+
   function render() {
     // Screen shake
     if (shakeIntensity > 0) {
@@ -774,13 +791,10 @@ const Game = (() => {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
-    // Walls
+    // Walls + Floor (same color, batched)
     ctx.fillStyle = '#0D6B5E';
     ctx.fillRect(0, DANGER_LINE_Y, 4, BASE_HEIGHT - DANGER_LINE_Y);
     ctx.fillRect(BASE_WIDTH - 4, DANGER_LINE_Y, 4, BASE_HEIGHT - DANGER_LINE_Y);
-
-    // Floor
-    ctx.fillStyle = '#0D6B5E';
     ctx.fillRect(0, BASE_HEIGHT - 4, BASE_WIDTH, 4);
 
     // Danger line
@@ -794,15 +808,28 @@ const Game = (() => {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Drop trails
-    for (const t of dropTrails) {
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
-      ctx.fillStyle = t.color;
-      ctx.globalAlpha = t.alpha;
-      ctx.fill();
+    // Drop trails — batched by color (single path per color)
+    if (dropTrails.length > 0) {
+      const trailsByColor = {};
+      for (let i = 0; i < dropTrails.length; i++) {
+        const t = dropTrails[i];
+        if (!trailsByColor[t.color]) trailsByColor[t.color] = [];
+        trailsByColor[t.color].push(t);
+      }
+      for (const color in trailsByColor) {
+        const trails = trailsByColor[color];
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath();
+        for (let i = 0; i < trails.length; i++) {
+          const t = trails[i];
+          ctx.moveTo(t.x + t.size, t.y);
+          ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
+        }
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
 
     // Fruits
     for (const body of fruitBodies) {
@@ -819,114 +846,141 @@ const Game = (() => {
       ctx.restore();
     }
 
-    // Landing dust effects
-    for (const l of landingEffects) {
+    // Landing dust effects — batched into single path
+    if (landingEffects.length > 0) {
+      ctx.fillStyle = 'rgba(180, 160, 130, 0.6)';
+      ctx.globalAlpha = 1;
       ctx.beginPath();
-      ctx.arc(l.x, l.y, l.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(180, 160, 130, ${l.alpha})`;
+      for (let i = 0; i < landingEffects.length; i++) {
+        const l = landingEffects[i];
+        ctx.moveTo(l.x + l.size, l.y);
+        ctx.arc(l.x, l.y, l.size, 0, Math.PI * 2);
+      }
       ctx.fill();
     }
 
     // Merge effects
     for (const effect of mergeEffects) {
-      // Glow — larger for high-level
+      // Glow — layered circles instead of createRadialGradient
       const glowMult = effect.level >= 7 ? 0.6 : 0.4;
-      ctx.save();
-      ctx.globalAlpha = effect.alpha * glowMult;
-      const glow = ctx.createRadialGradient(
-        effect.x, effect.y, 0,
-        effect.x, effect.y, effect.glowRadius
-      );
-      glow.addColorStop(0, effect.color);
-      glow.addColorStop(0.6, effect.color);
-      glow.addColorStop(1, 'transparent');
-      ctx.fillStyle = glow;
+      ctx.fillStyle = effect.color;
+      ctx.globalAlpha = effect.alpha * glowMult * 0.15;
       ctx.beginPath();
       ctx.arc(effect.x, effect.y, effect.glowRadius, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
+      ctx.globalAlpha = effect.alpha * glowMult * 0.25;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, effect.glowRadius * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = effect.alpha * glowMult * 0.35;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, effect.glowRadius * 0.3, 0, Math.PI * 2);
+      ctx.fill();
 
       // Ring — thicker for high level
+      ctx.globalAlpha = effect.alpha * 0.6;
+      ctx.strokeStyle = effect.color;
+      ctx.lineWidth = effect.level >= 7 ? 3 : 2;
       ctx.beginPath();
       ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = effect.color;
-      ctx.globalAlpha = effect.alpha * 0.6;
-      ctx.lineWidth = effect.level >= 7 ? 3 : 2;
       ctx.stroke();
-      ctx.globalAlpha = 1;
 
-      // Particles — star-shaped or circular, fruit-colored
-      for (const p of effect.particles) {
+      // Particles — batched by type: circular first, then stars
+      // Set alpha once for all particles in this effect
+      ctx.globalAlpha = effect.alpha;
+
+      // Batch circular particles by color
+      const circlesByColor = {};
+      const starParticles = [];
+      for (let i = 0; i < effect.particles.length; i++) {
+        const p = effect.particles[i];
+        const sz = p.size * effect.alpha;
+        if (sz < 0.5) continue;
+        if (p.isStar) {
+          starParticles.push(p);
+        } else {
+          if (!circlesByColor[p.color]) circlesByColor[p.color] = [];
+          circlesByColor[p.color].push(p);
+        }
+      }
+
+      // Draw circular particles — one path per color
+      for (const color in circlesByColor) {
+        const particles = circlesByColor[color];
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const px = effect.x + Math.cos(p.angle) * p.dist;
+          const py = effect.y + Math.sin(p.angle) * p.dist;
+          const sz = p.size * effect.alpha;
+          ctx.moveTo(px + sz, py);
+          ctx.arc(px, py, sz, 0, Math.PI * 2);
+        }
+        ctx.fill();
+      }
+
+      // Draw star particles — translate/rotate with manual inverse
+      for (let i = 0; i < starParticles.length; i++) {
+        const p = starParticles[i];
         const px = effect.x + Math.cos(p.angle) * p.dist;
         const py = effect.y + Math.sin(p.angle) * p.dist;
         const sz = p.size * effect.alpha;
-        if (sz < 0.5) continue;
 
-        ctx.save();
-        ctx.globalAlpha = effect.alpha;
         ctx.translate(px, py);
-
-        if (p.isStar) {
-          // Draw star shape
-          ctx.rotate(p.rot);
-          ctx.beginPath();
-          for (let s = 0; s < 5; s++) {
-            const a = (s / 5) * Math.PI * 2 - Math.PI / 2;
-            const outerX = Math.cos(a) * sz;
-            const outerY = Math.sin(a) * sz;
-            if (s === 0) ctx.moveTo(outerX, outerY);
-            else ctx.lineTo(outerX, outerY);
-            const innerA = a + Math.PI / 5;
-            ctx.lineTo(Math.cos(innerA) * sz * 0.4, Math.sin(innerA) * sz * 0.4);
-          }
-          ctx.closePath();
-          ctx.fillStyle = p.color;
-          ctx.fill();
-        } else {
-          // Circular particle with fruit color
-          ctx.beginPath();
-          ctx.arc(0, 0, sz, 0, Math.PI * 2);
-          ctx.fillStyle = p.color;
-          ctx.fill();
+        ctx.rotate(p.rot);
+        ctx.beginPath();
+        for (let s = 0; s < 5; s++) {
+          const a = (s / 5) * Math.PI * 2 - Math.PI / 2;
+          const outerX = Math.cos(a) * sz;
+          const outerY = Math.sin(a) * sz;
+          if (s === 0) ctx.moveTo(outerX, outerY);
+          else ctx.lineTo(outerX, outerY);
+          const innerA = a + Math.PI / 5;
+          ctx.lineTo(Math.cos(innerA) * sz * 0.4, Math.sin(innerA) * sz * 0.4);
         }
-        ctx.restore();
+        ctx.closePath();
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.rotate(-p.rot);
+        ctx.translate(-px, -py);
       }
     }
+    ctx.globalAlpha = 1;
 
-    // Rainbow rings (high-level merges)
+    // Rainbow rings (high-level merges) — no save/restore
     for (const ring of rainbowRings) {
-      ctx.save();
       ctx.globalAlpha = ring.alpha * 0.7;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = `hsl(${ring.hue % 360}, 100%, 65%)`;
       ctx.beginPath();
       ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `hsl(${ring.hue % 360}, 100%, 65%)`;
-      ctx.lineWidth = 3;
       ctx.stroke();
       // Second ring slightly delayed
       if (ring.radius > 10) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `hsl(${(ring.hue + 120) % 360}, 100%, 65%)`;
         ctx.beginPath();
         ctx.arc(ring.x, ring.y, ring.radius * 0.7, 0, Math.PI * 2);
-        ctx.strokeStyle = `hsl(${(ring.hue + 120) % 360}, 100%, 65%)`;
-        ctx.lineWidth = 2;
         ctx.stroke();
       }
-      ctx.restore();
     }
+    ctx.globalAlpha = 1;
 
-    // Score popups — enhanced with dynamic size and color
-    for (const pop of scorePopups) {
-      ctx.save();
-      ctx.globalAlpha = pop.alpha;
-      const size = pop.fontSize || 16;
-      ctx.font = `bold ${size}px "Fredoka", sans-serif`;
+    // Score popups — reduced save/restore
+    if (scorePopups.length > 0) {
       ctx.textAlign = 'center';
-      // Text stroke for readability
       ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.lineWidth = 3;
-      ctx.strokeText(pop.text, pop.x, pop.y + pop.dy);
-      ctx.fillStyle = pop.color || '#FFD700';
-      ctx.fillText(pop.text, pop.x, pop.y + pop.dy);
-      ctx.restore();
+      for (const pop of scorePopups) {
+        ctx.globalAlpha = pop.alpha;
+        const size = pop.fontSize || 16;
+        ctx.font = `bold ${size}px "Fredoka", sans-serif`;
+        ctx.strokeText(pop.text, pop.x, pop.y + pop.dy);
+        ctx.fillStyle = pop.color || '#FFD700';
+        ctx.fillText(pop.text, pop.x, pop.y + pop.dy);
+      }
+      ctx.globalAlpha = 1;
     }
 
     // Drop guide
@@ -975,16 +1029,14 @@ const Game = (() => {
       ctx.stroke();
     }
 
-    // Combo border pulse
+    // Combo border pulse — no save/restore needed
     if (comboBorderAlpha > 0) {
-      ctx.save();
       ctx.strokeStyle = `rgba(255, 215, 0, ${comboBorderAlpha})`;
       ctx.lineWidth = 4;
       ctx.strokeRect(2, DANGER_LINE_Y, BASE_WIDTH - 4, BASE_HEIGHT - DANGER_LINE_Y - 2);
-      ctx.restore();
     }
 
-    // Combo timer bar
+    // Combo timer bar — with roundRect polyfill
     if (comboTimer > 0 && comboCount >= 1) {
       const barW = 120;
       const barH = 6;
@@ -995,7 +1047,7 @@ const Game = (() => {
       // Background
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
       ctx.beginPath();
-      ctx.roundRect(barX, barY, barW, barH, 3);
+      _roundRect(ctx, barX, barY, barW, barH, 3);
       ctx.fill();
 
       // Fill — color shifts from gold to red as time runs out
@@ -1004,7 +1056,7 @@ const Game = (() => {
       const b = Math.round(0);
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.9)`;
       ctx.beginPath();
-      ctx.roundRect(barX, barY, barW * progress, barH, 3);
+      _roundRect(ctx, barX, barY, barW * progress, barH, 3);
       ctx.fill();
     }
 
