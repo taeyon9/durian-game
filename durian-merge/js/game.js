@@ -85,6 +85,11 @@ const Game = (() => {
     _pendingSave = {};
   }
 
+  // Frame throttling for 120Hz displays
+  const TARGET_FPS = 60;
+  const FRAME_DURATION = 1000 / TARGET_FPS; // ~16.67ms
+  let accumulator = 0;
+
   // Combo tracking
   let comboCount = 0;
   let comboTimer = 0;
@@ -310,6 +315,7 @@ const Game = (() => {
     canDrop = true;
     dropCooldown = 0;
     lastDropTime = 0;
+    accumulator = 0;
     gameState = 'playing';
     UI.showScreen('playing');
     UI.updateHUD(score, highScore);
@@ -328,8 +334,9 @@ const Game = (() => {
   function resumeGame() {
     if (gameState !== 'paused') return;
     gameState = 'playing';
-    // Reset lastTime to prevent delta explosion after long pause
+    // Reset lastTime and accumulator to prevent delta explosion after long pause
     lastTime = performance.now();
+    accumulator = 0;
     SoundManager.resumeCtx();
     UI.showScreen('playing');
   }
@@ -663,10 +670,22 @@ const Game = (() => {
   // ===== GAME LOOP =====
 
   function gameLoop(timestamp) {
-    const delta = Math.min(timestamp - lastTime, 33);
+    const rawDelta = timestamp - lastTime;
     lastTime = timestamp;
 
     if (gameState === 'playing') {
+      accumulator += rawDelta;
+
+      // Frame throttling: skip update if not enough time has passed (120Hz → 60fps)
+      if (accumulator < FRAME_DURATION) {
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      // Cap delta to prevent spiral of death (e.g., after tab switch)
+      const delta = Math.min(accumulator, 33);
+      accumulator = 0;
+
       Physics.update(16.67); // Fixed timestep (60fps) for consistent physics
 
       // Drop trails — enhanced: speed-proportional size and frequency
