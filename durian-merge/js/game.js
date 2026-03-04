@@ -19,13 +19,8 @@ const Game = (() => {
   let mergeEffects = [];
   let scorePopups = [];
   let shakeIntensity = 0;
-  let dropTrails = [];
-  let trailFrame = 0;
   let comboBorderAlpha = 0;
   let maxMergedLevel = 0;
-  let landingEffects = [];
-  let rainbowRings = [];
-  let screenFlash = 0; // 0~1, 1이면 최대 밝기 (두리안 합성 플래시)
   let gameOverAnimTimer = 0;
   const GAMEOVER_ANIM_DURATION = 1500; // 1.5초
   let gameOverAnimData = null; // 애니메이션 중 저장할 데이터
@@ -258,10 +253,6 @@ const Game = (() => {
     mergeEffects = [];
     scorePopups = [];
     shakeIntensity = 0;
-    screenFlash = 0;
-    dropTrails = [];
-    landingEffects = [];
-    rainbowRings = [];
     releaseAllParticles();
     comboBorderAlpha = 0;
     score = 0;
@@ -420,7 +411,10 @@ const Game = (() => {
 
       Physics.removeFruit(bodyA);
       Physics.removeFruit(bodyB);
-      fruitBodies = fruitBodies.filter(b => b !== bodyA && b !== bodyB);
+      const idxA = fruitBodies.indexOf(bodyA);
+      if (idxA >= 0) fruitBodies.splice(idxA, 1);
+      const idxB = fruitBodies.indexOf(bodyB);
+      if (idxB >= 0) fruitBodies.splice(idxB, 1);
 
       const newBody = Physics.createFruit(mx, my, level + 1);
       newBody.droppedAt = 0;
@@ -546,17 +540,6 @@ const Game = (() => {
         level: newLevel,
       });
 
-      // High-level special effect: rainbow ring + large explosion
-      if (isHighLevel) {
-        rainbowRings.push({
-          x: mx, y: my,
-          radius: fruitRadius * 0.5,
-          maxRadius: fruitRadius * 4,
-          alpha: 1,
-          hue: 0,
-        });
-      }
-
       // Screen shake — enhanced, level-proportional
       if (level >= 3) {
         shakeIntensity = Math.min(8, (level - 2) * 1.5);
@@ -572,7 +555,6 @@ const Game = (() => {
       // Durian merge special effects (level 9 = Durian)
       if (newLevel === 9) {
         shakeIntensity = 12;
-        screenFlash = 0.8;
 
         // Extra golden particles
         for (let i = 0; i < 10; i++) {
@@ -722,69 +704,6 @@ const Game = (() => {
 
       Physics.update(16.67); // Fixed timestep (60fps) for consistent physics
 
-      // Drop trails — enhanced: speed-proportional size and frequency
-      trailFrame++;
-      const trailInterval = 2; // slightly more frequent
-      if (trailFrame % trailInterval === 0) {
-        for (const body of fruitBodies) {
-          if (!body.droppedAt) continue;
-          const age = performance.now() - body.droppedAt;
-          if (age > 800) continue;
-          const vel = body.velocity;
-          const speed = Math.abs(vel.y);
-          if (speed < 1) continue;
-          const fruit = FRUITS[body.fruitLevel];
-          // More trail particles at higher speed
-          const trailCount = speed > 6 ? 2 : 1;
-          for (let t = 0; t < trailCount; t++) {
-            const p = acquireParticle();
-            if (!p) break;
-            p.x = body.position.x + (Math.random() - 0.5) * fruit.radius * 0.6;
-            p.y = body.position.y + (Math.random() - 0.5) * fruit.radius * 0.3;
-            p.alpha = Math.min(0.6, 0.3 + speed * 0.03);
-            p.size = Math.min(5, 1.5 + speed * 0.3 + Math.random() * 1.5);
-            p.color = fruit.color;
-            p.vx = 0; p.vy = 0;
-            p.angle = 0; p.dist = 0; p.speed = 0;
-            p.isStar = false; p.rotSpeed = 0; p.rot = 0;
-            dropTrails.push(p);
-          }
-        }
-      }
-
-      // Landing detection — generate dust particles when fruit settles
-      for (const body of fruitBodies) {
-        if (body.isMerging) continue;
-        const vel = body.velocity;
-        const speed = Math.abs(vel.y);
-        const fruit = FRUITS[body.fruitLevel];
-        const bottomY = body.position.y + fruit.radius;
-        // Detect landing: was moving fast, now nearly stopped, near floor or resting
-        if (!body._wasMoving && speed > 3) {
-          body._wasMoving = true;
-        }
-        if (body._wasMoving && speed < 0.5 && bottomY > BASE_HEIGHT - 20) {
-          body._wasMoving = false;
-          // Create dust particles
-          const dustCount = Math.min(8, 3 + Math.floor(fruit.radius / 15));
-          for (let d = 0; d < dustCount; d++) {
-            const p = acquireParticle();
-            if (!p) break;
-            const side = d < dustCount / 2 ? -1 : 1;
-            p.x = body.position.x + side * (Math.random() * fruit.radius * 0.8);
-            p.y = bottomY;
-            p.vx = side * (0.5 + Math.random() * 1.5);
-            p.vy = -(0.5 + Math.random() * 1.5);
-            p.alpha = 0.5 + Math.random() * 0.3;
-            p.size = 1.5 + Math.random() * 2;
-            p.color = '';
-            p.angle = 0; p.dist = 0; p.speed = 0;
-            p.isStar = false; p.rotSpeed = 0; p.rot = 0;
-            landingEffects.push(p);
-          }
-        }
-      }
-
       if (!canDrop) {
         if (performance.now() - lastDropTime >= DROP_COOLDOWN_MS) {
           canDrop = true;
@@ -819,38 +738,10 @@ const Game = (() => {
         }
       }
 
-      // Rainbow ring decay
-      for (let i = rainbowRings.length - 1; i >= 0; i--) {
-        const r = rainbowRings[i];
-        r.radius += delta * 0.2;
-        r.hue += delta * 0.5;
-        r.alpha -= delta / 600;
-        if (r.alpha <= 0 || r.radius > r.maxRadius) rainbowRings.splice(i, 1);
-      }
-
-      // Landing effects decay
-      for (let i = landingEffects.length - 1; i >= 0; i--) {
-        const l = landingEffects[i];
-        l.x += l.vx;
-        l.y += l.vy;
-        l.vy += 0.05; // gravity
-        l.alpha -= delta / 400;
-        if (l.alpha <= 0) {
-          releaseParticle(l);
-          landingEffects.splice(i, 1);
-        }
-      }
-
       // Shake decay
       if (shakeIntensity > 0) {
         shakeIntensity -= delta * 0.02;
         if (shakeIntensity < 0) shakeIntensity = 0;
-      }
-
-      // Screen flash decay (durian merge)
-      if (screenFlash > 0) {
-        screenFlash -= delta / 300;
-        if (screenFlash < 0) screenFlash = 0;
       }
 
       // Score popup decay
@@ -858,15 +749,6 @@ const Game = (() => {
         scorePopups[i].dy -= delta * 0.05;
         scorePopups[i].alpha -= delta / 800;
         if (scorePopups[i].alpha <= 0) scorePopups.splice(i, 1);
-      }
-
-      // Drop trail decay
-      for (let i = dropTrails.length - 1; i >= 0; i--) {
-        dropTrails[i].alpha -= delta / 300;
-        if (dropTrails[i].alpha <= 0) {
-          releaseParticle(dropTrails[i]);
-          dropTrails.splice(i, 1);
-        }
       }
 
       // Combo border decay
@@ -1031,29 +913,6 @@ const Game = (() => {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Drop trails — batched by color (single path per color)
-    if (dropTrails.length > 0) {
-      const trailsByColor = {};
-      for (let i = 0; i < dropTrails.length; i++) {
-        const t = dropTrails[i];
-        if (!trailsByColor[t.color]) trailsByColor[t.color] = [];
-        trailsByColor[t.color].push(t);
-      }
-      for (const color in trailsByColor) {
-        const trails = trailsByColor[color];
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.4;
-        ctx.beginPath();
-        for (let i = 0; i < trails.length; i++) {
-          const t = trails[i];
-          ctx.moveTo(t.x + t.size, t.y);
-          ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
-        }
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    }
-
     // Fruits
     for (const body of fruitBodies) {
       if (body.isMerging) continue;
@@ -1067,19 +926,6 @@ const Game = (() => {
       ctx.scale(squashX, squashY);
       drawFruit(ctx, 0, 0, body.fruitLevel, 0);
       ctx.restore();
-    }
-
-    // Landing dust effects — batched into single path
-    if (landingEffects.length > 0) {
-      ctx.fillStyle = 'rgba(180, 160, 130, 0.6)';
-      ctx.globalAlpha = 1;
-      ctx.beginPath();
-      for (let i = 0; i < landingEffects.length; i++) {
-        const l = landingEffects[i];
-        ctx.moveTo(l.x + l.size, l.y);
-        ctx.arc(l.x, l.y, l.size, 0, Math.PI * 2);
-      }
-      ctx.fill();
     }
 
     // Merge effects
@@ -1171,25 +1017,6 @@ const Game = (() => {
     }
     ctx.globalAlpha = 1;
 
-    // Rainbow rings (high-level merges) — no save/restore
-    for (const ring of rainbowRings) {
-      ctx.globalAlpha = ring.alpha * 0.7;
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = `hsl(${ring.hue % 360}, 100%, 65%)`;
-      ctx.beginPath();
-      ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
-      ctx.stroke();
-      // Second ring slightly delayed
-      if (ring.radius > 10) {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = `hsl(${(ring.hue + 120) % 360}, 100%, 65%)`;
-        ctx.beginPath();
-        ctx.arc(ring.x, ring.y, ring.radius * 0.7, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-    ctx.globalAlpha = 1;
-
     // Score popups — reduced save/restore
     if (scorePopups.length > 0) {
       ctx.textAlign = 'center';
@@ -1227,29 +1054,6 @@ const Game = (() => {
       ctx.globalAlpha = 0.25;
       drawFruit(ctx, dropX, DANGER_LINE_Y - 20, currentLevel, 0);
       ctx.globalAlpha = 1.0;
-
-      // Cooldown circular progress ring
-      const elapsed = performance.now() - lastDropTime;
-      const progress = Math.min(elapsed / DROP_COOLDOWN_MS, 1);
-      const ringRadius = 12;
-      const ringX = dropX;
-      const ringY = DANGER_LINE_Y - 20 + FRUITS[currentLevel].radius + ringRadius + 6;
-
-      // Background ring
-      ctx.beginPath();
-      ctx.arc(ringX, ringY, ringRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // Progress arc
-      const startAngle = -Math.PI / 2;
-      const endAngle = startAngle + progress * Math.PI * 2;
-      ctx.beginPath();
-      ctx.arc(ringX, ringY, ringRadius, startAngle, endAngle);
-      ctx.strokeStyle = 'rgba(255, 215, 0, 0.7)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
     }
 
     // Combo border pulse — no save/restore needed
@@ -1318,12 +1122,6 @@ const Game = (() => {
       ctx.fillText(comboDisplay.subText, 0, 24);
 
       ctx.restore();
-    }
-
-    // Screen flash (durian merge special effect)
-    if (screenFlash > 0) {
-      ctx.fillStyle = `rgba(255, 255, 200, ${screenFlash})`;
-      ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
     }
 
     // End screen shake
