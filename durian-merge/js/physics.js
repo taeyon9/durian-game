@@ -7,13 +7,29 @@ const Physics = (() => {
   let gameWidth, gameHeight;
   let groundY;
 
+  // Per-level physics parameters: [restitution, friction, density, frictionAir]
+  // Larger fruits = heavier, less bouncy, more friction → realistic weight feel
+  const PHYSICS_TABLE = [
+    [0.35, 0.40, 0.0012, 0.007],  // 0 Lychee (r=18) — light, bouncy
+    [0.32, 0.42, 0.0014, 0.008],  // 1 Lime (r=24)
+    [0.30, 0.45, 0.0016, 0.009],  // 2 Rambutan (r=30)
+    [0.28, 0.47, 0.0018, 0.010],  // 3 Passion Fruit (r=36)
+    [0.25, 0.50, 0.0022, 0.011],  // 4 Mango (r=43)
+    [0.22, 0.52, 0.0026, 0.012],  // 5 Dragon Fruit (r=50)
+    [0.18, 0.55, 0.0032, 0.014],  // 6 Papaya (r=58)
+    [0.14, 0.58, 0.0040, 0.016],  // 7 Coconut (r=66) — heavy, barely bounces
+    [0.10, 0.60, 0.0050, 0.018],  // 8 Pineapple (r=75)
+    [0.08, 0.65, 0.0065, 0.020],  // 9 Durian (r=85) — heaviest, thuds
+    [0.35, 0.40, 0.0010, 0.007],  // 10 Queen (r=20, special — light, bouncy)
+  ];
+
   function init(width, height) {
     gameWidth = width;
     gameHeight = height;
     groundY = height;
 
     engine = Engine.create({
-      gravity: { x: 0, y: 1.8 },
+      gravity: { x: 0, y: 1.6 },
       enableSleeping: true,
     });
     world = engine.world;
@@ -25,21 +41,21 @@ const Physics = (() => {
     const floor = Bodies.rectangle(
       width / 2, height + wallThickness / 2 - wallInset,
       width + wallThickness * 2, wallThickness,
-      { isStatic: true, label: 'wall', friction: 0.5, restitution: 0.2 }
+      { isStatic: true, label: 'wall', friction: 0.5, restitution: 0.15 }
     );
 
     // Left wall
     const leftWall = Bodies.rectangle(
       -wallThickness / 2 + wallInset, height / 2,
       wallThickness, height * 2,
-      { isStatic: true, label: 'wall', friction: 0.3, restitution: 0.2 }
+      { isStatic: true, label: 'wall', friction: 0.3, restitution: 0.1 }
     );
 
     // Right wall
     const rightWall = Bodies.rectangle(
       width + wallThickness / 2 - wallInset, height / 2,
       wallThickness, height * 2,
-      { isStatic: true, label: 'wall', friction: 0.3, restitution: 0.2 }
+      { isStatic: true, label: 'wall', friction: 0.3, restitution: 0.1 }
     );
 
     walls = [floor, leftWall, rightWall];
@@ -52,10 +68,13 @@ const Physics = (() => {
     const fruit = FRUITS[level];
     if (!fruit) return null;
 
+    const params = PHYSICS_TABLE[level] || PHYSICS_TABLE[0];
+
     const body = Bodies.circle(x, y, fruit.radius, {
-      restitution: 0.3,
-      friction: 0.5,
-      density: 0.001 + level * 0.0003,
+      restitution: params[0],
+      friction: params[1],
+      density: params[2],
+      frictionAir: params[3],
       label: 'fruit',
       fruitLevel: level,
       isMerging: false,

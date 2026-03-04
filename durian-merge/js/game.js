@@ -485,7 +485,7 @@ const Game = (() => {
     lastTime = timestamp;
 
     if (gameState === 'playing') {
-      Physics.update(delta);
+      Physics.update(16.67); // Fixed timestep (60fps) for consistent physics
 
       // Drop trails — enhanced: speed-proportional size and frequency
       trailFrame++;
