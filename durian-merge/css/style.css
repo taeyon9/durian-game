@@ -12,7 +12,7 @@
   --green: #2B9E80;
   --white: #FFFAF0;
   --text: #E8E0D4;
-  --text-dim: #7A9A8F;
+  --text-dim: #9DBDB5;
   --font: 'Fredoka', sans-serif;
   --radius: 16px;
   --radius-sm: 10px;
@@ -122,11 +122,13 @@ html, body {
   border: none;
   font-size: 22px;
   cursor: pointer;
-  padding: 8px;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 12px;
+  opacity: 0.75;
+  transition: opacity 0.15s, transform 0.1s;
 }
-.icon-btn:active { opacity: 1; }
+.icon-btn:active { opacity: 1; transform: scale(0.88); }
 
 /* Icon: three bars */
 .icon-bars {
@@ -186,11 +188,13 @@ html, body {
 .hud-left, .hud-right { text-align: center; min-width: 60px; }
 .hud-center { text-align: center; flex: 1; }
 .hud-score-label, .hud-best-label, .hud-next-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--gold-dim);
+  color: var(--gold);
   letter-spacing: 1px;
   text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 2px;
 }
 .hud-score {
   font-size: 32px;
@@ -199,8 +203,8 @@ html, body {
   line-height: 1.1;
 }
 .hud-best {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--gold);
 }
 #hudNextCanvas {
@@ -298,7 +302,7 @@ html, body {
   50%      { transform: translateY(-20px) scale(1.15); opacity: 0.14; }
 }
 
-.menu-settings { position: absolute; top: calc(var(--safe-top) + 4px); right: 12px; z-index: 2; }
+.menu-settings { position: absolute; top: calc(var(--safe-top) + 4px); right: 8px; z-index: 2; }
 
 .menu-content {
   flex: 1;
@@ -353,7 +357,7 @@ html, body {
   font-size: 13px;
   font-weight: 600;
   color: #DAA520;
-  letter-spacing: 4px;
+  letter-spacing: 2.5px;
 }
 
 .menu-player {
@@ -389,6 +393,20 @@ html, body {
 .menu-tickets {
   font-size: 13px;
   color: var(--text-dim);
+  font-weight: 600;
+  background: rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 6px 14px;
+}
+.menu-tickets.low-tickets {
+  color: var(--gold);
+  background: rgba(255,215,0,0.1);
+  border: 1px solid rgba(255,215,0,0.25);
+}
+.menu-tickets.no-tickets {
+  color: var(--red);
+  background: rgba(229,57,53,0.1);
+  border: 1px solid rgba(229,57,53,0.25);
 }
 .menu-ranking-link {
   font-size: 13px;
@@ -412,16 +430,18 @@ html, body {
   justify-content: flex-start;
   padding-top: 40px;
   gap: 16px;
+  animation: goSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .go-score-section { text-align: center; }
 .go-label {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--red);
-  letter-spacing: 3px;
+  letter-spacing: 4px;
 }
 .go-newbest {
-  font-size: 14px;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--gold);
   margin-top: 4px;
   animation: pulse 0.6s ease-in-out infinite alternate;
@@ -505,7 +525,7 @@ html, body {
 .go-rank.gold { color: #FFD700; }
 .go-rank.silver { color: #C0C0C0; }
 .go-rank.bronze { color: #CD7F32; }
-.go-name { flex:1; color: var(--text); font-weight: 500; }
+.go-name { flex:1; color: var(--text); font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .go-pts { font-weight: 700; color: var(--white); }
 
 /* Nickname overlay */
@@ -629,7 +649,8 @@ html, body {
   font-size: 13px;
   color: var(--text-dim);
   cursor: pointer;
-  padding: 8px;
+  padding: 14px 8px;
+  min-height: 44px;
 }
 
 /* ===== LEADERBOARD FULL ===== */
@@ -666,7 +687,7 @@ html, body {
 .lb-tab {
   flex: 1;
   text-align: center;
-  padding: 10px;
+  padding: 14px 10px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-dim);
@@ -699,7 +720,7 @@ html, body {
   font-weight: 700;
   text-align: center;
 }
-.lb-name { flex:1; font-weight: 500; }
+.lb-name { flex:1; font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .lb-pts { font-weight: 700; color: var(--white); }
 .lb-me {
   width: 100%;
@@ -955,7 +976,7 @@ html, body {
   font-size: 13px;
   color: var(--text-dim);
   cursor: pointer;
-  padding: 8px;
+  padding: 14px 8px;
 }
 
 /* ===== NICKNAME EDIT MODAL ===== */
@@ -1193,8 +1214,8 @@ html, body {
   font-size: 18px;
   font-weight: 700;
   color: var(--gold-dim);
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1206,7 +1227,7 @@ html, body {
 .menu-stats {
   position: absolute;
   top: calc(var(--safe-top) + 4px);
-  right: 92px;
+  right: 100px;
   z-index: 2;
 }
 
@@ -1250,11 +1271,13 @@ html, body {
   text-align: center;
 }
 .stat-value {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--gold);
   line-height: 1.2;
-  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .stat-label {
   font-size: 10px;
@@ -1600,7 +1623,8 @@ html, body {
   font-size: 32px;
   font-weight: 700;
   color: var(--gold);
-  letter-spacing: 6px;
+  letter-spacing: 4px;
+  text-indent: 4px;
   text-shadow: 0 2px 20px rgba(255,215,0,0.3);
 }
 .pause-toggles {
@@ -1618,5 +1642,77 @@ html, body {
 .pause-resume-btn {
   font-size: 20px;
   padding: 16px 48px;
+}
+
+/* ===== SCORE POP ANIMATION ===== */
+.hud-score.pop {
+  animation: scorePop 0.2s ease-out;
+}
+@keyframes scorePop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.2); color: var(--gold); }
+  100% { transform: scale(1); }
+}
+
+/* ===== GAME OVER ENTRANCE ===== */
+@keyframes goSlideIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== MODAL CLOSE ANIMATION ===== */
+.modal-bg.hiding { animation: fadeOut 0.2s ease forwards; }
+.modal-bg.hiding .settings-panel,
+.modal-bg.hiding .share-panel,
+.modal-bg.hiding .mission-panel,
+.modal-bg.hiding .stats-panel,
+.modal-bg.hiding .nick-modal-panel { animation: slideDown 0.2s ease forwards; }
+@keyframes fadeOut { from{opacity:1} to{opacity:0} }
+@keyframes slideDown { from{transform:translateY(0)} to{transform:translateY(100%)} }
+
+/* ===== PAUSE CONFIRM DIALOG ===== */
+.pause-confirm {
+  width: 100%;
+  background: rgba(229,57,53,0.12);
+  border: 1px solid rgba(229,57,53,0.35);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.15s;
+}
+.pause-confirm-msg {
+  font-size: 14px;
+  color: var(--text);
+  text-align: center;
+}
+.pause-confirm-btns {
+  display: flex;
+  gap: 10px;
+}
+.btn-danger {
+  background: var(--red);
+  color: #fff;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 16px;
+  border: none;
+  border-radius: 50px;
+  flex: 1;
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .sparkle, .bokeh, .menu-hero-fruit, .go-newbest,
+  .btn-continue, .btn-share.new-best, .combo-popup.show,
+  .go-rank-text, .mission-claim-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+  .go-newbest { opacity: 1; }
+  .btn-continue { box-shadow: 0 4px 20px rgba(255,215,0,0.35); }
 }
 
