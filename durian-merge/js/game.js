@@ -6,7 +6,7 @@ const Game = (() => {
   let highScore = 0;
   let currentLevel = 0;
   let nextLevel = 0;
-  let gameState = 'menu'; // 'menu', 'playing', 'gameover'
+  let gameState = 'menu'; // 'menu', 'playing', 'paused', 'gameover'
   let dropX = 0;
   let canDrop = true;
   let dropCooldown = 0;
@@ -65,6 +65,10 @@ const Game = (() => {
       onPlay: startGame,
       onWatchAd: watchAdForTicket,
       onContinue: watchAdToContinue,
+      onPause: pauseGame,
+      onResume: resumeGame,
+      onRestartFromPause: restartFromPause,
+      onMenuFromPause: menuFromPause,
     });
 
     // Firebase init
@@ -250,6 +254,46 @@ const Game = (() => {
     UI.updateHUD(score, highScore);
     UI.updateNextFruit(nextLevel);
   }
+
+  // ===== PAUSE / RESUME =====
+
+  function pauseGame() {
+    if (gameState !== 'playing') return;
+    gameState = 'paused';
+    SoundManager.suspendCtx();
+    UI.showScreen('paused');
+  }
+
+  function resumeGame() {
+    if (gameState !== 'paused') return;
+    gameState = 'playing';
+    // Reset lastTime to prevent delta explosion after long pause
+    lastTime = performance.now();
+    SoundManager.resumeCtx();
+    UI.showScreen('playing');
+  }
+
+  function restartFromPause() {
+    if (gameState !== 'paused') return;
+    SoundManager.resumeCtx();
+    // Reset state so startGame can proceed
+    gameState = 'menu';
+    startGame();
+  }
+
+  function menuFromPause() {
+    if (gameState !== 'paused') return;
+    gameState = 'menu';
+    SoundManager.resumeCtx();
+    UI.showScreen('menu');
+  }
+
+  // Auto-pause on background (visibility change)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && gameState === 'playing') {
+      pauseGame();
+    }
+  });
 
   // ===== GAME LOGIC =====
 

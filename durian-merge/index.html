@@ -30,6 +30,31 @@
         <canvas id="hudNextCanvas" width="50" height="50"></canvas>
       </div>
     </div>
+    <button class="hud-pause-btn" id="hudPauseBtn">⏸</button>
+  </div>
+
+  <!-- ===== PAUSE OVERLAY ===== -->
+  <div id="pauseOverlay" class="pause-overlay" style="display:none;">
+    <div class="pause-panel">
+      <div class="pause-title">PAUSED</div>
+      <div class="pause-toggles">
+        <label class="toggle-row">
+          <span>🔊 Sound</span>
+          <input type="checkbox" id="pauseToggleSfx" checked>
+          <div class="toggle-track"><div class="toggle-knob"></div></div>
+        </label>
+        <label class="toggle-row">
+          <span>📳 Haptic</span>
+          <input type="checkbox" id="pauseToggleHaptic" checked>
+          <div class="toggle-track"><div class="toggle-knob"></div></div>
+        </label>
+      </div>
+      <div class="pause-buttons">
+        <button class="btn btn-play pause-resume-btn" id="pauseResumeBtn">▶ RESUME</button>
+        <button class="btn btn-outline" id="pauseRestartBtn">🔄 RESTART</button>
+        <button class="btn btn-outline" id="pauseMenuBtn">🏠 MAIN MENU</button>
+      </div>
+    </div>
   </div>
 
   <!-- Combo popup (floats over gameplay) -->

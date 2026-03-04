@@ -4,15 +4,23 @@ const UI = (() => {
   let els = {};
   
   // State
-  let currentScreen = 'menu'; // menu | playing | gameover | leaderboard | settings
+  let currentScreen = 'menu'; // menu | playing | paused | gameover | leaderboard | settings
   let onPlayCallback = null;
   let onWatchAdCallback = null;
   let onContinueCallback = null;
+  let onPauseCallback = null;
+  let onResumeCallback = null;
+  let onRestartFromPauseCallback = null;
+  let onMenuFromPauseCallback = null;
 
   function init(callbacks) {
     onPlayCallback = callbacks.onPlay;
     onWatchAdCallback = callbacks.onWatchAd;
     onContinueCallback = callbacks.onContinue;
+    onPauseCallback = callbacks.onPause;
+    onResumeCallback = callbacks.onResume;
+    onRestartFromPauseCallback = callbacks.onRestartFromPause;
+    onMenuFromPauseCallback = callbacks.onMenuFromPause;
 
     // Cache all elements
     els = {
@@ -98,6 +106,15 @@ const UI = (() => {
 
       // Help
       menuHelpBtn: document.getElementById('menuHelpBtn'),
+
+      // Pause
+      hudPauseBtn: document.getElementById('hudPauseBtn'),
+      pauseOverlay: document.getElementById('pauseOverlay'),
+      pauseResumeBtn: document.getElementById('pauseResumeBtn'),
+      pauseRestartBtn: document.getElementById('pauseRestartBtn'),
+      pauseMenuBtn: document.getElementById('pauseMenuBtn'),
+      pauseToggleSfx: document.getElementById('pauseToggleSfx'),
+      pauseToggleHaptic: document.getElementById('pauseToggleHaptic'),
     };
 
     bindEvents();
@@ -194,6 +211,29 @@ const UI = (() => {
       if (e.key === 'Enter') handleNickSubmit();
     });
 
+    // Pause
+    els.hudPauseBtn.addEventListener('click', () => {
+      if (onPauseCallback) onPauseCallback();
+    });
+    els.pauseResumeBtn.addEventListener('click', () => {
+      if (onResumeCallback) onResumeCallback();
+    });
+    els.pauseRestartBtn.addEventListener('click', () => {
+      if (onRestartFromPauseCallback) onRestartFromPauseCallback();
+    });
+    els.pauseMenuBtn.addEventListener('click', () => {
+      if (onMenuFromPauseCallback) onMenuFromPauseCallback();
+    });
+    // Pause overlay quick toggles
+    els.pauseToggleSfx.addEventListener('change', () => {
+      els.toggleSfx.checked = els.pauseToggleSfx.checked;
+      saveSettings();
+    });
+    els.pauseToggleHaptic.addEventListener('change', () => {
+      els.toggleHaptic.checked = els.pauseToggleHaptic.checked;
+      saveSettings();
+    });
+
   }
 
   // ===== SCREEN MANAGEMENT =====
@@ -206,9 +246,17 @@ const UI = (() => {
     }
     currentScreen = name;
     els.menu.style.display = name === 'menu' ? '' : 'none';
-    els.hud.style.display = name === 'playing' ? '' : 'none';
+    els.hud.style.display = (name === 'playing' || name === 'paused') ? '' : 'none';
     els.gameover.style.display = name === 'gameover' ? '' : 'none';
     els.leaderboard.style.display = name === 'leaderboard' ? '' : 'none';
+
+    // Pause overlay
+    els.pauseOverlay.style.display = name === 'paused' ? '' : 'none';
+    if (name === 'paused') {
+      // Sync quick toggles with current settings
+      els.pauseToggleSfx.checked = els.toggleSfx.checked;
+      els.pauseToggleHaptic.checked = els.toggleHaptic.checked;
+    }
 
     // Settings overlay: show/hide
     if (name === 'settings') {
@@ -220,7 +268,7 @@ const UI = (() => {
 
     // Canvas visibility
     const canvas = document.getElementById('gameCanvas');
-    canvas.style.display = (name === 'playing') ? '' : 'none';
+    canvas.style.display = (name === 'playing' || name === 'paused') ? '' : 'none';
 
     if (name === 'menu') updateMenu();
     if (name === 'leaderboard') renderLeaderboardFull('alltime');
