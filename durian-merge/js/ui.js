@@ -70,8 +70,8 @@ const UI = (() => {
       goContinue: document.getElementById('goContinue'),
       goPlayAgain: document.getElementById('goPlayAgain'),
       goShareBtn: document.getElementById('goShareBtn'),
-      goWatchAd: document.getElementById('goWatchAd'),
       goBackMenu: document.getElementById('goBackMenu'),
+      goPlayTicket: document.getElementById('goPlayTicket'),
 
       // Leaderboard
       lbBack: document.getElementById('lbBack'),
@@ -142,7 +142,6 @@ const UI = (() => {
     els.goContinue.addEventListener('click', handleContinue);
     els.goPlayAgain.addEventListener('click', handlePlay);
     els.goShareBtn.addEventListener('click', handleDirectShare);
-    els.goWatchAd.addEventListener('click', handleWatchAd);
     els.goBackMenu.addEventListener('click', () => showScreen('menu'));
     els.goNickSubmit.addEventListener('click', handleNickSubmit);
     els.goNickSkip.addEventListener('click', handleNickSkip);
@@ -289,6 +288,12 @@ const UI = (() => {
     els.menu.style.display = name === 'menu' ? '' : 'none';
     els.hud.style.display = (name === 'playing' || name === 'paused') ? '' : 'none';
     els.gameover.style.display = name === 'gameover' ? '' : 'none';
+    // Trigger stagger entrance animations on game over
+    if (name === 'gameover') {
+      els.gameover.classList.remove('go-animate');
+      void els.gameover.offsetWidth; // force reflow to restart animations
+      els.gameover.classList.add('go-animate');
+    }
     els.leaderboard.style.display = name === 'leaderboard' ? '' : 'none';
 
     // Pause overlay
@@ -520,14 +525,18 @@ const UI = (() => {
     // Continue button (rewarded ad to resume game)
     els.goContinue.style.display = canContinue ? '' : 'none';
 
-    // Ticket display on play again button
+    // Smart Play Again button — gold with tickets, purple for ad
     const tickets = TicketManager.getTickets();
+    const mainText = els.goPlayAgain.querySelector('.btn-main-text');
+    const subText = els.goPlayTicket;
     if (tickets > 0) {
-      els.goPlayAgain.innerHTML = '▶ PLAY AGAIN';
-      els.goWatchAd.style.display = '';
+      els.goPlayAgain.classList.remove('no-tickets');
+      mainText.textContent = '▶ PLAY AGAIN';
+      subText.textContent = '🎟 ' + tickets + ' left';
     } else {
-      els.goPlayAgain.innerHTML = '📺 WATCH AD TO PLAY';
-      els.goWatchAd.style.display = 'none';
+      els.goPlayAgain.classList.add('no-tickets');
+      mainText.textContent = '▶ WATCH AD TO PLAY';
+      subText.textContent = '📺 Free play';
     }
 
     // Pulse share button on new best

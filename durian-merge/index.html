@@ -109,8 +109,15 @@
         🎟️ <span id="menuTickets">5</span> plays left today
       </div>
       <div class="menu-sub-links">
-        <button class="menu-ranking-link" id="menuRankingBtn">🏆 Ranking</button>
-        <button class="menu-ranking-link" id="missionBtn">📋 Missions <span class="mission-badge" id="missionBadge" style="display:none;">0</span></button>
+        <button class="menu-sub-btn" id="menuRankingBtn">
+          <span class="menu-sub-btn-icon">🏆</span>
+          <span class="menu-sub-btn-label">Ranking</span>
+        </button>
+        <button class="menu-sub-btn" id="missionBtn">
+          <span class="menu-sub-btn-icon">📋</span>
+          <span class="menu-sub-btn-label">Missions</span>
+          <span class="mission-badge" id="missionBadge" style="display:none;">0</span>
+        </button>
       </div>
     </div>
   </div>
@@ -163,13 +170,21 @@
 
     <!-- Buttons -->
     <div class="go-buttons">
-      <button class="btn btn-continue" id="goContinue" style="display:none;">🎬 Watch Ad to Continue</button>
-      <div class="go-btn-row">
-        <button class="btn btn-play" id="goPlayAgain">▶ PLAY AGAIN</button>
-        <button class="btn btn-share" id="goShareBtn" aria-label="Share score">📤</button>
+      <button class="btn btn-continue" id="goContinue" style="display:none;">
+        <span class="btn-continue-icon">🎬</span>
+        <span class="btn-continue-label">
+          <span class="btn-main-text">CONTINUE</span>
+          <span class="btn-sub-text">Watch Ad to keep playing</span>
+        </span>
+      </button>
+      <button class="btn btn-play" id="goPlayAgain">
+        <span class="btn-main-text">▶ PLAY AGAIN</span>
+        <span class="btn-sub-text" id="goPlayTicket">🎟 5 left</span>
+      </button>
+      <div class="go-secondary-row">
+        <button class="btn btn-secondary-pill" id="goShareBtn" aria-label="Share score">📤 Share</button>
+        <button class="btn btn-secondary-pill" id="goBackMenu">🏠 Menu</button>
       </div>
-      <button class="btn btn-ad" id="goWatchAd">📺 Watch Ad +1 Play</button>
-      <button class="go-back" id="goBackMenu">Back to Menu</button>
     </div>
   </div>
 
