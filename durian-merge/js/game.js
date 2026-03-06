@@ -362,13 +362,15 @@ const Game = (() => {
     if (typeof ItemManager === 'undefined') return;
     if (!ItemManager.hasItem(itemId)) return;
 
+    let success = false;
     switch (itemId) {
-      case 'bomb': useBomb(); break;
-      case 'shake': useShake(); break;
-      case 'upgrade': useUpgrade(); break;
+      case 'bomb': success = useBomb(); break;
+      case 'shake': success = useShake(); break;
+      case 'upgrade': success = useUpgrade(); break;
       default: return;
     }
 
+    if (!success) return; // Don't consume item if effect failed
     ItemManager.useItem(itemId);
     updateItemHUD();
     SoundManager.playMerge(5);
@@ -376,7 +378,7 @@ const Game = (() => {
   }
 
   function useBomb() {
-    if (fruitBodies.length === 0) return;
+    if (fruitBodies.length === 0) return false;
     // Find smallest fruit
     let smallest = null;
     let smallestLevel = Infinity;
@@ -387,7 +389,7 @@ const Game = (() => {
         smallest = body;
       }
     }
-    if (!smallest) return;
+    if (!smallest) return false;
 
     // Visual effect
     const mx = smallest.position.x;
@@ -406,9 +408,11 @@ const Game = (() => {
     Physics.removeFruit(smallest);
     const idx = fruitBodies.indexOf(smallest);
     if (idx >= 0) fruitBodies.splice(idx, 1);
+    return true;
   }
 
   function useShake() {
+    if (fruitBodies.length === 0) return false;
     // Shuffle all fruits with random impulse
     for (const body of fruitBodies) {
       if (body.isMerging) continue;
@@ -418,10 +422,11 @@ const Game = (() => {
       Matter.Sleeping.set(body, false);
     }
     shakeIntensity = 6;
+    return true;
   }
 
   function useUpgrade() {
-    if (fruitBodies.length === 0) return;
+    if (fruitBodies.length === 0) return false;
     // Find smallest fruit and upgrade it
     let smallest = null;
     let smallestLevel = Infinity;
@@ -432,7 +437,7 @@ const Game = (() => {
         smallest = body;
       }
     }
-    if (!smallest) return;
+    if (!smallest) return false;
 
     const mx = smallest.position.x;
     const my = smallest.position.y;
@@ -458,6 +463,7 @@ const Game = (() => {
       particles: [],
       level: newLevel,
     });
+    return true;
   }
 
   function updateItemHUD() {

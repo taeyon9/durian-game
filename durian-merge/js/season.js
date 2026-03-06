@@ -172,7 +172,7 @@ const SeasonManager = (() => {
     }
 
     if (changed) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* QuotaExceeded */ }
     }
   }
 

@@ -29,7 +29,7 @@ const DailyRewardManager = (() => {
   }
 
   function save(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* QuotaExceeded */ }
   }
 
   function isConsecutiveDay(dateStr) {
@@ -37,7 +37,7 @@ const DailyRewardManager = (() => {
     const last = new Date(dateStr);
     const today = new Date(todayStr());
     const diffMs = today - last;
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
     return diffDays === 1;
   }
 
