@@ -31,6 +31,19 @@
       </div>
     </div>
     <button class="hud-pause-btn" id="hudPauseBtn" aria-label="Pause game">⏸</button>
+    <!-- Item buttons -->
+    <div class="hud-items" id="hudItems">
+      <button class="hud-item-btn" data-item="bomb" id="hudItemBomb" title="Bomb">💣<span class="hud-item-count" id="hudBombCount">0</span></button>
+      <button class="hud-item-btn" data-item="shake" id="hudItemShake" title="Shake">🌊<span class="hud-item-count" id="hudShakeCount">0</span></button>
+      <button class="hud-item-btn" data-item="upgrade" id="hudItemUpgrade" title="Upgrade">⬆️<span class="hud-item-count" id="hudUpgradeCount">0</span></button>
+    </div>
+    <!-- Challenge timer -->
+    <div class="hud-timer" id="hudTimer" style="display:none;">
+      <span class="hud-timer-icon">⏱️</span>
+      <span class="hud-timer-value" id="hudTimerValue">60</span>
+    </div>
+    <!-- Challenge mode label -->
+    <div class="hud-mode-label" id="hudModeLabel" style="display:none;"></div>
   </div>
 
   <!-- ===== PAUSE OVERLAY ===== -->
@@ -118,6 +131,20 @@
           <span class="menu-sub-btn-label">Missions</span>
           <span class="mission-badge" id="missionBadge" style="display:none;">0</span>
         </button>
+        <button class="menu-sub-btn" id="achievementBtn">
+          <span class="menu-sub-btn-icon">🎖️</span>
+          <span class="menu-sub-btn-label">Badges</span>
+          <span class="mission-badge" id="achievementBadge" style="display:none;">0</span>
+        </button>
+        <button class="menu-sub-btn" id="menuModesBtn">
+          <span class="menu-sub-btn-icon">🎯</span>
+          <span class="menu-sub-btn-label">Modes</span>
+        </button>
+      </div>
+      <!-- Season label -->
+      <div class="menu-season" id="menuSeason">
+        <span class="menu-season-icon">🌴</span>
+        <span class="menu-season-name" id="seasonLabel">Tropical Summer</span>
       </div>
     </div>
   </div>
@@ -353,6 +380,41 @@
   </div>
 
 
+  <!-- ===== ACHIEVEMENT OVERLAY ===== -->
+  <div id="achievementOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="achievement-panel">
+      <div class="ach-header">
+        <h3>🎖️ Achievements</h3>
+        <button class="settings-close" id="achievementClose">✕</button>
+      </div>
+      <div class="ach-list" id="achievementList"></div>
+    </div>
+  </div>
+
+  <!-- ===== DAILY REWARD OVERLAY ===== -->
+  <div id="dailyRewardOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="dr-panel">
+      <div class="dr-header">
+        <h3>🎁 Daily Rewards</h3>
+        <button class="settings-close" id="dailyRewardClose">✕</button>
+      </div>
+      <div class="dr-streak" id="dailyRewardStreak">0 day streak</div>
+      <div class="dr-list" id="dailyRewardList"></div>
+      <button class="btn btn-gold dr-checkin-btn" id="dailyCheckInBtn">Check In!</button>
+    </div>
+  </div>
+
+  <!-- ===== MODE SELECT OVERLAY ===== -->
+  <div id="modeSelectOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="mode-panel">
+      <div class="mode-header">
+        <h3>🎯 Game Modes</h3>
+        <button class="settings-close" id="modeSelectClose">✕</button>
+      </div>
+      <div class="mode-list" id="modeSelectList"></div>
+    </div>
+  </div>
+
   <!-- Toast notification -->
   <div id="toast" class="toast"></div>
 
@@ -370,10 +432,15 @@
   <script src="js/haptic.js"></script>
   <script src="js/physics.js"></script>
   <script src="js/tickets.js"></script>
+  <script src="js/items.js"></script>
   <script src="js/missions.js"></script>
   <script src="js/nickname.js"></script>
   <script src="js/ranking.js"></script>
   <script src="js/tutorial.js"></script>
+  <script src="js/challenge.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/daily-rewards.js"></script>
+  <script src="js/season.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/analytics.js"></script>
   <script src="js/firebase-leaderboard.js"></script>

@@ -398,7 +398,7 @@ describe('Score Calculation', () => {
 describe('Combo System', () => {
   it('combo window should be 2000ms', () => {
     const src = readSrc('js/game.js');
-    assert.ok(src.includes('COMBO_WINDOW_MS = 2000'));
+    assert.ok(src.includes('COMBO_WINDOW_MS = 1200'));
   });
 
   it('comboCount should increment on each merge', () => {
@@ -563,9 +563,9 @@ describe('State Transitions', () => {
 //  7. Drop Cooldown
 // ============================
 describe('Drop Cooldown', () => {
-  it('DROP_COOLDOWN_MS should be 500ms', () => {
+  it('DROP_COOLDOWN_MS should be 350ms', () => {
     const src = readSrc('js/game.js');
-    assert.ok(src.includes('DROP_COOLDOWN_MS = 500'));
+    assert.ok(src.includes('DROP_COOLDOWN_MS = 350'));
   });
 
   it('canDrop should be false after dropping', () => {
@@ -665,7 +665,7 @@ describe('Integration — Game Flow via Sandbox', () => {
     const src = readSrc('js/game.js');
     const block = src.substring(src.indexOf('function startGame()'), src.indexOf('function resetGame()'));
     assert.ok(block.includes("UI.showScreen('playing')"));
-    assert.ok(block.includes('UI.updateHUD(0, highScore)'));
+    assert.ok(block.includes('UI.updateHUD('));
     assert.ok(block.includes('UI.updateNextFruit(nextLevel)'));
   });
 

@@ -171,6 +171,16 @@ const SkinManager = (() => {
     return null;
   }
 
+  function forceUnlock(skinId) {
+    if (!SKINS[skinId]) return false;
+    let unlocks = getUnlocks();
+    if (!unlocks.includes(skinId)) {
+      unlocks.push(skinId);
+      localStorage.setItem(UNLOCK_KEY, JSON.stringify(unlocks));
+    }
+    return true;
+  }
+
   return {
     init,
     recordGameEnd,
@@ -182,5 +192,6 @@ const SkinManager = (() => {
     getAllSkins,
     getUnlockProgress,
     checkUnlocks,
+    forceUnlock,
   };
 })();

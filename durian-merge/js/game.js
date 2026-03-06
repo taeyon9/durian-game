@@ -11,10 +11,10 @@ const Game = (() => {
   let canDrop = true;
   let dropCooldown = 0;
   let lastDropTime = 0;
-  const DROP_COOLDOWN_MS = 350;
+  let DROP_COOLDOWN_MS = 350;
   const DANGER_LINE_Y = 100; // Slightly less since HUD is now HTML overlay
   let dangerTimer = 0;
-  const DANGER_TIMEOUT = 2000;
+  let DANGER_TIMEOUT = 2000;
   let fruitBodies = [];
   let mergeEffects = [];
   let scorePopups = [];
@@ -102,6 +102,14 @@ const Game = (() => {
   let gameStartTime = 0;
   let continuedThisGame = false;
 
+  // Challenge mode state
+  let challengeTimer = 0; // remaining ms for time attack
+  let challengeStartTime = 0;
+  let dangerEnabled = true;
+  let scoreEnabled = true;
+  let radiusScale = 1;
+  let targetScore = 0; // for speed run
+
   // Scale
   let scale = 1;
   const BASE_WIDTH = 390;
@@ -161,6 +169,18 @@ const Game = (() => {
     // Init physics
     Physics.init(BASE_WIDTH, BASE_HEIGHT);
     Physics.onCollision(handleCollision);
+
+    // Item buttons
+    document.querySelectorAll('.hud-item-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const itemId = btn.dataset.item;
+        if (itemId) useItem(itemId);
+      });
+    });
+
+    // Mode select UI
+    initModeSelectUI();
 
     // Initial fruits
     currentLevel = randomDropLevel();
@@ -239,15 +259,56 @@ const Game = (() => {
     if (!TicketManager.hasTickets()) return;
     TicketManager.useTicket();
     resetGame();
+    applyChallengeSettings();
     gameState = 'playing';
     gameStartTime = performance.now();
+    challengeStartTime = performance.now();
     continuedThisGame = false;
     UI.showScreen('playing');
-    UI.updateHUD(0, highScore);
+    UI.updateHUD(scoreEnabled ? 0 : '-', highScore);
     UI.updateNextFruit(nextLevel);
+    updateItemHUD();
+
+    // Show mode label
+    if (typeof ChallengeManager !== 'undefined' && !ChallengeManager.isNormal()) {
+      const mode = ChallengeManager.getModeDef();
+      const label = document.getElementById('hudModeLabel');
+      if (label) { label.textContent = mode.icon + ' ' + mode.name; label.style.display = ''; }
+      const timer = document.getElementById('hudTimer');
+      if (timer && challengeTimer > 0) timer.style.display = '';
+    }
 
     MissionManager.track('play');
     AnalyticsManager.track('game_start');
+    if (typeof SeasonManager !== 'undefined') SeasonManager.trackSeasonMission('play');
+    if (typeof AchievementManager !== 'undefined') AchievementManager.check('play');
+  }
+
+  function applyChallengeSettings() {
+    if (typeof ChallengeManager === 'undefined') return;
+    const settings = ChallengeManager.getModeSettings();
+
+    // Reset to defaults
+    DROP_COOLDOWN_MS = 350;
+    DANGER_TIMEOUT = 2000;
+    dangerEnabled = true;
+    scoreEnabled = true;
+    radiusScale = 1;
+    challengeTimer = 0;
+    targetScore = 0;
+
+    // Apply mode-specific
+    if (settings.timeLimit) challengeTimer = settings.timeLimit;
+    if (settings.radiusScale) radiusScale = settings.radiusScale;
+    if (settings.gravityScale) {
+      const engine = Physics.getEngine();
+      engine.gravity.y = 1.8 * settings.gravityScale;
+    }
+    if (settings.dropCooldown) DROP_COOLDOWN_MS = settings.dropCooldown;
+    if (settings.dangerTimeout) DANGER_TIMEOUT = settings.dangerTimeout;
+    if (settings.dangerEnabled === false) dangerEnabled = false;
+    if (settings.scoreEnabled === false) scoreEnabled = false;
+    if (settings.targetScore) targetScore = settings.targetScore;
   }
 
   function resetGame() {
@@ -274,6 +335,139 @@ const Game = (() => {
     maxMergedLevel = 0;
     gameOverAnimTimer = 0;
     gameOverAnimData = null;
+
+    // Reset challenge state
+    challengeTimer = 0;
+    targetScore = 0;
+    dangerEnabled = true;
+    scoreEnabled = true;
+    radiusScale = 1;
+    // Reset physics gravity
+    const engine = Physics.getEngine();
+    if (engine) engine.gravity.y = 1.8;
+  }
+
+  // ===== ITEM USAGE =====
+
+  function useItem(itemId) {
+    if (gameState !== 'playing') return;
+    if (typeof ItemManager === 'undefined') return;
+    if (!ItemManager.hasItem(itemId)) return;
+
+    switch (itemId) {
+      case 'bomb': useBomb(); break;
+      case 'shake': useShake(); break;
+      case 'upgrade': useUpgrade(); break;
+      default: return;
+    }
+
+    ItemManager.useItem(itemId);
+    updateItemHUD();
+    SoundManager.playMerge(5);
+    Haptic.merge(5);
+  }
+
+  function useBomb() {
+    if (fruitBodies.length === 0) return;
+    // Find smallest fruit
+    let smallest = null;
+    let smallestLevel = Infinity;
+    for (const body of fruitBodies) {
+      if (body.isMerging) continue;
+      if (body.fruitLevel < smallestLevel) {
+        smallestLevel = body.fruitLevel;
+        smallest = body;
+      }
+    }
+    if (!smallest) return;
+
+    // Visual effect
+    const mx = smallest.position.x;
+    const my = smallest.position.y;
+    mergeEffects.push({
+      x: mx, y: my,
+      radius: FRUITS[smallest.fruitLevel].radius,
+      alpha: 1,
+      color: '#FF4500',
+      glowRadius: 0,
+      particles: [],
+      level: smallest.fruitLevel,
+    });
+    shakeIntensity = 4;
+
+    Physics.removeFruit(smallest);
+    const idx = fruitBodies.indexOf(smallest);
+    if (idx >= 0) fruitBodies.splice(idx, 1);
+  }
+
+  function useShake() {
+    // Shuffle all fruits with random impulse
+    for (const body of fruitBodies) {
+      if (body.isMerging) continue;
+      const vx = (Math.random() - 0.5) * 8;
+      const vy = -Math.random() * 5 - 2;
+      Matter.Body.setVelocity(body, { x: vx, y: vy });
+      Matter.Sleeping.set(body, false);
+    }
+    shakeIntensity = 6;
+  }
+
+  function useUpgrade() {
+    if (fruitBodies.length === 0) return;
+    // Find smallest fruit and upgrade it
+    let smallest = null;
+    let smallestLevel = Infinity;
+    for (const body of fruitBodies) {
+      if (body.isMerging) continue;
+      if (body.fruitLevel < smallestLevel && body.fruitLevel < FRUITS.length - 1) {
+        smallestLevel = body.fruitLevel;
+        smallest = body;
+      }
+    }
+    if (!smallest) return;
+
+    const mx = smallest.position.x;
+    const my = smallest.position.y;
+    const newLevel = smallest.fruitLevel + 1;
+
+    Physics.removeFruit(smallest);
+    const idx = fruitBodies.indexOf(smallest);
+    if (idx >= 0) fruitBodies.splice(idx, 1);
+
+    const newBody = Physics.createFruit(mx, my, newLevel);
+    newBody.droppedAt = 0;
+    newBody.mergedAt = performance.now();
+    fruitBodies.push(newBody);
+
+    FruitAlbum.unlock(newLevel);
+
+    mergeEffects.push({
+      x: mx, y: my,
+      radius: FRUITS[newLevel].radius,
+      alpha: 1,
+      color: '#00FF88',
+      glowRadius: 0,
+      particles: [],
+      level: newLevel,
+    });
+  }
+
+  function updateItemHUD() {
+    if (typeof ItemManager === 'undefined') return;
+    const counts = ItemManager.getAll();
+    const bombEl = document.getElementById('hudBombCount');
+    const shakeEl = document.getElementById('hudShakeCount');
+    const upgradeEl = document.getElementById('hudUpgradeCount');
+    if (bombEl) bombEl.textContent = counts.bomb || 0;
+    if (shakeEl) shakeEl.textContent = counts.shake || 0;
+    if (upgradeEl) upgradeEl.textContent = counts.upgrade || 0;
+
+    const bombBtn = document.getElementById('hudItemBomb');
+    const shakeBtn = document.getElementById('hudItemShake');
+    const upgradeBtn = document.getElementById('hudItemUpgrade');
+    if (bombBtn) bombBtn.disabled = !counts.bomb;
+    if (shakeBtn) shakeBtn.disabled = !counts.shake;
+    if (upgradeBtn) upgradeBtn.disabled = !counts.upgrade;
   }
 
   async function watchAdForTicket() {
@@ -346,6 +540,8 @@ const Game = (() => {
   function menuFromPause() {
     if (gameState !== 'paused') return;
     gameState = 'menu';
+    // Reset challenge mode when leaving to menu
+    if (typeof ChallengeManager !== 'undefined') ChallengeManager.resetMode();
     SoundManager.resumeCtx();
     UI.showScreen('menu');
   }
@@ -430,9 +626,11 @@ const Game = (() => {
 
       MissionManager.track('merge', level + 1);
       AnalyticsManager.track('merge', { fruitLevel: level + 1 });
+      if (typeof AchievementManager !== 'undefined') AchievementManager.check('merge', level + 1);
+      if (typeof SeasonManager !== 'undefined') SeasonManager.trackSeasonMission('merge', level + 1);
 
       // Score + Combo
-      const points = FRUITS[level + 1].score;
+      const points = scoreEnabled ? FRUITS[level + 1].score : 0;
       comboCount++;
       comboTimer = COMBO_WINDOW_MS;
 
@@ -476,6 +674,8 @@ const Game = (() => {
 
         MissionManager.track('combo', comboCount);
         AnalyticsManager.track('combo', { count: comboCount });
+        if (typeof AchievementManager !== 'undefined') AchievementManager.check('combo', comboCount);
+        if (typeof SeasonManager !== 'undefined') SeasonManager.trackSeasonMission('combo', comboCount);
 
         // UI.showCombo(comboCount); // removed: Canvas comboDisplay already shows combo at merge location
         SoundManager.playCombo(comboCount);
@@ -607,6 +807,16 @@ const Game = (() => {
 
     MissionManager.track('score', score);
     AnalyticsManager.track('game_over', { score, playTimeMs: gameDurationMs });
+    if (typeof AchievementManager !== 'undefined') AchievementManager.check('score', score);
+    if (typeof SeasonManager !== 'undefined') SeasonManager.trackSeasonMission('score', score);
+
+    // Challenge mode completion
+    if (typeof ChallengeManager !== 'undefined' && !ChallengeManager.isNormal()) {
+      const modeId = ChallengeManager.getMode();
+      ChallengeManager.completeMode(modeId, score, performance.now() - challengeStartTime);
+      if (typeof AchievementManager !== 'undefined') AchievementManager.check('challenge_clear');
+      ChallengeManager.resetMode();
+    }
 
     const isNewBest = score > highScore;
 
@@ -654,6 +864,12 @@ const Game = (() => {
 
   function finishGameOver() {
     gameState = 'gameover';
+
+    // Hide challenge HUD elements
+    const timer = document.getElementById('hudTimer');
+    if (timer) { timer.style.display = 'none'; timer.classList.remove('danger'); }
+    const modeLabel = document.getElementById('hudModeLabel');
+    if (modeLabel) modeLabel.style.display = 'none';
 
     const { gameDurationMs, isNewBest } = gameOverAnimData;
 
@@ -710,7 +926,28 @@ const Game = (() => {
         }
       }
 
-      checkGameOver(delta);
+      // Challenge timer (time attack)
+      if (challengeTimer > 0) {
+        challengeTimer -= delta;
+        const timerEl = document.getElementById('hudTimerValue');
+        if (timerEl) timerEl.textContent = Math.max(0, Math.ceil(challengeTimer / 1000));
+        const timerWrap = document.getElementById('hudTimer');
+        if (timerWrap) {
+          if (challengeTimer <= 10000) timerWrap.classList.add('danger');
+          else timerWrap.classList.remove('danger');
+        }
+        if (challengeTimer <= 0) {
+          challengeTimer = 0;
+          triggerGameOver();
+        }
+      }
+
+      // Speed run check
+      if (targetScore > 0 && score >= targetScore) {
+        triggerGameOver();
+      }
+
+      if (dangerEnabled) checkGameOver(delta);
 
       // Merge effects decay
       for (let i = mergeEffects.length - 1; i >= 0; i--) {
@@ -912,6 +1149,8 @@ const Game = (() => {
 
     // Merge effects
     for (const effect of mergeEffects) {
+      // Merge flash (brief white flash at merge point)
+      renderMergeFlash(effect);
       // Glow — single circle
       const glowMult = effect.level >= 7 ? 0.6 : 0.4;
       ctx.fillStyle = effect.color;
@@ -1007,6 +1246,13 @@ const Game = (() => {
       ctx.globalAlpha = 1;
     }
 
+    // Danger zone pulse overlay
+    if (dangerTimer > 800 && dangerEnabled) {
+      const pulseAlpha = Math.sin(dangerTimer / 150) * 0.08 + 0.08;
+      ctx.fillStyle = `rgba(255, 0, 0, ${pulseAlpha})`;
+      ctx.fillRect(0, 0, BASE_WIDTH, DANGER_LINE_Y + 20);
+    }
+
     // Drop guide
     if (canDrop) {
       // Guideline
@@ -1081,7 +1327,92 @@ const Game = (() => {
     }
   }
 
-  return { init, triggerGameOver };
+  // ===== MODE SELECT UI =====
+
+  function initModeSelectUI() {
+    const modesBtn = document.getElementById('menuModesBtn');
+    if (modesBtn) {
+      modesBtn.addEventListener('click', () => {
+        renderModeSelect();
+        const overlay = document.getElementById('modeSelectOverlay');
+        if (overlay) overlay.style.display = '';
+      });
+    }
+
+    const closeBtn = document.getElementById('modeSelectClose');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        const overlay = document.getElementById('modeSelectOverlay');
+        if (overlay) overlay.style.display = 'none';
+      });
+    }
+
+    const overlay = document.getElementById('modeSelectOverlay');
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.style.display = 'none';
+      });
+    }
+  }
+
+  function renderModeSelect() {
+    if (typeof ChallengeManager === 'undefined') return;
+    const list = document.getElementById('modeSelectList');
+    if (!list) return;
+
+    const modes = ChallengeManager.getAllModes();
+    const currentMode = ChallengeManager.getMode();
+
+    list.innerHTML = '';
+    for (const mode of modes) {
+      const div = document.createElement('div');
+      div.className = 'mode-card' + (mode.id === currentMode ? ' active' : '');
+
+      const stars = '★'.repeat(mode.difficulty) + '☆'.repeat(Math.max(0, 5 - mode.difficulty));
+      const rewardText = mode.reward
+        ? (mode.reward.type === 'ticket' ? '🎟️ x' + mode.reward.count
+          : mode.reward.itemId ? mode.reward.itemId + ' x' + mode.reward.count
+          : '')
+        : 'No reward';
+
+      div.innerHTML =
+        '<div class="mode-icon">' + mode.icon + '</div>' +
+        '<div class="mode-info">' +
+          '<div class="mode-name">' + mode.name + '</div>' +
+          '<div class="mode-desc">' + mode.desc + '</div>' +
+          '<div class="mode-reward">' + rewardText + '</div>' +
+        '</div>' +
+        '<div class="mode-difficulty">' + stars + '</div>';
+
+      div.addEventListener('click', () => {
+        ChallengeManager.setMode(mode.id);
+        const overlay = document.getElementById('modeSelectOverlay');
+        if (overlay) overlay.style.display = 'none';
+        if (typeof UI !== 'undefined') {
+          UI.showToast(mode.icon + ' ' + mode.name + ' selected', 1500);
+        }
+      });
+
+      list.appendChild(div);
+    }
+  }
+
+  // ===== VISUAL EFFECTS (Phase 3) =====
+
+  // Merge flash (brief white overlay at merge point)
+  function renderMergeFlash(effect) {
+    if (effect.alpha > 0.7) {
+      const flashAlpha = (effect.alpha - 0.7) / 0.3;
+      ctx.globalAlpha = flashAlpha * 0.4;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, effect.radius * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  return { init, triggerGameOver, useItem };
 })();
 
 window.addEventListener('load', () => Game.init());

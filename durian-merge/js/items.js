@@ -1,0 +1,80 @@
+// Item/Power-up System — bomb, shake, upgrade
+const ItemManager = (() => {
+  const STORAGE_KEY = 'durianMergeItems';
+
+  const ITEM_DEFS = {
+    bomb: {
+      id: 'bomb',
+      name: 'Bomb',
+      icon: '💣',
+      desc: 'Remove the smallest fruit on screen',
+      maxStack: 10,
+    },
+    shake: {
+      id: 'shake',
+      name: 'Shake',
+      icon: '🌊',
+      desc: 'Shuffle all fruits to create new merge chances',
+      maxStack: 10,
+    },
+    upgrade: {
+      id: 'upgrade',
+      name: 'Upgrade',
+      icon: '⬆️',
+      desc: 'Upgrade the smallest fruit by one level',
+      maxStack: 10,
+    },
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { bomb: 0, shake: 0, upgrade: 0 };
+      return JSON.parse(raw);
+    } catch { return { bomb: 0, shake: 0, upgrade: 0 }; }
+  }
+
+  function save(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function getCount(itemId) {
+    return load()[itemId] || 0;
+  }
+
+  function getAll() {
+    return load();
+  }
+
+  function addItem(itemId, count) {
+    count = count || 1;
+    const data = load();
+    const def = ITEM_DEFS[itemId];
+    if (!def) return false;
+    data[itemId] = Math.min((data[itemId] || 0) + count, def.maxStack);
+    save(data);
+    return true;
+  }
+
+  function useItem(itemId) {
+    const data = load();
+    if (!data[itemId] || data[itemId] <= 0) return false;
+    data[itemId]--;
+    save(data);
+    return true;
+  }
+
+  function hasItem(itemId) {
+    return getCount(itemId) > 0;
+  }
+
+  function getDef(itemId) {
+    return ITEM_DEFS[itemId] || null;
+  }
+
+  function getAllDefs() {
+    return Object.values(ITEM_DEFS);
+  }
+
+  return { getCount, getAll, addItem, useItem, hasItem, getDef, getAllDefs };
+})();

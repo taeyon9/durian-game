@@ -576,6 +576,58 @@ const SoundManager = (() => {
     }, hadPrevious ? FADE_MS : 0);
   }
 
+  function fadeOutBGM(durationMs) {
+    if (!_bgmCurrent || !_bgmCurrent.gainNode) return;
+    const ctx = getCtx();
+    const dur = (durationMs || FADE_MS) / 1000;
+    _bgmCurrent.gainNode.gain.cancelScheduledValues(ctx.currentTime);
+    _bgmCurrent.gainNode.gain.setValueAtTime(_bgmCurrent.gainNode.gain.value, ctx.currentTime);
+    _bgmCurrent.gainNode.gain.linearRampToValueAtTime(0.001, ctx.currentTime + dur);
+    if (_bgmCurrent.timer) clearInterval(_bgmCurrent.timer);
+    setTimeout(() => {
+      if (_bgmCurrent) {
+        _bgmCurrent.nodes.forEach(n => { try { n.stop(); } catch (_) {} });
+        try { _bgmCurrent.gainNode.disconnect(); } catch (_) {}
+        _bgmCurrent = null;
+      }
+    }, durationMs || FADE_MS);
+  }
+
+  function playItemUse() {
+    if (_sfxMuted) return;
+    const ctx = getCtx();
+    // Quick "power-up" sound: ascending chime
+    for (let i = 0; i < 3; i++) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.06;
+      osc.frequency.setValueAtTime(600 + i * 200, t);
+      g.gain.setValueAtTime(0.2, t);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+      osc.start(t); osc.stop(t + 0.1);
+    }
+  }
+
+  function playAchievement() {
+    if (_sfxMuted) return;
+    const ctx = getCtx();
+    // Triumphant fanfare: 4-note ascending
+    const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+    for (let i = 0; i < freqs.length; i++) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.type = 'triangle';
+      const t = ctx.currentTime + i * 0.12;
+      osc.frequency.setValueAtTime(freqs[i], t);
+      g.gain.setValueAtTime(0.25, t);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+      osc.start(t); osc.stop(t + 0.25);
+    }
+  }
+
   function bgmStop() {
     _lastBgmType = null;
     _bgmStopCurrent();
@@ -598,6 +650,7 @@ const SoundManager = (() => {
   return {
     resume, suspendCtx, resumeCtx,
     playDrop, playMerge, playCombo, playComboBreak, playGameOver, playBounce,
+    playItemUse, playAchievement, fadeOutBGM,
     mute, unmute, toggleMute,
     get sfxMuted() { return _sfxMuted; },
     set sfxMuted(v) {
