@@ -689,3 +689,177 @@ describe('Integration — Game Flow via Sandbox', () => {
     assert.ok(block.includes('UI.updateHUD(score, highScore)'));
   });
 });
+
+// ============================
+//  11. Item System
+// ============================
+describe('Item System', () => {
+  it('items.js should define ItemManager with IIFE pattern', () => {
+    const src = readSrc('js/items.js');
+    assert.ok(src.includes('const ItemManager'));
+    assert.ok(src.includes('bomb'));
+    assert.ok(src.includes('shake'));
+    assert.ok(src.includes('upgrade'));
+  });
+
+  it('ItemManager should have getCount, addItem, useItem methods', () => {
+    const src = readSrc('js/items.js');
+    assert.ok(src.includes('function getCount'));
+    assert.ok(src.includes('function addItem'));
+    assert.ok(src.includes('function useItem'));
+  });
+
+  it('game.js should integrate item usage', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('function useItem'));
+    assert.ok(src.includes('function useBomb'));
+    assert.ok(src.includes('function useShake'));
+    assert.ok(src.includes('function useUpgrade'));
+  });
+
+  it('game.js should expose useItem in return', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('return { init, triggerGameOver, useItem }'));
+  });
+});
+
+// ============================
+//  12. Challenge System
+// ============================
+describe('Challenge System', () => {
+  it('challenge.js should define ChallengeManager with 6 modes', () => {
+    const src = readSrc('js/challenge.js');
+    assert.ok(src.includes('const ChallengeManager'));
+    assert.ok(src.includes("normal"));
+    assert.ok(src.includes("timeattack"));
+    assert.ok(src.includes("tinyfruit"));
+    assert.ok(src.includes("hard"));
+    assert.ok(src.includes("speedrun"));
+    assert.ok(src.includes("zen"));
+  });
+
+  it('game.js should apply challenge settings', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('function applyChallengeSettings'));
+    assert.ok(src.includes('challengeTimer'));
+    assert.ok(src.includes('radiusScale'));
+  });
+
+  it('game.js should handle time attack countdown', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('challengeTimer -= delta'));
+  });
+});
+
+// ============================
+//  13. Achievement System
+// ============================
+describe('Achievement System', () => {
+  it('achievements.js should define 20 achievements', () => {
+    const src = readSrc('js/achievements.js');
+    assert.ok(src.includes('const AchievementManager'));
+    assert.ok(src.includes("first_merge"));
+    assert.ok(src.includes("merge_durian"));
+    assert.ok(src.includes("all_achievements"));
+    // Count achievement entries
+    const count = (src.match(/\{ id: '/g) || []).length;
+    assert.ok(count >= 20, 'Should have at least 20 achievements, got ' + count);
+  });
+
+  it('game.js should call AchievementManager.check', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes("AchievementManager.check('merge'"));
+    assert.ok(src.includes("AchievementManager.check('combo'"));
+    assert.ok(src.includes("AchievementManager.check('score'"));
+    assert.ok(src.includes("AchievementManager.check('play'"));
+  });
+});
+
+// ============================
+//  14. Daily Reward System
+// ============================
+describe('Daily Reward System', () => {
+  it('daily-rewards.js should define 7-day reward cycle', () => {
+    const src = readSrc('js/daily-rewards.js');
+    assert.ok(src.includes('const DailyRewardManager'));
+    assert.ok(src.includes('day: 1'));
+    assert.ok(src.includes('day: 7'));
+    // Count reward entries
+    const count = (src.match(/\{ day:/g) || []).length;
+    assert.equal(count, 7);
+  });
+
+  it('should have checkIn and canCheckIn methods', () => {
+    const src = readSrc('js/daily-rewards.js');
+    assert.ok(src.includes('function checkIn'));
+    assert.ok(src.includes('function canCheckIn'));
+    assert.ok(src.includes('function getStreak'));
+  });
+});
+
+// ============================
+//  15. Season System
+// ============================
+describe('Season System', () => {
+  it('season.js should define 6 themes', () => {
+    const src = readSrc('js/season.js');
+    assert.ok(src.includes('const SeasonManager'));
+    assert.ok(src.includes('tropical_summer'));
+    assert.ok(src.includes('midnight_neon'));
+    assert.ok(src.includes('aurora_night'));
+    const count = (src.match(/id: '/g) || []).length;
+    assert.ok(count >= 6, 'Should have at least 6 themes');
+  });
+
+  it('game.js should track season missions', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes("SeasonManager.trackSeasonMission"));
+  });
+});
+
+// ============================
+//  16. Visual Effects
+// ============================
+describe('Visual Effects', () => {
+  it('game.js should have merge flash effect', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('function renderMergeFlash'));
+    assert.ok(src.includes('renderMergeFlash(effect)'));
+  });
+
+  it('game.js should have danger zone pulse', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('Danger zone pulse'));
+  });
+});
+
+// ============================
+//  17. Sound Effects
+// ============================
+describe('Sound Effects', () => {
+  it('sounds.js should have item use and achievement sounds', () => {
+    const src = readSrc('js/sounds.js');
+    assert.ok(src.includes('function playItemUse'));
+    assert.ok(src.includes('function playAchievement'));
+    assert.ok(src.includes('function fadeOutBGM'));
+  });
+});
+
+// ============================
+//  18. Statistics Enhancement
+// ============================
+describe('Statistics Enhancement', () => {
+  it('analytics.js should track combo stats', () => {
+    const src = readSrc('js/analytics.js');
+    assert.ok(src.includes("case 'combo'"));
+    assert.ok(src.includes('comboStats'));
+    assert.ok(src.includes('distribution'));
+  });
+
+  it('index.html should have combo stats section', () => {
+    const src = readSrc('index.html');
+    assert.ok(src.includes('statComboSection'));
+    assert.ok(src.includes('statBestCombo'));
+    assert.ok(src.includes('statComboDistribution'));
+  });
+});
