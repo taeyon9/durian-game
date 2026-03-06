@@ -183,10 +183,18 @@ const DailyRewardManager = (() => {
     }
   }
 
-  // Auto-show on app start if can check in
+  // Auto-show on app start if can check in (skip if tutorial is showing)
   function autoShow() {
-    if (canCheckIn()) {
-      showPanel();
+    if (!canCheckIn()) return;
+    // Don't show if tutorial is active
+    if (typeof TutorialManager !== 'undefined' && !TutorialManager.isDone()) return;
+    showPanel();
+  }
+
+  function updateBadge() {
+    const badge = document.getElementById('dailyBadge');
+    if (badge) {
+      badge.style.display = canCheckIn() ? '' : 'none';
     }
   }
 
@@ -201,8 +209,14 @@ const DailyRewardManager = (() => {
       });
     }
 
-    // Auto-show after a small delay
-    setTimeout(autoShow, 500);
+    // Menu button
+    const dailyBtn = document.getElementById('menuDailyBtn');
+    if (dailyBtn) dailyBtn.addEventListener('click', showPanel);
+
+    updateBadge();
+
+    // Auto-show after delay (respects tutorial state)
+    setTimeout(autoShow, 800);
   }
 
   if (document.readyState === 'loading') {

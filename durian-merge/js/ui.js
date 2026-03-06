@@ -320,7 +320,10 @@ const UI = (() => {
     const canvas = document.getElementById('gameCanvas');
     canvas.style.display = (name === 'playing' || name === 'paused') ? '' : 'none';
 
-    if (name === 'menu') updateMenu();
+    if (name === 'menu') {
+      updateMenu();
+      updateMenuItems();
+    }
     if (name === 'leaderboard') renderLeaderboardFull('alltime');
   }
 
@@ -971,6 +974,18 @@ const UI = (() => {
   }
 
   // ===== UTILS =====
+
+  function updateMenuItems() {
+    if (typeof ItemManager === 'undefined') return;
+    const items = ItemManager.getAll();
+    const el = (id) => document.getElementById(id);
+    const b = el('menuBombCount');
+    const s = el('menuShakeCount');
+    const u = el('menuUpgradeCount');
+    if (b) b.textContent = items.bomb || 0;
+    if (s) s.textContent = items.shake || 0;
+    if (u) u.textContent = items.upgrade || 0;
+  }
 
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

@@ -110,6 +110,10 @@ const Game = (() => {
   let radiusScale = 1;
   let targetScore = 0; // for speed run
 
+  // Cached DOM refs for per-frame access
+  let _hudTimerValue = null;
+  let _hudTimerWrap = null;
+
   // Scale
   let scale = 1;
   const BASE_WIDTH = 390;
@@ -169,6 +173,10 @@ const Game = (() => {
     // Init physics
     Physics.init(BASE_WIDTH, BASE_HEIGHT);
     Physics.onCollision(handleCollision);
+
+    // Cache DOM refs for game loop
+    _hudTimerValue = document.getElementById('hudTimerValue');
+    _hudTimerWrap = document.getElementById('hudTimer');
 
     // Item buttons
     document.querySelectorAll('.hud-item-btn').forEach(btn => {
@@ -929,12 +937,10 @@ const Game = (() => {
       // Challenge timer (time attack)
       if (challengeTimer > 0) {
         challengeTimer -= delta;
-        const timerEl = document.getElementById('hudTimerValue');
-        if (timerEl) timerEl.textContent = Math.max(0, Math.ceil(challengeTimer / 1000));
-        const timerWrap = document.getElementById('hudTimer');
-        if (timerWrap) {
-          if (challengeTimer <= 10000) timerWrap.classList.add('danger');
-          else timerWrap.classList.remove('danger');
+        if (_hudTimerValue) _hudTimerValue.textContent = Math.max(0, Math.ceil(challengeTimer / 1000));
+        if (_hudTimerWrap) {
+          if (challengeTimer <= 10000) _hudTimerWrap.classList.add('danger');
+          else _hudTimerWrap.classList.remove('danger');
         }
         if (challengeTimer <= 0) {
           challengeTimer = 0;

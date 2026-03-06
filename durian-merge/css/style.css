@@ -2193,6 +2193,28 @@ html, body {
 .menu-season-icon { font-size: 14px; }
 .menu-season-name { font-weight: 500; }
 
+/* ===== MENU ITEMS DISPLAY ===== */
+.menu-items {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+}
+.menu-item-slot {
+  font-size: 14px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.menu-item-slot span {
+  font-weight: 600;
+  color: var(--gold);
+  font-size: 13px;
+}
+
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
   .sparkle, .bokeh, .menu-hero-fruit, .go-newbest,
