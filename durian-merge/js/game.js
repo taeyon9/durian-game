@@ -245,6 +245,9 @@ const Game = (() => {
     UI.showScreen('playing');
     UI.updateHUD(0, highScore);
     UI.updateNextFruit(nextLevel);
+
+    MissionManager.track('play');
+    AnalyticsManager.track('game_start');
   }
 
   function resetGame() {
@@ -425,6 +428,9 @@ const Game = (() => {
       FruitAlbum.unlock(level + 1);
       if (level + 1 > maxMergedLevel) maxMergedLevel = level + 1;
 
+      MissionManager.track('merge', level + 1);
+      AnalyticsManager.track('merge', { fruitLevel: level + 1 });
+
       // Score + Combo
       const points = FRUITS[level + 1].score;
       comboCount++;
@@ -467,6 +473,9 @@ const Game = (() => {
           y: Math.max(my - 40, DANGER_LINE_Y + 40),
           color: comboColor, // null = rainbow
         };
+
+        MissionManager.track('combo', comboCount);
+        AnalyticsManager.track('combo', { count: comboCount });
 
         // UI.showCombo(comboCount); // removed: Canvas comboDisplay already shows combo at merge location
         SoundManager.playCombo(comboCount);
@@ -595,6 +604,10 @@ const Game = (() => {
     gameOverAnimTimer = 0;
 
     const gameDurationMs = performance.now() - gameStartTime;
+
+    MissionManager.track('score', score);
+    AnalyticsManager.track('game_over', { score, playTimeMs: gameDurationMs });
+
     const isNewBest = score > highScore;
 
     if (isNewBest) {
