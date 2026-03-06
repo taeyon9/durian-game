@@ -100,6 +100,16 @@ const AnalyticsManager = (() => {
         break;
       }
 
+      case 'combo': {
+        const comboCount = (data && data.count) || 0;
+        if (!stats.comboStats) stats.comboStats = { total: 0, max: 0, distribution: {} };
+        stats.comboStats.total++;
+        if (comboCount > stats.comboStats.max) stats.comboStats.max = comboCount;
+        const key = String(comboCount);
+        stats.comboStats.distribution[key] = (stats.comboStats.distribution[key] || 0) + 1;
+        break;
+      }
+
       case 'ad_watched':
         // Track ad watches (extensible)
         break;
@@ -147,6 +157,9 @@ const AnalyticsManager = (() => {
       ? FRUITS[stats.maxFruitLevel].name
       : 'None';
 
+    // Combo stats
+    const comboStats = stats.comboStats || { total: 0, max: 0, distribution: {} };
+
     return {
       totalPlays: stats.totalPlays,
       totalPlayTime: playTimeFormatted,
@@ -158,6 +171,7 @@ const AnalyticsManager = (() => {
       maxFruitLevel: stats.maxFruitLevel,
       maxFruitName,
       dailyRecords: dailyList,
+      comboStats,
     };
   }
 
@@ -186,20 +200,50 @@ const AnalyticsManager = (() => {
     document.getElementById('statLowestScore').textContent = stats.lowestScore.toLocaleString();
     document.getElementById('statMaxFruit').textContent = stats.maxFruitName;
 
-    // Merge counts
+    // Merge counts with bar chart
     const mergeList = document.getElementById('statMergeList');
     mergeList.innerHTML = '';
+    const maxMerge = Math.max(1, ...stats.mergeCounts);
     for (let i = 0; i < stats.mergeCounts.length; i++) {
       const fruitName = (typeof FRUITS !== 'undefined' && FRUITS[i])
         ? FRUITS[i].name
         : ('Lv.' + i);
       const count = stats.mergeCounts[i];
+      const pct = Math.round((count / maxMerge) * 100);
+      const color = (typeof FRUITS !== 'undefined' && FRUITS[i]) ? FRUITS[i].color : '#888';
       const row = document.createElement('div');
       row.className = 'stat-merge-row';
       row.innerHTML =
         '<span class="stat-merge-name">' + fruitName + '</span>' +
+        '<div class="stat-merge-bar"><div class="stat-merge-bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
         '<span class="stat-merge-count">' + count.toLocaleString() + '</span>';
       mergeList.appendChild(row);
+    }
+
+    // Combo stats
+    const comboSection = document.getElementById('statComboSection');
+    if (comboSection && stats.comboStats) {
+      const cs = stats.comboStats;
+      document.getElementById('statBestCombo').textContent = cs.max ? cs.max + 'x' : '-';
+      document.getElementById('statTotalCombos').textContent = cs.total;
+
+      // Combo distribution
+      const distList = document.getElementById('statComboDistribution');
+      if (distList) {
+        distList.innerHTML = '';
+        const entries = Object.entries(cs.distribution).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+        const maxDist = Math.max(1, ...entries.map(e => e[1]));
+        for (const [combo, count] of entries) {
+          const pct = Math.round((count / maxDist) * 100);
+          const row = document.createElement('div');
+          row.className = 'stat-combo-row';
+          row.innerHTML =
+            '<span class="stat-combo-label">' + combo + 'x</span>' +
+            '<div class="stat-merge-bar"><div class="stat-merge-bar-fill" style="width:' + pct + '%;background:var(--gold)"></div></div>' +
+            '<span class="stat-merge-count">' + count + '</span>';
+          distList.appendChild(row);
+        }
+      }
     }
 
     // Daily records
@@ -211,7 +255,6 @@ const AnalyticsManager = (() => {
       for (const day of stats.dailyRecords) {
         const row = document.createElement('div');
         row.className = 'stat-daily-row';
-        // Format date nicely
         const parts = day.date.split('-');
         const dateStr = parts[1] + '/' + parts[2];
         row.innerHTML =
