@@ -49,6 +49,10 @@ game/
 - Node.js 유닛: VM 샌드박스로 브라우저 코드 테스트 (`createSandbox()` 패턴)
 - 성능 벤치마크: `requestAnimationFrame` 후킹으로 프레임 타이밍 측정
 - 뷰포트 표준: 390×844 (모바일 퍼스트)
+- 스크린 캡처 자동화: Playwright로 모든 화면 상태를 screenshots/에 저장 (`tests/capture-screens.js` 패턴)
+  - localStorage 조작으로 특정 상태(미션 완료, 보상 수령 등) 재현
+  - `addInitScript()`로 튜토리얼/팝업 자동 차단 후 캡처
+- Figma 업로드 자동화: `ws` + WebSocket으로 MCP 채널에 직접 업로드 (`tests/upload-to-figma.js` 패턴)
 
 ## UI/UX 디자인 원칙
 
@@ -75,11 +79,6 @@ game/
 - 비활성 버튼(0개, 잠금 등)도 탭 가능 — 탭 시 기능 설명 토스트 표시
 - 비활성 상태는 opacity 0.4로 시각 피드백
 - HUD가 pointer-events:none이어도 인터랙티브 자식은 반드시 pointer-events:auto
-
-### AD 배너 공존
-- `--banner-height` CSS 변수로 배너 높이 관리 (0px 기본, has-banner 시 50px)
-- 모든 하단 패널의 padding-bottom에 `+ var(--banner-height)` 포함
-- 모달 z-index(200+) > 배너 z-index(100) 유지
 
 ## 보안 (원격 저장소 업로드 금지 항목)
 - **API 키/시크릿**: Firebase config, AdMob 실제 ID 등 절대 코드에 하드코딩 금지

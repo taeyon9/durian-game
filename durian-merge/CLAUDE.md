@@ -50,6 +50,7 @@ game.js → admob.js
 - DANGER_LINE_Y = 100 (HUD가 HTML이므로 PRD의 120보다 낮음, 의도적)
 - game.js: Firebase config의 "YOUR_API_KEY" 등을 실제 값으로 교체
 - localStorage `durianMergeTutorialDone` 삭제하고 튜토리얼 플로우 테스트
+- AD 배너 공존: `--banner-height` CSS 변수(0px/50px), 하단 패널 padding-bottom에 `+ var(--banner-height)`, 모달 z-index(200+) > 배너(100)
 
 ## 릴리스 전 제거 (DEBUG)
 - ui.js: `// DEBUG:` 주석 블록 (BEST 5탭 → 강제 게임오버)

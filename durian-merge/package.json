@@ -28,7 +28,8 @@
     "@capacitor-community/admob": "^8.0.0",
     "@capacitor/android": "^8.1.0",
     "@capacitor/cli": "^8.1.0",
-    "@capacitor/core": "^8.1.0"
+    "@capacitor/core": "^8.1.0",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"
