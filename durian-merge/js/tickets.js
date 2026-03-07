@@ -50,7 +50,7 @@ const TicketManager = (() => {
     if (!data || data.date !== today) {
       data = { tickets: DAILY_TICKETS, date: today };
     }
-    data.tickets++;
+    data.tickets = Math.min(data.tickets + 1, 999);
     save(data);
     return data.tickets;
   }

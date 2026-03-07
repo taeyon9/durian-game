@@ -128,7 +128,12 @@ const DailyRewardManager = (() => {
 
   function hidePanel() {
     const overlay = document.getElementById('dailyRewardOverlay');
-    if (overlay) overlay.style.display = 'none';
+    if (!overlay) return;
+    overlay.classList.add('hiding');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.classList.remove('hiding');
+    }, 200);
   }
 
   function renderUI() {
@@ -169,6 +174,8 @@ const DailyRewardManager = (() => {
         checkInBtn.onclick = () => {
           const result = checkIn();
           if (result) {
+            if (typeof SoundManager !== 'undefined') SoundManager.playDrop();
+            if (typeof Haptic !== 'undefined') Haptic.drop();
             if (typeof UI !== 'undefined') {
               UI.showToast(result.reward.icon + ' ' + result.reward.label + ' received!', 2500);
               UI.updateMenu();

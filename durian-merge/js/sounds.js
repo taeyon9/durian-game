@@ -539,6 +539,12 @@ const SoundManager = (() => {
     // Already playing the requested type
     if (_bgmCurrent && _bgmCurrent.type === type) return;
 
+    // Disconnect previous nodes to prevent memory leak
+    if (_bgmCurrent && _bgmCurrent.nodes) {
+      _bgmCurrent.nodes.forEach(n => { try { n.disconnect(); } catch(e) {} });
+      _bgmCurrent.nodes = [];
+    }
+
     // Stop current BGM with fade (clear timer first to prevent duplicates)
     const hadPrevious = _bgmCurrent !== null;
     _bgmStopCurrent();

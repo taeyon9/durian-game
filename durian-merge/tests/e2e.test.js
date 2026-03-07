@@ -3,10 +3,18 @@
 
 const { test, expect } = require('@playwright/test');
 
-// Helper: skip tutorial by setting localStorage before page load
+// Helper: skip tutorial and dismiss daily reward by setting localStorage before page load
 async function skipTutorial(page) {
   await page.addInitScript(() => {
     localStorage.setItem('durianMergeTutorialDone', 'true');
+    // Mark today's daily reward as already checked in to prevent overlay blocking
+    const d = new Date();
+    const today = d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+    localStorage.setItem('durianMergeDailyReward', JSON.stringify({
+      lastCheckIn: today, streak: 1, totalCheckIns: 1
+    }));
   });
 }
 
@@ -340,5 +348,355 @@ test.describe('Pause & Resume', () => {
     });
 
     expect(pauseHidden).toBe(true);
+  });
+
+  test('pause restart should show confirm dialog', async ({ page }) => {
+    await startGame(page);
+    await page.locator('#hudPauseBtn').click();
+    await page.waitForTimeout(200);
+
+    await page.locator('#pauseRestartBtn').click();
+    await page.waitForTimeout(200);
+
+    const confirmVisible = await page.evaluate(() => {
+      const el = document.getElementById('pauseConfirm');
+      return el && el.style.display !== 'none';
+    });
+    expect(confirmVisible).toBe(true);
+  });
+
+  test('pause menu should show confirm dialog', async ({ page }) => {
+    await startGame(page);
+    await page.locator('#hudPauseBtn').click();
+    await page.waitForTimeout(200);
+
+    await page.locator('#pauseMenuBtn').click();
+    await page.waitForTimeout(200);
+
+    const confirmVisible = await page.evaluate(() => {
+      const el = document.getElementById('pauseConfirm');
+      return el && el.style.display !== 'none';
+    });
+    expect(confirmVisible).toBe(true);
+  });
+});
+
+
+// ============================
+//  8. Settings Modal
+// ============================
+test.describe('Settings Modal', () => {
+  test('settings button should open settings overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuSettingsBtn').click();
+    await page.waitForTimeout(300);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('settingsOverlay');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+
+  test('settings close should hide overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuSettingsBtn').click();
+    await page.waitForTimeout(300);
+    await page.locator('#settingsClose').click();
+    await page.waitForTimeout(400);
+
+    const hidden = await page.evaluate(() => {
+      const el = document.getElementById('settingsOverlay');
+      return !el || el.style.display === 'none';
+    });
+    expect(hidden).toBe(true);
+  });
+
+  test('sound toggle should exist and be checkable', async ({ page }) => {
+    await gotoGame(page);
+    await page.locator('#menuSettingsBtn').click();
+    await page.waitForTimeout(300);
+
+    const checked = await page.evaluate(() => {
+      const el = document.getElementById('toggleSfx');
+      return el && el.checked;
+    });
+    expect(checked).toBe(true);
+  });
+});
+
+
+// ============================
+//  9. Modal Panels (Missions, Achievements, Daily, Modes)
+// ============================
+test.describe('Modal Panels', () => {
+  test('missions button should open mission overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#missionBtn').click();
+    await page.waitForTimeout(300);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('missionOverlay');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+
+  test('mission close should hide overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#missionBtn').click();
+    await page.waitForTimeout(300);
+    await page.locator('#missionClose').click();
+    await page.waitForTimeout(400);
+
+    const hidden = await page.evaluate(() => {
+      const el = document.getElementById('missionOverlay');
+      return !el || el.style.display === 'none';
+    });
+    expect(hidden).toBe(true);
+  });
+
+  test('achievements button should open achievement overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#achievementBtn').click();
+    await page.waitForTimeout(300);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('achievementOverlay');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+
+  test('achievement close should hide overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#achievementBtn').click();
+    await page.waitForTimeout(300);
+    await page.locator('#achievementClose').click();
+    await page.waitForTimeout(400);
+
+    const hidden = await page.evaluate(() => {
+      const el = document.getElementById('achievementOverlay');
+      return !el || el.style.display === 'none';
+    });
+    expect(hidden).toBe(true);
+  });
+
+  test('daily rewards button should open daily overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuDailyBtn').click();
+    await page.waitForTimeout(300);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('dailyRewardOverlay');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+
+  test('daily reward close should hide overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuDailyBtn').click();
+    await page.waitForTimeout(300);
+    await page.locator('#dailyRewardClose').click();
+    await page.waitForTimeout(400);
+
+    const hidden = await page.evaluate(() => {
+      const el = document.getElementById('dailyRewardOverlay');
+      return !el || el.style.display === 'none';
+    });
+    expect(hidden).toBe(true);
+  });
+
+  test('modes button should open mode select overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuModesBtn').click();
+    await page.waitForTimeout(300);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('modeSelectOverlay');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+
+  test('mode select close should hide overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuModesBtn').click();
+    await page.waitForTimeout(300);
+    await page.locator('#modeSelectClose').click();
+    await page.waitForTimeout(400);
+
+    const hidden = await page.evaluate(() => {
+      const el = document.getElementById('modeSelectOverlay');
+      return !el || el.style.display === 'none';
+    });
+    expect(hidden).toBe(true);
+  });
+});
+
+
+// ============================
+//  10. Leaderboard & Stats
+// ============================
+test.describe('Leaderboard & Stats', () => {
+  test('ranking button should open leaderboard', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuRankingBtn').click();
+    await page.waitForTimeout(300);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('leaderboardScreen');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+
+  test('leaderboard back should return to menu', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuRankingBtn').click();
+    await page.waitForTimeout(300);
+    await page.locator('#lbBack').click();
+    await page.waitForTimeout(300);
+
+    const menuVisible = await page.evaluate(() => {
+      const el = document.getElementById('menuScreen');
+      return el && el.style.display !== 'none';
+    });
+    expect(menuVisible).toBe(true);
+  });
+
+  test('stats button should open stats overlay', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuStatsBtn').click();
+    await page.waitForTimeout(300);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('statsOverlay');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+});
+
+
+// ============================
+//  11. Tutorial Flow
+// ============================
+test.describe('Tutorial', () => {
+  test('tutorial should show on first visit', async ({ page }) => {
+    // Do NOT skip tutorial
+    await page.goto('/');
+    await waitForGame(page);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('tutorialOverlay');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+
+  test('tutorial skip should hide overlay', async ({ page }) => {
+    await page.goto('/');
+    await waitForGame(page);
+
+    await page.locator('#tutorialSkip').click();
+    await page.waitForTimeout(300);
+
+    const hidden = await page.evaluate(() => {
+      const el = document.getElementById('tutorialOverlay');
+      return !el || el.style.display === 'none';
+    });
+    expect(hidden).toBe(true);
+  });
+
+  test('tutorial should not show after being done', async ({ page }) => {
+    await gotoGame(page); // skipTutorial sets localStorage
+
+    const hidden = await page.evaluate(() => {
+      const el = document.getElementById('tutorialOverlay');
+      return !el || el.style.display === 'none';
+    });
+    expect(hidden).toBe(true);
+  });
+
+  test('help button should reopen tutorial', async ({ page }) => {
+    await gotoGame(page);
+
+    await page.locator('#menuHelpBtn').click();
+    await page.waitForTimeout(300);
+
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('tutorialOverlay');
+      return el && el.style.display !== 'none';
+    });
+    expect(visible).toBe(true);
+  });
+});
+
+
+// ============================
+//  12. Item HUD
+// ============================
+test.describe('Item HUD', () => {
+  test('item buttons should be visible during gameplay', async ({ page }) => {
+    await startGame(page);
+
+    const itemsExist = await page.evaluate(() => {
+      return !!(document.getElementById('hudItemBomb') &&
+                document.getElementById('hudItemShake') &&
+                document.getElementById('hudItemUpgrade'));
+    });
+    expect(itemsExist).toBe(true);
+  });
+});
+
+
+// ============================
+//  13. Full Cycle Integration
+// ============================
+test.describe('Full Cycle', () => {
+  test('menu → play → pause → resume → play continues', async ({ page }) => {
+    await startGame(page);
+
+    // Drop a fruit
+    await dropFruit(page, 195);
+    await page.waitForTimeout(400);
+
+    // Pause
+    await page.locator('#hudPauseBtn').click();
+    await page.waitForTimeout(300);
+
+    // Verify paused
+    const paused = await page.evaluate(() => {
+      return document.getElementById('pauseOverlay').style.display !== 'none';
+    });
+    expect(paused).toBe(true);
+
+    // Resume
+    await page.locator('#pauseResumeBtn').click();
+    await page.waitForTimeout(300);
+
+    // Verify playing continues (can drop another fruit)
+    await dropFruit(page, 100);
+    await page.waitForTimeout(400);
+
+    const fruitCount = await page.evaluate(() =>
+      Matter.Composite.allBodies(Physics.getEngine().world).filter(b => b.label === 'fruit').length
+    );
+    expect(fruitCount).toBeGreaterThanOrEqual(2);
   });
 });

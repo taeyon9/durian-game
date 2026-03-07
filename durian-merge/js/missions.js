@@ -20,6 +20,7 @@ const MissionManager = (() => {
   ];
 
   const DAILY_MISSION_COUNT = 3;
+  let _uiPending = false;
 
   // Seed-based random for deterministic daily selection
   function seededRandom(seed) {
@@ -142,7 +143,10 @@ const MissionManager = (() => {
 
     if (changed) {
       save(data);
-      updateUI();
+      if (!_uiPending) {
+        _uiPending = true;
+        requestAnimationFrame(() => { _uiPending = false; updateUI(); });
+      }
     }
   }
 
@@ -159,6 +163,7 @@ const MissionManager = (() => {
     if (typeof TicketManager !== 'undefined') {
       TicketManager.addTicket();
     }
+    if (typeof SoundManager !== 'undefined') SoundManager.playDrop();
 
     updateUI();
     return true;
@@ -234,7 +239,12 @@ const MissionManager = (() => {
 
   function hidePanel() {
     const overlay = document.getElementById('missionOverlay');
-    if (overlay) overlay.style.display = 'none';
+    if (!overlay) return;
+    overlay.classList.add('hiding');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.classList.remove('hiding');
+    }, 200);
   }
 
   function initUI() {

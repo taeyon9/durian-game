@@ -26,15 +26,20 @@ const ItemManager = (() => {
     },
   };
 
+  let _cache = null;
+
   function load() {
+    if (_cache) return _cache;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { bomb: 0, shake: 0, upgrade: 0 };
-      return JSON.parse(raw);
-    } catch { return { bomb: 0, shake: 0, upgrade: 0 }; }
+      if (!raw) { _cache = { bomb: 0, shake: 0, upgrade: 0 }; return _cache; }
+      _cache = JSON.parse(raw);
+      return _cache;
+    } catch { _cache = { bomb: 0, shake: 0, upgrade: 0 }; return _cache; }
   }
 
   function save(data) {
+    _cache = data;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* QuotaExceeded */ }
   }
 

@@ -281,7 +281,7 @@ const UI = (() => {
   let previousScreen = 'menu';
 
   function showScreen(name) {
-    if (name === 'settings') {
+    if (name === 'settings' || name === 'leaderboard') {
       previousScreen = currentScreen;
     }
     currentScreen = name;
@@ -361,7 +361,7 @@ const UI = (() => {
     if (currentScreen === 'settings') {
       showScreen(previousScreen);
     } else if (currentScreen === 'leaderboard') {
-      showScreen('menu');
+      showScreen(previousScreen === 'gameover' ? 'gameover' : 'menu');
     }
   }
 

@@ -42,16 +42,21 @@ const AchievementManager = (() => {
     { id: 'all_achievements', name: 'Completionist',     desc: 'Unlock all other achievements',               icon: '🎖️', tier: 'diamond',  condition: { type: 'all_achievements', target: 19 }, reward: { type: 'ticket', count: 10 } },
   ];
 
+  let _cache = null;
+
   // Persistent progress data
   function load() {
+    if (_cache) return _cache;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { unlocked: {}, claimed: {}, progress: {} };
-      return JSON.parse(raw);
-    } catch { return { unlocked: {}, claimed: {}, progress: {} }; }
+      if (!raw) { _cache = { unlocked: {}, claimed: {}, progress: {} }; return _cache; }
+      _cache = JSON.parse(raw);
+      return _cache;
+    } catch { _cache = { unlocked: {}, claimed: {}, progress: {} }; return _cache; }
   }
 
   function save(data) {
+    _cache = data;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* QuotaExceeded */ }
   }
 
@@ -160,6 +165,8 @@ const AchievementManager = (() => {
 
     // Grant reward
     grantReward(ach.reward);
+    if (typeof SoundManager !== 'undefined') SoundManager.playMerge(5);
+    if (typeof Haptic !== 'undefined') Haptic.combo(2);
     return true;
   }
 
@@ -216,7 +223,12 @@ const AchievementManager = (() => {
 
   function hidePanel() {
     const overlay = document.getElementById('achievementOverlay');
-    if (overlay) overlay.style.display = 'none';
+    if (!overlay) return;
+    overlay.classList.add('hiding');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.classList.remove('hiding');
+    }, 200);
   }
 
   function renderUI() {

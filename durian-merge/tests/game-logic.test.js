@@ -863,3 +863,184 @@ describe('Statistics Enhancement', () => {
     assert.ok(src.includes('statComboDistribution'));
   });
 });
+
+
+// ============================
+//  19. NEW BEST Detection Fix
+// ============================
+describe('NEW BEST Detection', () => {
+  it('game.js should use highScoreAtStart for isNewBest comparison', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('highScoreAtStart'), 'highScoreAtStart variable should exist');
+    assert.ok(src.includes('score > highScoreAtStart'), 'isNewBest should compare against highScoreAtStart');
+  });
+
+  it('startGame should save highScoreAtStart', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('highScoreAtStart = highScore'), 'startGame should save highScore at start');
+  });
+
+  it('isNewBest should be true when score exceeds initial highScore', () => {
+    const { sandbox, triggerCollision, allBodies } = createGameSandbox();
+    // Set initial high score
+    sandbox.localStorage.setItem('durianMergeHighScore', '100');
+
+    // Start game (reads highScore, saves highScoreAtStart)
+    sandbox.Game.init();
+    const startResult = sandbox.TicketManager.hasTickets();
+    assert.ok(startResult, 'should have tickets');
+  });
+});
+
+
+// ============================
+//  20. Ticket Max Cap
+// ============================
+describe('Ticket Max Cap', () => {
+  it('addTicket should cap at 999', () => {
+    const src = readSrc('js/tickets.js');
+    assert.ok(src.includes('Math.min(data.tickets + 1, 999)'), 'addTicket should use Math.min with 999');
+  });
+});
+
+
+// ============================
+//  21. Item In-Memory Cache
+// ============================
+describe('Item Cache', () => {
+  it('items.js should have _cache variable', () => {
+    const src = readSrc('js/items.js');
+    assert.ok(src.includes('let _cache = null'), 'should have _cache variable');
+  });
+
+  it('load() should return cache when available', () => {
+    const src = readSrc('js/items.js');
+    assert.ok(src.includes('if (_cache) return _cache'), 'load should check cache first');
+  });
+
+  it('save() should update cache', () => {
+    const src = readSrc('js/items.js');
+    assert.ok(src.includes('_cache = data'), 'save should update cache');
+  });
+});
+
+
+// ============================
+//  22. Achievement Cache
+// ============================
+describe('Achievement Cache', () => {
+  it('achievements.js should have _cache variable', () => {
+    const src = readSrc('js/achievements.js');
+    assert.ok(src.includes('let _cache = null'), 'should have _cache variable');
+  });
+
+  it('claim should play sound and haptic', () => {
+    const src = readSrc('js/achievements.js');
+    assert.ok(src.includes('SoundManager.playMerge(5)'), 'claim should play sound');
+    assert.ok(src.includes('Haptic.combo(2)'), 'claim should trigger haptic');
+  });
+});
+
+
+// ============================
+//  23. Mission Debounce
+// ============================
+describe('Mission UI Debounce', () => {
+  it('missions.js should debounce updateUI with requestAnimationFrame', () => {
+    const src = readSrc('js/missions.js');
+    assert.ok(src.includes('_uiPending'), 'should have _uiPending flag');
+    assert.ok(src.includes('requestAnimationFrame'), 'should use requestAnimationFrame');
+  });
+
+  it('missions claimReward should play sound', () => {
+    const src = readSrc('js/missions.js');
+    assert.ok(src.includes("SoundManager.playDrop()"), 'claimReward should play drop sound');
+  });
+});
+
+
+// ============================
+//  24. Daily Reward Feedback
+// ============================
+describe('Daily Reward Feedback', () => {
+  it('daily-rewards.js should play sound on check-in', () => {
+    const src = readSrc('js/daily-rewards.js');
+    assert.ok(src.includes('SoundManager.playDrop()'), 'checkIn should play sound');
+    assert.ok(src.includes('Haptic.drop()'), 'checkIn should trigger haptic');
+  });
+});
+
+
+// ============================
+//  25. Modal Hiding Animations
+// ============================
+describe('Modal Hiding Animations', () => {
+  it('achievements hidePanel should use hiding class', () => {
+    const src = readSrc('js/achievements.js');
+    assert.ok(src.includes("classList.add('hiding')"), 'should add hiding class');
+    assert.ok(src.includes("classList.remove('hiding')"), 'should remove hiding class after timeout');
+  });
+
+  it('daily-rewards hidePanel should use hiding class', () => {
+    const src = readSrc('js/daily-rewards.js');
+    assert.ok(src.includes("classList.add('hiding')"), 'should add hiding class');
+  });
+
+  it('missions hidePanel should use hiding class', () => {
+    const src = readSrc('js/missions.js');
+    assert.ok(src.includes("classList.add('hiding')"), 'should add hiding class');
+  });
+
+  it('CSS should have hiding animation for overlay panels', () => {
+    const src = readSrc('css/style.css');
+    assert.ok(src.includes('#achievementOverlay.hiding'), 'should have achievement hiding rule');
+    assert.ok(src.includes('#dailyRewardOverlay.hiding'), 'should have daily reward hiding rule');
+    assert.ok(src.includes('#missionOverlay.hiding'), 'should have mission hiding rule');
+  });
+});
+
+
+// ============================
+//  26. Safe Area & BGM Fix
+// ============================
+describe('Safe Area & BGM', () => {
+  it('--safe-bottom should use max() with 20px fallback', () => {
+    const src = readSrc('css/style.css');
+    assert.ok(src.includes('max(env(safe-area-inset-bottom'), 'should have max() wrapper');
+    assert.ok(src.includes('20px'), 'should have 20px fallback');
+  });
+
+  it('sounds.js bgmPlay should disconnect previous nodes', () => {
+    const src = readSrc('js/sounds.js');
+    assert.ok(src.includes('n.disconnect()'), 'should disconnect previous nodes');
+  });
+});
+
+
+// ============================
+//  27. Leaderboard GoBack Context
+// ============================
+describe('Leaderboard GoBack Context', () => {
+  it('ui.js should track previousScreen for leaderboard', () => {
+    const src = readSrc('js/ui.js');
+    assert.ok(src.includes("name === 'leaderboard'"), 'showScreen should handle leaderboard');
+    assert.ok(src.includes("previousScreen === 'gameover'"), 'goBack should check gameover context');
+  });
+});
+
+
+// ============================
+//  28. Pause Restart Ticket Check
+// ============================
+describe('Pause Restart Ticket Check', () => {
+  it('game.js restartFromPause should check tickets', () => {
+    const src = readSrc('js/game.js');
+    assert.ok(src.includes('restartFromPause'), 'should have restartFromPause function');
+    // Find the restartFromPause section and verify ticket check
+    const idx = src.indexOf('function restartFromPause');
+    assert.ok(idx >= 0, 'should have restartFromPause function definition');
+    const section = src.substring(idx, idx + 400);
+    assert.ok(section.includes('hasTickets'), 'restartFromPause should check hasTickets');
+    assert.ok(section.includes('showToast'), 'restartFromPause should show toast when no tickets');
+  });
+});

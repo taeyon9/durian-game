@@ -16,7 +16,7 @@
   --font: 'Fredoka', sans-serif;
   --radius: 16px;
   --radius-sm: 10px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
   --safe-top: max(env(safe-area-inset-top, 0px), 48px);
 }
 
@@ -1862,6 +1862,15 @@ html, body {
 .modal-bg.hiding .nick-modal-panel { animation: slideDown 0.2s ease forwards; }
 @keyframes fadeOut { from{opacity:1} to{opacity:0} }
 @keyframes slideDown { from{transform:translateY(0)} to{transform:translateY(100%)} }
+
+/* Generic hiding animation for overlay panels */
+#achievementOverlay.hiding,
+#dailyRewardOverlay.hiding,
+#challengeOverlay.hiding,
+#missionOverlay.hiding,
+#statsOverlay.hiding {
+  animation: fadeOut 0.2s ease-out forwards;
+}
 
 /* ===== PAUSE CONFIRM DIALOG ===== */
 .pause-confirm {

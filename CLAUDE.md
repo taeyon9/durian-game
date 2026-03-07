@@ -31,6 +31,25 @@ game/
 - localStorage만으로 오프라인 게임 데이터 관리 충분
 - 티켓 시스템 + 보상형 광고 조합이 기본 수익화 모델
 
+### 성능 최적화 레슨런
+- 시각 이펙트(파티클, 글로우, 쉐이크)는 과감히 제거/간소화 — 모바일에서 체감 큼
+- 이펙트 코드는 생성/업데이트(decay)/렌더링 3곳에 분산됨 → 하나라도 빼먹으면 메모리 누수
+- `collisionActive`에 전체 로직 넘기지 말 것 — sleep 깨우기만 분리
+- `fruitBodies.filter()` 대신 `splice()`로 in-place 제거 (GC 압력 감소)
+- localStorage를 매 이벤트마다 접근하는 패턴은 메모리 캐시(Set)로 개선
+- headless 데스크탑 벤치마크 ≠ 저사양 모바일 체감. 실기기 테스트 필수
+
+### 게임 튜닝 레슨런
+- 중력/쿨다운/콤보윈도우 같은 수치는 "변경→실기기 체감→조정" 반복 필수
+- gameLoop 내 상태별 블록에서 `const delta`는 scoping 주의 — 각 상태 블록에서 별도 계산
+- 팀 에이전트(성능 전문가 + UX 전문가) 병렬 리뷰 후 교차 토론이 효과적
+
+### 테스트 인프라 패턴 (다음 게임에 재사용)
+- Playwright E2E: `skipTutorial()`, `startGame()`, `dropFruit()` 헬퍼 패턴
+- Node.js 유닛: VM 샌드박스로 브라우저 코드 테스트 (`createSandbox()` 패턴)
+- 성능 벤치마크: `requestAnimationFrame` 후킹으로 프레임 타이밍 측정
+- 뷰포트 표준: 390×844 (모바일 퍼스트)
+
 ## 보안 (원격 저장소 업로드 금지 항목)
 - **API 키/시크릿**: Firebase config, AdMob 실제 ID 등 절대 코드에 하드코딩 금지
   - 코드 내 placeholder(`YOUR_API_KEY` 등)는 OK, 실제 값은 별도 파일이나 환경변수로 관리

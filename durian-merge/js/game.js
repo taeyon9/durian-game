@@ -4,6 +4,7 @@ const Game = (() => {
   let gameWidth, gameHeight;
   let score = 0;
   let highScore = 0;
+  let highScoreAtStart = 0;
   let currentLevel = 0;
   let nextLevel = 0;
   let gameState = 'menu'; // 'menu', 'playing', 'paused', 'gameoverAnim', 'gameover'
@@ -268,6 +269,7 @@ const Game = (() => {
     TicketManager.useTicket();
     resetGame();
     applyChallengeSettings();
+    highScoreAtStart = highScore;
     gameState = 'playing';
     gameStartTime = performance.now();
     challengeStartTime = performance.now();
@@ -545,6 +547,7 @@ const Game = (() => {
 
   function restartFromPause() {
     if (gameState !== 'paused') return;
+    if (!TicketManager.hasTickets()) { UI.showToast('No tickets left!', 2000); return; }
     SoundManager.resumeCtx();
     // Reset state so startGame can proceed
     gameState = 'menu';
@@ -832,7 +835,7 @@ const Game = (() => {
       ChallengeManager.resetMode();
     }
 
-    const isNewBest = score > highScore;
+    const isNewBest = score > highScoreAtStart;
 
     if (isNewBest) {
       highScore = score;
@@ -1397,6 +1400,7 @@ const Game = (() => {
         '<div class="mode-difficulty">' + stars + '</div>';
 
       div.addEventListener('click', () => {
+        if (typeof SoundManager !== 'undefined') SoundManager.playDrop();
         ChallengeManager.setMode(mode.id);
         const overlay = document.getElementById('modeSelectOverlay');
         if (overlay) overlay.style.display = 'none';
