@@ -181,6 +181,7 @@ const DailyRewardManager = (() => {
               UI.updateMenu();
             }
             renderUI();
+            updateBadge();
           }
         };
       } else {

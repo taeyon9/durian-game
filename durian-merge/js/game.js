@@ -359,10 +359,22 @@ const Game = (() => {
 
   // ===== ITEM USAGE =====
 
+  const ITEM_DESCRIPTIONS = {
+    bomb: '💣 Bomb — Removes the smallest fruit',
+    shake: '🌊 Shake — Shuffles all fruits around',
+    upgrade: '⬆️ Upgrade — Levels up the smallest fruit',
+  };
+
   function useItem(itemId) {
     if (gameState !== 'playing') return;
     if (typeof ItemManager === 'undefined') return;
-    if (!ItemManager.hasItem(itemId)) return;
+    if (!ItemManager.hasItem(itemId)) {
+      // Show description toast when no items
+      if (ITEM_DESCRIPTIONS[itemId] && typeof UI !== 'undefined') {
+        UI.showToast(ITEM_DESCRIPTIONS[itemId], 2000);
+      }
+      return;
+    }
 
     let success = false;
     switch (itemId) {

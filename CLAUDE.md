@@ -50,6 +50,37 @@ game/
 - 성능 벤치마크: `requestAnimationFrame` 후킹으로 프레임 타이밍 측정
 - 뷰포트 표준: 390×844 (모바일 퍼스트)
 
+## UI/UX 디자인 원칙
+
+### 간격 (Spacing)
+- 최소 터치 영역: 44×44px (Apple HIG 준수)
+- 같은 그룹 내 요소 간격: 최소 8px
+- 다른 그룹 간 간격: 최소 12px
+- 섹션 간 간격: 최소 16px
+- 인접 인터랙티브 요소는 시각적으로 최소 8px 여백 — 겹침 절대 금지
+- 상단 네비게이션 아이콘 버튼: 44px 크기 + 8px 간격
+
+### 아이콘 일관성 (Icon Consistency)
+- 게임 내 모든 아이콘은 이모지 기반으로 통일
+- 차트/데이터/비즈니스 느낌 아이콘 금지 → 게임성 있는 이모지 사용
+- 크기 기준: 메뉴 버튼 22px, HUD 20px, 설정/모달 내 18px
+- 스킨/테마 프리뷰는 형태+컬러 모두 즉시 구분 가능해야 함
+
+### 배지/알림 (Notification Badge)
+- 유저가 수행해야 할 액션이 있을 때만 배지 표시
+- 액션 완료 시 배지를 즉시 숨김 (화면 전환까지 기다리지 않음)
+- 이미 완료된 상태에서 배지 표시 금지 (거짓 긍정 금지)
+
+### 아이템/기능 가시성 (Feature Visibility)
+- 비활성 버튼(0개, 잠금 등)도 탭 가능 — 탭 시 기능 설명 토스트 표시
+- 비활성 상태는 opacity 0.4로 시각 피드백
+- HUD가 pointer-events:none이어도 인터랙티브 자식은 반드시 pointer-events:auto
+
+### AD 배너 공존
+- `--banner-height` CSS 변수로 배너 높이 관리 (0px 기본, has-banner 시 50px)
+- 모든 하단 패널의 padding-bottom에 `+ var(--banner-height)` 포함
+- 모달 z-index(200+) > 배너 z-index(100) 유지
+
 ## 보안 (원격 저장소 업로드 금지 항목)
 - **API 키/시크릿**: Firebase config, AdMob 실제 ID 등 절대 코드에 하드코딩 금지
   - 코드 내 placeholder(`YOUR_API_KEY` 등)는 OK, 실제 값은 별도 파일이나 환경변수로 관리

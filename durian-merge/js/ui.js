@@ -209,6 +209,16 @@ const UI = (() => {
       if (NicknameManager.hasName()) handleNickEdit();
     });
 
+    // Menu item slot descriptions
+    document.querySelectorAll('.menu-item-slot').forEach(slot => {
+      slot.addEventListener('click', () => {
+        const text = slot.textContent.trim();
+        if (text.startsWith('💣')) showToast('💣 Bomb — Removes the smallest fruit');
+        else if (text.startsWith('🌊')) showToast('🌊 Shake — Shuffles all fruits around');
+        else if (text.startsWith('⬆')) showToast('⬆️ Upgrade — Levels up the smallest fruit');
+      });
+    });
+
     // Share
     els.shareClose.addEventListener('click', () => hideModal('share'));
     document.querySelectorAll('.share-btn').forEach(btn => {
@@ -272,6 +282,37 @@ const UI = (() => {
       if (e.target === els.pauseOverlay) {
         if (onResumeCallback) onResumeCallback();
       }
+    });
+
+    // Android back button
+    document.addEventListener('backbutton', (e) => {
+      e.preventDefault();
+      // Close modals first
+      if (els.nickModal && els.nickModal.style.display !== 'none') {
+        hideModal('nickname'); return;
+      }
+      if (els.share && els.share.style.display !== 'none') {
+        hideModal('share'); return;
+      }
+      if (els.settings && els.settings.style.display !== 'none' && currentScreen !== 'settings') {
+        hideModal('settings'); return;
+      }
+      // Close modal-bg overlays (achievements, daily rewards, mode, missions, stats)
+      const openModal = document.querySelector('.modal-bg[style*="display"]:not([style*="none"])');
+      if (openModal) {
+        openModal.classList.add('hiding');
+        setTimeout(() => { openModal.style.display = 'none'; openModal.classList.remove('hiding'); }, 200);
+        return;
+      }
+      // Screen navigation
+      if (currentScreen === 'leaderboard' || currentScreen === 'settings') {
+        goBack();
+      } else if (currentScreen === 'paused') {
+        if (onResumeCallback) onResumeCallback();
+      } else if (currentScreen === 'gameover') {
+        showScreen('menu');
+      }
+      // menu = do nothing (let system handle app exit)
     });
 
   }
@@ -758,7 +799,7 @@ const UI = (() => {
 
     let html = '';
     if (board.length === 0) {
-      html = '<div style="text-align:center;padding:40px;color:var(--text-dim);">No scores yet. Play a game!</div>';
+      html = '<div style="text-align:center;padding:40px;color:var(--text-dim);"><div style="font-size:48px;margin-bottom:12px;">🍉</div><div style="font-size:15px;font-weight:600;color:var(--white);margin-bottom:6px;">No scores yet</div><div style="font-size:13px;">Play a game to see your ranking here!</div></div>';
     } else {
       board.forEach((entry, i) => {
         const rankLabel = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
@@ -819,7 +860,9 @@ const UI = (() => {
       for (let i = 0; i < 4; i++) {
         const d = skin.data[i];
         if (skin.type === 'emoji' && d.emoji) {
-          dots += '<span class="skin-dot" style="font-size:12px;display:flex;align-items:center;justify-content:center;">' + d.emoji + '</span>';
+          dots += '<span class="skin-dot skin-dot-emoji" style="background:' + d.color + ';">' + d.emoji + '</span>';
+        } else if (skin.type === 'recolor' && d.accent) {
+          dots += '<span class="skin-dot skin-dot-jewel" style="background:linear-gradient(135deg,' + d.color + ' 40%,' + d.accent + ' 100%);"></span>';
         } else {
           dots += '<span class="skin-dot" style="background:' + d.color + ';"></span>';
         }
