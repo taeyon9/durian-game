@@ -98,15 +98,10 @@
       <span class="bokeh" style="top:50%;right:5%;--delay:10s;"></span>
     </div>
     <div class="menu-top-icons">
+      <button class="icon-btn menu-skins-btn" id="menuSkinsBtn" aria-label="Skins">🎨</button>
       <button class="icon-btn menu-stats" id="menuStatsBtn" aria-label="Statistics">🎮</button>
       <button class="icon-btn menu-help" id="menuHelpBtn" aria-label="How to play">?</button>
       <button class="icon-btn menu-settings" id="menuSettingsBtn" aria-label="Settings"><span class="icon-gear">&#9881;</span></button>
-    </div>
-
-    <!-- Skin selector (top area) -->
-    <div class="menu-skins" id="menuSkins">
-      <div class="menu-skins-label">🎨 Skins</div>
-      <div class="menu-skins-list" id="menuSkinsList"></div>
     </div>
 
     <div class="menu-content">
@@ -149,11 +144,6 @@
           <span class="menu-sub-btn-icon">🎒</span>
           <span class="menu-sub-btn-label">Items</span>
         </button>
-      </div>
-      <!-- Item inventory (toggle on Items btn click) -->
-      <div class="menu-items" id="menuItems" style="display:none;">
-        <span class="menu-item-slot">💣 <span id="menuBombCount">0</span></span>
-        <span class="menu-item-slot">🌊 <span id="menuShakeCount">0</span></span>
       </div>
       <button class="btn btn-play" id="menuPlayBtn">
         <span class="btn-main-text">▶ PLAY</span>
@@ -441,6 +431,45 @@
         <button class="settings-close" id="modeSelectClose">✕</button>
       </div>
       <div class="mode-list" id="modeSelectList"></div>
+    </div>
+  </div>
+
+  <!-- ===== SKINS OVERLAY ===== -->
+  <div id="skinsOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="skins-panel">
+      <div class="skins-header">
+        <h3>🎨 Skins</h3>
+        <button class="settings-close" id="skinsClose">✕</button>
+      </div>
+      <div class="skins-list" id="menuSkinsList"></div>
+    </div>
+  </div>
+
+  <!-- ===== RANKING OVERLAY ===== -->
+  <div id="rankingOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="ranking-panel">
+      <div class="ranking-header">
+        <h3>🏆 Ranking</h3>
+        <button class="settings-close" id="rankingClose">✕</button>
+      </div>
+      <div class="ranking-tabs">
+        <div class="lb-tab active" data-tab="alltime">All Time</div>
+        <div class="lb-tab" data-tab="weekly">Weekly</div>
+        <div class="lb-tab" data-tab="country">🌏 Country</div>
+      </div>
+      <div class="ranking-list" id="rankingList"></div>
+      <div class="ranking-me" id="rankingMe"></div>
+    </div>
+  </div>
+
+  <!-- ===== ITEMS OVERLAY ===== -->
+  <div id="itemsOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="items-panel">
+      <div class="items-header">
+        <h3>🎒 Items</h3>
+        <button class="settings-close" id="itemsClose">✕</button>
+      </div>
+      <div class="items-list" id="itemsList"></div>
     </div>
   </div>
 

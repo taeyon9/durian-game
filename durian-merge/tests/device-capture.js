@@ -123,7 +123,7 @@ async function dismissAll(Runtime) {
   await execJS(Runtime, `
     ['dailyRewardOverlay', 'tutorialOverlay', 'missionOverlay', 'achievementOverlay',
      'modeSelectOverlay', 'statsOverlay', 'settingsOverlay', 'shareOverlay', 'nickModal',
-     'menuSkinsModal'].forEach(id => {
+     'skinsOverlay', 'rankingOverlay', 'itemsOverlay'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -160,7 +160,7 @@ async function captureAllScreens() {
   await tap(Runtime, '#menuSkinsBtn');
   await sleep(SETTLE_MS);
   await captureScreen('02-skins');
-  await execJS(Runtime, `document.getElementById('menuSkinsModal').style.display = 'none'`);
+  await execJS(Runtime, `document.getElementById('skinsOverlay').style.display = 'none'`);
   await sleep(300);
 
   // ===== 3. SETTINGS =====
