@@ -14,7 +14,8 @@
     "check:testing": "grep -rn 'isTesting.*true\\|initializeForTesting.*true' js/ || echo 'No testing flags found'",
     "test": "node --test tests/game-logic.test.js",
     "test:e2e": "npx playwright test tests/e2e.test.js",
-    "test:all": "npm test && npm run test:e2e"
+    "test:all": "npm test && npm run test:e2e",
+    "device:capture": "node tests/device-capture.js"
   },
   "keywords": [
     "game",
@@ -32,6 +33,7 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.58.2",
+    "chrome-remote-interface": "^0.34.0"
   }
 }
