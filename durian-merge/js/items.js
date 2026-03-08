@@ -8,20 +8,13 @@ const ItemManager = (() => {
       name: 'Bomb',
       icon: '💣',
       desc: 'Remove the smallest fruit on screen',
-      maxStack: 10,
+      maxStack: 5,
     },
     shake: {
       id: 'shake',
       name: 'Shake',
       icon: '🌊',
       desc: 'Shuffle all fruits to create new merge chances',
-      maxStack: 10,
-    },
-    upgrade: {
-      id: 'upgrade',
-      name: 'Upgrade',
-      icon: '⬆️',
-      desc: 'Upgrade the smallest fruit by one level',
       maxStack: 10,
     },
   };
@@ -32,10 +25,10 @@ const ItemManager = (() => {
     if (_cache) return _cache;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) { _cache = { bomb: 0, shake: 0, upgrade: 0 }; return _cache; }
+      if (!raw) { _cache = { bomb: 0, shake: 0 }; return _cache; }
       _cache = JSON.parse(raw);
       return _cache;
-    } catch { _cache = { bomb: 0, shake: 0, upgrade: 0 }; return _cache; }
+    } catch { _cache = { bomb: 0, shake: 0 }; return _cache; }
   }
 
   function save(data) {

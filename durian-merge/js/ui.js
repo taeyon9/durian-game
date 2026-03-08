@@ -209,13 +209,21 @@ const UI = (() => {
       if (NicknameManager.hasName()) handleNickEdit();
     });
 
+    // Items button toggle
+    const menuItemsBtn = document.getElementById('menuItemsBtn');
+    const menuItemsPanel = document.getElementById('menuItems');
+    if (menuItemsBtn && menuItemsPanel) {
+      menuItemsBtn.addEventListener('click', () => {
+        menuItemsPanel.style.display = menuItemsPanel.style.display === 'none' ? '' : 'none';
+      });
+    }
+
     // Menu item slot descriptions
     document.querySelectorAll('.menu-item-slot').forEach(slot => {
       slot.addEventListener('click', () => {
         const text = slot.textContent.trim();
         if (text.startsWith('💣')) showToast('💣 Bomb — Removes the smallest fruit');
         else if (text.startsWith('🌊')) showToast('🌊 Shake — Shuffles all fruits around');
-        else if (text.startsWith('⬆')) showToast('⬆️ Upgrade — Levels up the smallest fruit');
       });
     });
 
@@ -231,7 +239,7 @@ const UI = (() => {
     });
 
     // Pause
-    els.hudPauseBtn.addEventListener('click', () => {
+    if (els.hudPauseBtn) els.hudPauseBtn.addEventListener('click', () => {
       if (onPauseCallback) onPauseCallback();
     });
     els.pauseResumeBtn.addEventListener('click', () => {
@@ -416,10 +424,16 @@ const UI = (() => {
     const best = parseInt(localStorage.getItem('durianMergeHighScore') || '0');
 
     els.menuTickets.textContent = tickets;
-    const ticketWrap = els.menuTickets.parentElement;
-    ticketWrap.classList.remove('low-tickets', 'no-tickets');
-    if (tickets === 0) ticketWrap.classList.add('no-tickets');
-    else if (tickets <= 1) ticketWrap.classList.add('low-tickets');
+    // Play button style based on ticket count
+    els.menuPlayBtn.classList.remove('no-tickets');
+    if (tickets > 0) {
+      els.menuPlayBtn.querySelector('.btn-main-text').textContent = '▶ PLAY';
+      els.menuPlayBtn.querySelector('.btn-sub-text').innerHTML = '🎟️ ' + tickets + ' plays left';
+    } else {
+      els.menuPlayBtn.classList.add('no-tickets');
+      els.menuPlayBtn.querySelector('.btn-main-text').textContent = '📺 WATCH AD TO PLAY';
+      els.menuPlayBtn.querySelector('.btn-sub-text').innerHTML = '🎟️ 0 plays left';
+    }
     els.menuBestScore.textContent = best;
 
     if (name) {
@@ -429,12 +443,8 @@ const UI = (() => {
       els.menuPlayer.style.display = 'none';
     }
 
-    // Button state
-    if (tickets > 0) {
-      els.menuPlayBtn.innerHTML = '<span class="btn-icon">▶</span> PLAY';
-    } else {
-      els.menuPlayBtn.innerHTML = '<span class="btn-icon">📺</span> WATCH AD TO PLAY';
-    }
+    // Render skins in menu
+    renderMenuSkins();
   }
 
   function renderMenuFruits() {
@@ -1024,10 +1034,69 @@ const UI = (() => {
     const el = (id) => document.getElementById(id);
     const b = el('menuBombCount');
     const s = el('menuShakeCount');
-    const u = el('menuUpgradeCount');
     if (b) b.textContent = items.bomb || 0;
     if (s) s.textContent = items.shake || 0;
-    if (u) u.textContent = items.upgrade || 0;
+  }
+
+  function renderMenuSkins() {
+    const list = document.getElementById('menuSkinsList');
+    if (!list || typeof SkinManager === 'undefined') return;
+
+    const skins = SkinManager.getAllSkins();
+    const currentId = SkinManager.getCurrentSkinId();
+    let html = '';
+
+    skins.forEach(skin => {
+      const unlocked = SkinManager.isUnlocked(skin.id);
+      const isActive = skin.id === currentId;
+      const cls = isActive ? 'skin-card active' : (unlocked ? 'skin-card' : 'skin-card locked');
+
+      let dots = '';
+      for (let i = 0; i < 4; i++) {
+        const d = skin.data[i];
+        if (skin.type === 'emoji' && d.emoji) {
+          dots += '<span class="skin-dot skin-dot-emoji" style="background:' + d.color + ';">' + d.emoji + '</span>';
+        } else if (skin.type === 'recolor' && d.accent) {
+          dots += '<span class="skin-dot skin-dot-jewel" style="background:linear-gradient(135deg,' + d.color + ' 40%,' + d.accent + ' 100%);"></span>';
+        } else {
+          dots += '<span class="skin-dot" style="background:' + d.color + ';"></span>';
+        }
+      }
+
+      let extra = '';
+      if (!unlocked) {
+        const prog = SkinManager.getUnlockProgress(skin.id);
+        if (prog) {
+          const pct = Math.min(100, Math.round(prog.current / prog.target * 100));
+          extra = '<div class="skin-progress"><div class="skin-progress-bar" style="width:' + pct + '%;"></div></div>';
+        }
+      }
+
+      const check = isActive ? '<span class="skin-check">&#10003;</span>' : (unlocked ? '' : '<span class="skin-check">&#128274;</span>');
+
+      html += '<div class="' + cls + '" data-skin="' + skin.id + '">'
+        + '<div class="skin-preview">' + dots + '</div>'
+        + '<div class="skin-info">'
+        + '<div class="skin-name">' + escHtml(skin.name) + '</div>'
+        + '<div class="skin-desc">' + escHtml(skin.description) + '</div>'
+        + extra
+        + '</div>'
+        + check
+        + '</div>';
+    });
+
+    list.innerHTML = html;
+
+    list.querySelectorAll('.skin-card:not(.locked)').forEach(card => {
+      card.addEventListener('click', () => {
+        const skinId = card.dataset.skin;
+        if (SkinManager.selectSkin(skinId)) {
+          renderMenuSkins();
+          renderSkinSelector();
+          renderMenuFruits();
+        }
+      });
+    });
   }
 
   function escHtml(s) {

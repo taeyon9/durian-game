@@ -362,7 +362,6 @@ const Game = (() => {
   const ITEM_DESCRIPTIONS = {
     bomb: '💣 Bomb — Removes the smallest fruit',
     shake: '🌊 Shake — Shuffles all fruits around',
-    upgrade: '⬆️ Upgrade — Levels up the smallest fruit',
   };
 
   function useItem(itemId) {
@@ -380,7 +379,6 @@ const Game = (() => {
     switch (itemId) {
       case 'bomb': success = useBomb(); break;
       case 'shake': success = useShake(); break;
-      case 'upgrade': success = useUpgrade(); break;
       default: return;
     }
 
@@ -485,17 +483,13 @@ const Game = (() => {
     const counts = ItemManager.getAll();
     const bombEl = document.getElementById('hudBombCount');
     const shakeEl = document.getElementById('hudShakeCount');
-    const upgradeEl = document.getElementById('hudUpgradeCount');
     if (bombEl) bombEl.textContent = counts.bomb || 0;
     if (shakeEl) shakeEl.textContent = counts.shake || 0;
-    if (upgradeEl) upgradeEl.textContent = counts.upgrade || 0;
 
     const bombBtn = document.getElementById('hudItemBomb');
     const shakeBtn = document.getElementById('hudItemShake');
-    const upgradeBtn = document.getElementById('hudItemUpgrade');
     if (bombBtn) bombBtn.disabled = !counts.bomb;
     if (shakeBtn) shakeBtn.disabled = !counts.shake;
-    if (upgradeBtn) upgradeBtn.disabled = !counts.upgrade;
   }
 
   async function watchAdForTicket() {

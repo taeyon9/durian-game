@@ -5,12 +5,12 @@ const DailyRewardManager = (() => {
   // 7-day reward cycle (repeats)
   const REWARDS = [
     { day: 1, icon: '🎟️', label: 'Ticket x2',       reward: { type: 'ticket', count: 2 } },
-    { day: 2, icon: '💣', label: 'Bomb x1',          reward: { type: 'item', itemId: 'bomb', count: 1 } },
+    { day: 2, icon: '🌊', label: 'Shake x1',         reward: { type: 'item', itemId: 'shake', count: 1 } },
     { day: 3, icon: '🎟️', label: 'Ticket x3',       reward: { type: 'ticket', count: 3 } },
     { day: 4, icon: '🌊', label: 'Shake x2',         reward: { type: 'item', itemId: 'shake', count: 2 } },
-    { day: 5, icon: '⬆️', label: 'Upgrade x1',       reward: { type: 'item', itemId: 'upgrade', count: 1 } },
+    { day: 5, icon: '🎟️', label: 'Ticket x3',       reward: { type: 'ticket', count: 3 } },
     { day: 6, icon: '🎟️', label: 'Ticket x5',       reward: { type: 'ticket', count: 5 } },
-    { day: 7, icon: '🎨', label: 'Weekly Skin',       reward: { type: 'skin', skinId: 'weekly' } },
+    { day: 7, icon: '💣', label: 'Bomb x1',          reward: { type: 'item', itemId: 'bomb', count: 1 } },
   ];
 
   function todayStr() {

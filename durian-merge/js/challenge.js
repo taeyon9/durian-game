@@ -18,7 +18,7 @@ const ChallengeManager = (() => {
       icon: '⏱️',
       desc: '60 seconds — score as high as you can!',
       difficulty: 2,
-      reward: { type: 'item', itemId: 'bomb', count: 1 },
+      reward: { type: 'item', itemId: 'shake', count: 1 },
       settings: { timeLimit: 60000, dangerEnabled: true },
     },
     tinyfruit: {
@@ -27,7 +27,7 @@ const ChallengeManager = (() => {
       icon: '🔬',
       desc: 'All fruits are 70% smaller',
       difficulty: 3,
-      reward: { type: 'item', itemId: 'upgrade', count: 1 },
+      reward: { type: 'item', itemId: 'shake', count: 1 },
       settings: { radiusScale: 0.7 },
     },
     hard: {

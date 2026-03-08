@@ -18,27 +18,27 @@ const AchievementManager = (() => {
     { id: 'merge_10',        name: 'Merger',             desc: 'Merge 10 times total',                       icon: '🔄', tier: 'bronze',   condition: { type: 'merge_total', target: 10 },  reward: { type: 'ticket', count: 1 } },
 
     // Silver (medium)
-    { id: 'score_500',       name: 'Rising Star',        desc: 'Score 500 points in a single game',          icon: '⭐', tier: 'silver',   condition: { type: 'score', target: 500 },       reward: { type: 'item', itemId: 'bomb', count: 2 } },
-    { id: 'combo_3',         name: 'Combo Starter',      desc: 'Get a 3x combo',                             icon: '💥', tier: 'silver',   condition: { type: 'combo', target: 3 },         reward: { type: 'item', itemId: 'bomb', count: 2 } },
+    { id: 'score_500',       name: 'Rising Star',        desc: 'Score 500 points in a single game',          icon: '⭐', tier: 'silver',   condition: { type: 'score', target: 500 },       reward: { type: 'item', itemId: 'shake', count: 1 } },
+    { id: 'combo_3',         name: 'Combo Starter',      desc: 'Get a 3x combo',                             icon: '💥', tier: 'silver',   condition: { type: 'combo', target: 3 },         reward: { type: 'item', itemId: 'shake', count: 1 } },
     { id: 'merge_mango',     name: 'Mango Master',       desc: 'Create a Mango (level 5)',                   icon: '🥭', tier: 'silver',   condition: { type: 'merge_level', target: 4 },   reward: { type: 'item', itemId: 'shake', count: 1 } },
-    { id: 'play_50',         name: 'Dedicated Player',   desc: 'Play 50 games',                              icon: '🏅', tier: 'silver',   condition: { type: 'play_count', target: 50 },   reward: { type: 'item', itemId: 'bomb', count: 3 } },
+    { id: 'play_50',         name: 'Dedicated Player',   desc: 'Play 50 games',                              icon: '🏅', tier: 'silver',   condition: { type: 'play_count', target: 50 },   reward: { type: 'item', itemId: 'shake', count: 2 } },
 
     // Gold (hard)
-    { id: 'score_2000',      name: 'High Scorer',        desc: 'Score 2000 points in a single game',         icon: '🏆', tier: 'gold',     condition: { type: 'score', target: 2000 },      reward: { type: 'item', itemId: 'upgrade', count: 1 } },
-    { id: 'combo_5',         name: 'Combo Expert',       desc: 'Get a 5x combo',                             icon: '🔥', tier: 'gold',     condition: { type: 'combo', target: 5 },         reward: { type: 'item', itemId: 'upgrade', count: 1 } },
-    { id: 'merge_papaya',    name: 'Papaya Puncher',     desc: 'Create a Papaya (level 7)',                   icon: '🍈', tier: 'gold',     condition: { type: 'merge_level', target: 6 },   reward: { type: 'item', itemId: 'upgrade', count: 1 } },
+    { id: 'score_2000',      name: 'High Scorer',        desc: 'Score 2000 points in a single game',         icon: '🏆', tier: 'gold',     condition: { type: 'score', target: 2000 },      reward: { type: 'item', itemId: 'shake', count: 2 } },
+    { id: 'combo_5',         name: 'Combo Expert',       desc: 'Get a 5x combo',                             icon: '🔥', tier: 'gold',     condition: { type: 'combo', target: 5 },         reward: { type: 'item', itemId: 'shake', count: 2 } },
+    { id: 'merge_papaya',    name: 'Papaya Puncher',     desc: 'Create a Papaya (level 7)',                   icon: '🍈', tier: 'gold',     condition: { type: 'merge_level', target: 6 },   reward: { type: 'ticket', count: 3 } },
     { id: 'merge_100',       name: 'Merge Machine',      desc: 'Merge 100 times total',                      icon: '⚙️', tier: 'gold',     condition: { type: 'merge_total', target: 100 }, reward: { type: 'item', itemId: 'shake', count: 2 } },
 
-    // Platinum (very hard)
+    // Platinum (very hard) — bomb only from here
     { id: 'score_5000',      name: 'Score Legend',        desc: 'Score 5000 points in a single game',         icon: '👑', tier: 'platinum', condition: { type: 'score', target: 5000 },      reward: { type: 'skin', skinId: 'jewel' } },
     { id: 'merge_coconut',   name: 'Coconut Crusher',    desc: 'Create a Coconut (level 8)',                  icon: '🥥', tier: 'platinum', condition: { type: 'merge_level', target: 7 },   reward: { type: 'skin', skinId: 'jewel' } },
-    { id: 'combo_7',         name: 'Combo Maniac',       desc: 'Get a 7x combo',                             icon: '💎', tier: 'platinum', condition: { type: 'combo', target: 7 },         reward: { type: 'item', itemId: 'upgrade', count: 2 } },
-    { id: 'challenge_clear', name: 'Challenger',         desc: 'Complete any challenge mode',                 icon: '🎯', tier: 'platinum', condition: { type: 'challenge_clear', target: 1 }, reward: { type: 'item', itemId: 'bomb', count: 3 } },
+    { id: 'combo_7',         name: 'Combo Maniac',       desc: 'Get a 7x combo',                             icon: '💎', tier: 'platinum', condition: { type: 'combo', target: 7 },         reward: { type: 'item', itemId: 'bomb', count: 1 } },
+    { id: 'challenge_clear', name: 'Challenger',         desc: 'Complete any challenge mode',                 icon: '🎯', tier: 'platinum', condition: { type: 'challenge_clear', target: 1 }, reward: { type: 'item', itemId: 'bomb', count: 1 } },
 
     // Diamond (legendary)
     { id: 'merge_durian',    name: 'Durian King',        desc: 'Create a Durian (level 10)',                  icon: '👑', tier: 'diamond',  condition: { type: 'merge_level', target: 9 },   reward: { type: 'skin', skinId: 'emoji' } },
-    { id: 'score_10000',     name: 'Mythic Scorer',      desc: 'Score 10000 points in a single game',         icon: '🌟', tier: 'diamond',  condition: { type: 'score', target: 10000 },     reward: { type: 'ticket', count: 5 } },
-    { id: 'combo_10',        name: 'Combo God',          desc: 'Get a 10x combo',                             icon: '⚡', tier: 'diamond',  condition: { type: 'combo', target: 10 },        reward: { type: 'item', itemId: 'upgrade', count: 3 } },
+    { id: 'score_10000',     name: 'Mythic Scorer',      desc: 'Score 10000 points in a single game',         icon: '🌟', tier: 'diamond',  condition: { type: 'score', target: 10000 },     reward: { type: 'item', itemId: 'bomb', count: 1 } },
+    { id: 'combo_10',        name: 'Combo God',          desc: 'Get a 10x combo',                             icon: '⚡', tier: 'diamond',  condition: { type: 'combo', target: 10 },        reward: { type: 'item', itemId: 'bomb', count: 1 } },
     { id: 'all_achievements', name: 'Completionist',     desc: 'Unlock all other achievements',               icon: '🎖️', tier: 'diamond',  condition: { type: 'all_achievements', target: 19 }, reward: { type: 'ticket', count: 10 } },
   ];
 

@@ -46,6 +46,7 @@ game.js → admob.js
 - **데이터**: localStorage(오프라인) + Firebase Firestore(온라인 리더보드)
 
 ## 주의사항
+- **CSS 토큰**: style.css는 clamp() 기반 반응형 토큰 사용. 새 크기 추가 시 `--sp-*`, `--fs-*` 토큰으로 정의. 하드코딩 px는 예외(입력필드 16px, 게임 이펙트)만 허용
 - admob.js의 `isTesting: true` → 릴리스 전 반드시 false + 실제 ID 교체
 - DANGER_LINE_Y = 100 (HUD가 HTML이므로 PRD의 120보다 낮음, 의도적)
 - game.js: Firebase config의 "YOUR_API_KEY" 등을 실제 값으로 교체

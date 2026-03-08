@@ -80,6 +80,14 @@ game/
 - 비활성 상태는 opacity 0.4로 시각 피드백
 - HUD가 pointer-events:none이어도 인터랙티브 자식은 반드시 pointer-events:auto
 
+### CSS 아키텍처 (Design Tokens)
+- px 하드코딩 대신 CSS 커스텀 프로퍼티(디자인 토큰)로 반응형화 — `durian-merge/css/style.css` 참조
+- 스페이싱: `--sp-2xs` ~ `--sp-2xl` (7단계, `clamp()` 기반)
+- 폰트: `--fs-2xs` ~ `--fs-3xl` (9단계, `clamp()` 기반)
+- 모달 폭: `--modal-sm`, `--modal-lg` / 터치 타겟: `--touch-min: 44px`
+- 예외 (고정값 유지): 입력 필드 16px (iOS 자동줌 방지), 게임플레이 이펙트, Canvas 좌표 기반 요소
+- 메뉴 아이콘은 `absolute` 대신 `flex row` — 뷰포트 변화에 간격 자동 유지
+
 ## 보안 (원격 저장소 업로드 금지 항목)
 - **API 키/시크릿**: Firebase config, AdMob 실제 ID 등 절대 코드에 하드코딩 금지
   - 코드 내 placeholder(`YOUR_API_KEY` 등)는 OK, 실제 값은 별도 파일이나 환경변수로 관리

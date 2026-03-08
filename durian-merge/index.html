@@ -30,12 +30,10 @@
         <canvas id="hudNextCanvas" width="80" height="80"></canvas>
       </div>
     </div>
-    <button class="hud-pause-btn" id="hudPauseBtn" aria-label="Pause game">⏸</button>
-    <!-- Item buttons -->
+    <!-- Item buttons (bottom) -->
     <div class="hud-items" id="hudItems">
       <button class="hud-item-btn" data-item="bomb" id="hudItemBomb" title="Bomb">💣<span class="hud-item-count" id="hudBombCount">0</span></button>
       <button class="hud-item-btn" data-item="shake" id="hudItemShake" title="Shake">🌊<span class="hud-item-count" id="hudShakeCount">0</span></button>
-      <button class="hud-item-btn" data-item="upgrade" id="hudItemUpgrade" title="Upgrade">⬆️<span class="hud-item-count" id="hudUpgradeCount">0</span></button>
     </div>
     <!-- Challenge timer -->
     <div class="hud-timer" id="hudTimer" style="display:none;">
@@ -105,6 +103,12 @@
       <button class="icon-btn menu-settings" id="menuSettingsBtn" aria-label="Settings"><span class="icon-gear">&#9881;</span></button>
     </div>
 
+    <!-- Skin selector (top area) -->
+    <div class="menu-skins" id="menuSkins">
+      <div class="menu-skins-label">🎨 Skins</div>
+      <div class="menu-skins-list" id="menuSkinsList"></div>
+    </div>
+
     <div class="menu-content">
       <div class="menu-fruits" id="menuFruits"></div>
       <h1 class="menu-title">Durian Merge</h1>
@@ -117,12 +121,6 @@
     </div>
 
     <div class="menu-actions">
-      <button class="btn btn-play" id="menuPlayBtn">
-        <span class="btn-icon">▶</span> PLAY
-      </button>
-      <div class="menu-tickets">
-        🎟️ <span id="menuTickets">5</span> plays left today
-      </div>
       <div class="menu-sub-links">
         <button class="menu-sub-btn" id="menuRankingBtn">
           <span class="menu-sub-btn-icon">🏆</span>
@@ -147,18 +145,20 @@
           <span class="menu-sub-btn-label">Daily</span>
           <span class="mission-badge" id="dailyBadge" style="display:none;">!</span>
         </button>
+        <button class="menu-sub-btn" id="menuItemsBtn">
+          <span class="menu-sub-btn-icon">🎒</span>
+          <span class="menu-sub-btn-label">Items</span>
+        </button>
       </div>
-      <!-- Season label -->
-      <div class="menu-season" id="menuSeason">
-        <span class="menu-season-icon">🌴</span>
-        <span class="menu-season-name" id="seasonLabel">Tropical Summer</span>
-      </div>
-      <!-- Item inventory display -->
-      <div class="menu-items" id="menuItems">
+      <!-- Item inventory (toggle on Items btn click) -->
+      <div class="menu-items" id="menuItems" style="display:none;">
         <span class="menu-item-slot">💣 <span id="menuBombCount">0</span></span>
         <span class="menu-item-slot">🌊 <span id="menuShakeCount">0</span></span>
-        <span class="menu-item-slot">⬆️ <span id="menuUpgradeCount">0</span></span>
       </div>
+      <button class="btn btn-play" id="menuPlayBtn">
+        <span class="btn-main-text">▶ PLAY</span>
+        <span class="btn-sub-text">🎟️ <span id="menuTickets">5</span> plays left</span>
+      </button>
     </div>
   </div>
 
