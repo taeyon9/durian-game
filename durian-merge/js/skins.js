@@ -257,10 +257,23 @@ const SkinManager = (() => {
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));
   }
 
-  function recordGameEnd(score) {
+  function recordGameEnd(score, extras) {
     const stats = getStats();
     stats.totalScore = (stats.totalScore || 0) + score;
     stats.gamesPlayed = (stats.gamesPlayed || 0) + 1;
+    if (score > (stats.bestSingleScore || 0)) {
+      stats.bestSingleScore = score;
+    }
+    if (extras && extras.maxCombo > (stats.bestSingleCombos || 0)) {
+      stats.bestSingleCombos = extras.maxCombo;
+    }
+    saveStats(stats);
+    checkUnlocks();
+  }
+
+  function recordMissionComplete() {
+    const stats = getStats();
+    stats.missionsCompleted = (stats.missionsCompleted || 0) + 1;
     saveStats(stats);
     checkUnlocks();
   }
@@ -279,6 +292,32 @@ const SkinManager = (() => {
         met = (stats.totalScore || 0) >= skin.unlockValue;
       } else if (skin.unlockCondition === 'gamesPlayed') {
         met = (stats.gamesPlayed || 0) >= skin.unlockValue;
+      } else if (skin.unlockCondition === 'singleGameScore') {
+        met = (stats.bestSingleScore || 0) >= skin.unlockValue;
+      } else if (skin.unlockCondition === 'loginStreak') {
+        if (typeof DailyRewardManager !== 'undefined') {
+          met = DailyRewardManager.getStreak() >= skin.unlockValue;
+        }
+      } else if (skin.unlockCondition === 'albumCount') {
+        if (typeof FruitAlbum !== 'undefined') {
+          met = FruitAlbum.count() >= skin.unlockValue;
+        }
+      } else if (skin.unlockCondition === 'missionsCompleted') {
+        met = (stats.missionsCompleted || 0) >= skin.unlockValue;
+      } else if (skin.unlockCondition === 'singleGameCombos') {
+        met = (stats.bestSingleCombos || 0) >= skin.unlockValue;
+      } else if (skin.unlockCondition === 'season') {
+        const now = new Date();
+        const sv = skin.unlockValue;
+        if (now.getMonth() + 1 === sv.month) {
+          if (sv.subCondition === 'gamesPlayed') {
+            met = (stats.gamesPlayed || 0) >= sv.subValue;
+          } else if (sv.subCondition === 'loginStreak') {
+            if (typeof DailyRewardManager !== 'undefined') {
+              met = DailyRewardManager.getStreak() >= sv.subValue;
+            }
+          }
+        }
       }
       if (met) {
         unlocks.push(skin.id);
@@ -337,6 +376,32 @@ const SkinManager = (() => {
     if (skin.unlockCondition === 'gamesPlayed') {
       return { current: stats.gamesPlayed || 0, target: skin.unlockValue };
     }
+    if (skin.unlockCondition === 'singleGameScore') {
+      return { current: stats.bestSingleScore || 0, target: skin.unlockValue };
+    }
+    if (skin.unlockCondition === 'loginStreak') {
+      const streak = typeof DailyRewardManager !== 'undefined' ? DailyRewardManager.getStreak() : 0;
+      return { current: streak, target: skin.unlockValue };
+    }
+    if (skin.unlockCondition === 'albumCount') {
+      const count = typeof FruitAlbum !== 'undefined' ? FruitAlbum.count() : 0;
+      return { current: count, target: skin.unlockValue };
+    }
+    if (skin.unlockCondition === 'missionsCompleted') {
+      return { current: stats.missionsCompleted || 0, target: skin.unlockValue };
+    }
+    if (skin.unlockCondition === 'singleGameCombos') {
+      return { current: stats.bestSingleCombos || 0, target: skin.unlockValue };
+    }
+    if (skin.unlockCondition === 'season') {
+      const sv = skin.unlockValue;
+      if (sv.subCondition === 'gamesPlayed') {
+        return { current: stats.gamesPlayed || 0, target: sv.subValue };
+      } else if (sv.subCondition === 'loginStreak') {
+        const streak = typeof DailyRewardManager !== 'undefined' ? DailyRewardManager.getStreak() : 0;
+        return { current: streak, target: sv.subValue };
+      }
+    }
     return null;
   }
 
@@ -353,6 +418,7 @@ const SkinManager = (() => {
   return {
     init,
     recordGameEnd,
+    recordMissionComplete,
     isUnlocked,
     selectSkin,
     getCurrentSkinId,
