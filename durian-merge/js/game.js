@@ -835,7 +835,7 @@ const Game = (() => {
       gameOverRank = RankingManager.getRank(score);
     }
 
-    if (typeof SkinManager !== 'undefined') SkinManager.recordGameEnd(score);
+    if (typeof SkinManager !== 'undefined') SkinManager.recordGameEnd(score, { maxCombo: maxCombo });
 
     // 사운드/진동은 애니메이션 시작 시 즉시 재생
     SoundManager.playGameOver();

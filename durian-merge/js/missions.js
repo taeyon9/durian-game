@@ -159,6 +159,10 @@ const MissionManager = (() => {
     mission.rewarded = true;
     save(data);
 
+    if (typeof SkinManager !== 'undefined' && SkinManager.recordMissionComplete) {
+      SkinManager.recordMissionComplete();
+    }
+
     // Grant ticket reward
     if (typeof TicketManager !== 'undefined') {
       TicketManager.addTicket();
