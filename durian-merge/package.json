@@ -15,7 +15,9 @@
     "test": "node --test tests/game-logic.test.js",
     "test:e2e": "npx playwright test tests/e2e.test.js",
     "test:all": "npm test && npm run test:e2e",
-    "device:capture": "node tests/device-capture.js"
+    "device:capture": "node tests/device-capture.js",
+    "restart": "~/android-sdk/platform-tools/adb shell am force-stop com.durianmerge.game && sleep 3 && ~/android-sdk/platform-tools/adb shell am start -n com.durianmerge.game/.MainActivity && echo 'App restarted'",
+    "deploy:capture": "npm run deploy && npm run restart && sleep 5 && npm run device:capture"
   },
   "keywords": [
     "game",

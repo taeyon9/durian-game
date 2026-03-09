@@ -288,7 +288,7 @@ async function captureAllScreens() {
   const backup = await safeEval(`JSON.stringify({
     nickname: localStorage.getItem('durianMergeNickname'),
     userId: localStorage.getItem('durianMergeUserId'),
-    ranking: localStorage.getItem('durianMergeRanking'),
+    ranking: localStorage.getItem('durianMergeLeaderboard'),
     daily: localStorage.getItem('durianMergeDailyReward'),
     tutorial: localStorage.getItem('durianMergeTutorialDone'),
   })`);
@@ -416,7 +416,7 @@ async function captureAllScreens() {
       { name: 'TestPlayer', score: 2100, date: new Date().toISOString(), userId: 'test-123' },
       { name: 'DurianFan', score: 1820, date: new Date().toISOString(), userId: 'f1' },
     ];
-    localStorage.setItem('durianMergeRanking', JSON.stringify(scores));
+    localStorage.setItem('durianMergeLeaderboard', JSON.stringify(scores));
   `);
   await safeEval(`UI.showGameOver(2680, 2450, true, 1, 8, false, 6, 5)`);
   await sleep(2000);
@@ -464,7 +464,7 @@ async function captureAllScreens() {
         const map = {
           nickname: 'durianMergeNickname',
           userId: 'durianMergeUserId',
-          ranking: 'durianMergeRanking',
+          ranking: 'durianMergeLeaderboard',
           daily: 'durianMergeDailyReward',
           tutorial: 'durianMergeTutorialDone',
         };
