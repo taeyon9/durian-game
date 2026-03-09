@@ -126,6 +126,141 @@ function drawFruit(ctx, x, y, level, angle) {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(skinData.emoji, 0, fruit.radius * 0.08);
+    } else if (skinType === 'neon' && skinData) {
+      const glowColor = skinData.glow || baseColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#0A0A0A';
+      ctx.fill();
+      for (let i = 3; i >= 1; i--) {
+        ctx.beginPath();
+        ctx.arc(0, 0, fruit.radius - 2, 0, Math.PI * 2);
+        ctx.strokeStyle = glowColor;
+        ctx.lineWidth = i * 3;
+        ctx.globalAlpha = 0.15 + (0.15 * (4 - i));
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    } else if (skinType === 'pastel' && skinData) {
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      const pGrad = ctx.createRadialGradient(
+        -fruit.radius * 0.2, -fruit.radius * 0.2, fruit.radius * 0.05,
+        0, 0, fruit.radius
+      );
+      pGrad.addColorStop(0, '#FFFFFF');
+      pGrad.addColorStop(0.4, baseColor);
+      pGrad.addColorStop(1, darkenColor(baseColor, 15));
+      ctx.fillStyle = pGrad;
+      ctx.fill();
+    } else if (skinType === 'mono') {
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      const mGrad = ctx.createRadialGradient(
+        -fruit.radius * 0.3, -fruit.radius * 0.3, fruit.radius * 0.1,
+        0, 0, fruit.radius
+      );
+      mGrad.addColorStop(0, lightenColor(baseColor, 30));
+      mGrad.addColorStop(0.6, baseColor);
+      mGrad.addColorStop(1, darkenColor(baseColor, 40));
+      ctx.fillStyle = mGrad;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(139, 119, 101, 0.1)';
+      ctx.fill();
+    } else if (skinType === 'galaxy' && skinData) {
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      const gGrad = ctx.createRadialGradient(
+        fruit.radius * 0.2, fruit.radius * 0.2, fruit.radius * 0.1,
+        0, 0, fruit.radius
+      );
+      gGrad.addColorStop(0, skinData.highlight || '#FFFFFF');
+      gGrad.addColorStop(0.3, baseColor);
+      gGrad.addColorStop(1, '#000000');
+      ctx.fillStyle = gGrad;
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      for (let i = 0; i < 6 + level * 2; i++) {
+        const seed = level * 100 + i * 17;
+        const sx = (Math.sin(seed) * 0.7) * fruit.radius;
+        const sy = (Math.cos(seed * 1.3) * 0.7) * fruit.radius;
+        const sr = 0.5 + (seed % 3) * 0.4;
+        ctx.beginPath();
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (skinType === 'pixel' && skinData) {
+      const dark = skinData.dark || darkenColor(baseColor, 40);
+      const gridSize = Math.max(4, Math.floor(fruit.radius / 5));
+      const r = fruit.radius * 0.85;
+      ctx.beginPath();
+      ctx.moveTo(-r, -r + gridSize);
+      ctx.lineTo(-r, r - gridSize);
+      ctx.lineTo(-r + gridSize, r);
+      ctx.lineTo(r - gridSize, r);
+      ctx.lineTo(r, r - gridSize);
+      ctx.lineTo(r, -r + gridSize);
+      ctx.lineTo(r - gridSize, -r);
+      ctx.lineTo(-r + gridSize, -r);
+      ctx.closePath();
+      ctx.fillStyle = baseColor;
+      ctx.fill();
+      ctx.strokeStyle = dark;
+      ctx.lineWidth = 0.5;
+      for (let gx = -r; gx <= r; gx += gridSize) {
+        ctx.beginPath(); ctx.moveTo(gx, -r); ctx.lineTo(gx, r); ctx.stroke();
+      }
+      for (let gy = -r; gy <= r; gy += gridSize) {
+        ctx.beginPath(); ctx.moveTo(-r, gy); ctx.lineTo(r, gy); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fillRect(-r, -r, gridSize * 2, gridSize * 2);
+    } else if (skinType === 'candy' && skinData) {
+      const stripeColor = skinData.stripe || '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      ctx.fillStyle = baseColor;
+      ctx.fill();
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.lineWidth = fruit.radius * 0.2;
+      ctx.strokeStyle = stripeColor;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 4; a += 0.1) {
+        const sr = a * fruit.radius / (Math.PI * 4);
+        const sx = Math.cos(a) * sr;
+        const sy = Math.sin(a) * sr;
+        if (a === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(-fruit.radius * 0.25, -fruit.radius * 0.25, fruit.radius * 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.fill();
+    } else if (skinType === 'placeholder' && skinData && skinData.emoji) {
+      ctx.beginPath();
+      ctx.arc(0, 0, fruit.radius, 0, Math.PI * 2);
+      const phGrad = ctx.createRadialGradient(
+        -fruit.radius * 0.3, -fruit.radius * 0.3, fruit.radius * 0.1,
+        0, 0, fruit.radius
+      );
+      phGrad.addColorStop(0, lightenColor(baseColor, 40));
+      phGrad.addColorStop(0.7, baseColor);
+      phGrad.addColorStop(1, darkenColor(baseColor, 30));
+      ctx.fillStyle = phGrad;
+      ctx.fill();
+      ctx.font = `${fruit.radius * 1.1}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(skinData.emoji, 0, fruit.radius * 0.08);
     } else if (skinType === 'recolor' && skinData && skinData.accent) {
       // Jewel skin: faceted look with accent highlight
       ctx.beginPath();
