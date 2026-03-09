@@ -99,9 +99,8 @@ const Game = (() => {
   // Game over rank
   let gameOverRank = -1;
 
-  // Ad optimization: time tracking + continue
+  // Ad optimization: time tracking
   let gameStartTime = 0;
-  let continuedThisGame = false;
 
   // Challenge mode state
   let challengeTimer = 0; // remaining ms for time attack
@@ -134,7 +133,7 @@ const Game = (() => {
     UI.init({
       onPlay: startGame,
       onWatchAd: watchAdForTicket,
-      onContinue: watchAdToContinue,
+
       onPause: pauseGame,
       onResume: resumeGame,
       onRestartFromPause: restartFromPause,
@@ -273,7 +272,6 @@ const Game = (() => {
     gameState = 'playing';
     gameStartTime = performance.now();
     challengeStartTime = performance.now();
-    continuedThisGame = false;
     UI.showScreen('playing');
     UI.updateHUD(scoreEnabled ? 0 : '-', highScore);
     UI.updateNextFruit(nextLevel);
@@ -500,36 +498,6 @@ const Game = (() => {
         startGame();
       }
     }
-  }
-
-  async function watchAdToContinue() {
-    if (typeof AdMobManager !== 'undefined') {
-      const rewarded = await AdMobManager.showRewarded();
-      if (rewarded) continueGame();
-    }
-  }
-
-  function continueGame() {
-    continuedThisGame = true;
-    // Push danger-zone fruits down to give breathing room
-    const maxY = BASE_HEIGHT - 50;
-    for (const body of fruitBodies) {
-      if (body.position.y - FRUITS[body.fruitLevel].radius < DANGER_LINE_Y + 30) {
-        const newY = Math.min(body.position.y + 60, maxY);
-        Matter.Body.setPosition(body, { x: body.position.x, y: newY });
-        Matter.Body.setVelocity(body, { x: 0, y: 0 });
-        Matter.Sleeping.set(body, false);
-      }
-    }
-    dangerTimer = 0;
-    canDrop = true;
-    dropCooldown = 0;
-    lastDropTime = 0;
-    accumulator = 0;
-    gameState = 'playing';
-    UI.showScreen('playing');
-    UI.updateHUD(score, highScore);
-    UI.updateNextFruit(nextLevel);
   }
 
   // ===== PAUSE / RESUME =====
@@ -901,14 +869,10 @@ const Game = (() => {
       AdMobManager.showInterstitial(gameDurationMs);
     }
 
-    // Can continue if: not already continued this game + rewarded ad available
-    const canContinue = !continuedThisGame &&
-      (typeof AdMobManager !== 'undefined' && AdMobManager.isRewardedReady());
-
     // Flush pending saves (game over is low-frequency, safe to write now)
     flushSaves();
 
-    UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel, canContinue, maxCombo, bestCombo);
+    UI.showGameOver(score, highScore, isNewBest, gameOverRank, maxMergedLevel, maxCombo, bestCombo);
     gameOverAnimData = null;
   }
 
@@ -1434,7 +1398,20 @@ const Game = (() => {
     }
   }
 
-  return { init, triggerGameOver, useItem };
+  // DEBUG: fill screen with fruits for quick testing
+  function debugFill(count) {
+    if (gameState !== 'playing') return;
+    const n = count || 15;
+    for (let i = 0; i < n; i++) {
+      const lvl = Math.floor(Math.random() * 5);
+      const x = FRUITS[lvl].radius + Math.random() * (BASE_WIDTH - FRUITS[lvl].radius * 2);
+      const y = DANGER_LINE_Y + 50 + Math.random() * (BASE_HEIGHT - DANGER_LINE_Y - 150);
+      const body = Physics.createFruit(x, y, lvl);
+      if (body) { body.droppedAt = 0; fruitBodies.push(body); }
+    }
+  }
+
+  return { init, triggerGameOver, useItem, debugFill };
 })();
 
 window.addEventListener('load', () => Game.init());

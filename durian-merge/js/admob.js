@@ -31,6 +31,7 @@ const AdMobManager = (() => {
 
       await AdMob.initialize({
         initializeForTesting: false,
+        maxAdContentRating: 'General',
       });
 
       await showBanner();
@@ -88,11 +89,11 @@ const AdMobManager = (() => {
       await AdMob.showInterstitial();
       gamesSinceLastInterstitial = 0;
       interstitialLoaded = false;
-      await loadInterstitial();
+      loadInterstitial(); // fire-and-forget
     } catch (err) {
       console.error('AdMob: Interstitial show error', err);
       interstitialLoaded = false;
-      await loadInterstitial();
+      loadInterstitial();
     }
   }
 
@@ -120,14 +121,14 @@ const AdMobManager = (() => {
     if (!rewardedLoaded) return false;
 
     try {
-      const result = await AdMob.showRewardVideoAd();
+      await AdMob.showRewardVideoAd();
       rewardedLoaded = false;
-      await loadRewarded();
+      loadRewarded(); // fire-and-forget
       return true;
     } catch (err) {
       console.error('AdMob: Rewarded show error', err);
       rewardedLoaded = false;
-      await loadRewarded();
+      loadRewarded();
       return false;
     }
   }

@@ -282,7 +282,6 @@ const AchievementManager = (() => {
     const badge = document.getElementById('achievementBadge');
     if (badge) {
       const count = getUnclaimedCount();
-      badge.textContent = count;
       badge.style.display = count > 0 ? '' : 'none';
     }
   }

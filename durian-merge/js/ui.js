@@ -7,7 +7,7 @@ const UI = (() => {
   let currentScreen = 'menu'; // menu | playing | paused | gameover | leaderboard | settings
   let onPlayCallback = null;
   let onWatchAdCallback = null;
-  let onContinueCallback = null;
+
   let onPauseCallback = null;
   let onResumeCallback = null;
   let onRestartFromPauseCallback = null;
@@ -16,7 +16,7 @@ const UI = (() => {
   function init(callbacks) {
     onPlayCallback = callbacks.onPlay;
     onWatchAdCallback = callbacks.onWatchAd;
-    onContinueCallback = callbacks.onContinue;
+
     onPauseCallback = callbacks.onPause;
     onResumeCallback = callbacks.onResume;
     onRestartFromPauseCallback = callbacks.onRestartFromPause;
@@ -77,7 +77,8 @@ const UI = (() => {
       goViewAll: document.getElementById('goViewAll'),
       goRankReveal: document.getElementById('goRankReveal'),
       goRankText: document.getElementById('goRankText'),
-      goContinue: document.getElementById('goContinue'),
+
+      goButtons: document.getElementById('goButtons'),
       goPlayAgain: document.getElementById('goPlayAgain'),
       goShareBtn: document.getElementById('goShareBtn'),
       goBackMenu: document.getElementById('goBackMenu'),
@@ -181,7 +182,7 @@ const UI = (() => {
     if (els.hudSettingsBtn) els.hudSettingsBtn.addEventListener('click', () => showModal('settings'));
 
     // Game Over
-    els.goContinue.addEventListener('click', handleContinue);
+
     els.goPlayAgain.addEventListener('click', handlePlay);
     els.goShareBtn.addEventListener('click', handleDirectShare);
     els.goBackMenu.addEventListener('click', () => showScreen('menu'));
@@ -521,6 +522,22 @@ const UI = (() => {
         els.hudBest._debugTimer = setTimeout(() => { els.hudBest._debugTapCount = 0; }, 3000);
       });
     }
+
+    // DEBUG: tap SCORE label 5 times to fill screen with fruits
+    if (!els.hudScore._debugTapCount) {
+      els.hudScore._debugTapCount = 0;
+      els.hudScore.addEventListener('click', () => {
+        els.hudScore._debugTapCount++;
+        if (els.hudScore._debugTapCount >= 5) {
+          els.hudScore._debugTapCount = 0;
+          if (typeof Game !== 'undefined' && Game.debugFill) {
+            Game.debugFill(20);
+          }
+        }
+        clearTimeout(els.hudScore._debugTimer);
+        els.hudScore._debugTimer = setTimeout(() => { els.hudScore._debugTapCount = 0; }, 3000);
+      });
+    }
   }
 
   function updateNextFruit(level) {
@@ -556,11 +573,17 @@ const UI = (() => {
   let lastMaxFruitLevel = 0;
   let lastIsNewBest = false;
   let lastMaxCombo = 0;
+  let lastScore = 0;
+  let lastHighScore = 0;
+  let lastRank = null;
 
-  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel, canContinue, maxCombo, bestCombo) {
+  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel, maxCombo, bestCombo) {
     lastMaxFruitLevel = maxFruitLevel || 0;
     lastIsNewBest = isNewBest;
     lastMaxCombo = maxCombo || 0;
+    lastScore = score;
+    lastHighScore = highScore;
+    lastRank = rank;
     els.goScore.textContent = score;
     // Best diff display
     const diffEl = document.getElementById('goBestDiff');
@@ -591,18 +614,19 @@ const UI = (() => {
       els.goComboStats.style.display = 'none';
     }
 
+    showFullGameOver();
+    showScreen('gameover');
+  }
+
+  function showFullGameOver() {
+    els.goButtons.style.display = '';
+
     const hasName = NicknameManager.hasName();
-
     if (hasName) {
-      // Returning user → show neighbor ranks
-      showReturningGameOver(score, rank);
+      showReturningGameOver(lastScore, lastRank);
     } else {
-      // First time → blurred board + nickname prompt
-      showFirstTimeGameOver(score);
+      showFirstTimeGameOver(lastScore);
     }
-
-    // Continue button (rewarded ad to resume game)
-    els.goContinue.style.display = canContinue ? '' : 'none';
 
     // Smart Play Again button — gold with tickets, purple for ad
     const tickets = TicketManager.getTickets();
@@ -619,13 +643,11 @@ const UI = (() => {
     }
 
     // Pulse share button on new best
-    if (isNewBest) {
+    if (lastIsNewBest) {
       els.goShareBtn.classList.add('new-best');
     } else {
       els.goShareBtn.classList.remove('new-best');
     }
-
-    showScreen('gameover');
   }
 
   function showFirstTimeGameOver(score) {
@@ -1047,9 +1069,6 @@ const UI = (() => {
     if (onWatchAdCallback) onWatchAdCallback();
   }
 
-  function handleContinue() {
-    if (onContinueCallback) onContinueCallback();
-  }
 
   // ===== UTILS =====
 
