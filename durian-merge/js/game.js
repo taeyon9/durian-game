@@ -89,7 +89,12 @@ const Game = (() => {
   // Combo tracking
   let comboCount = 0;
   let comboTimer = 0;
-  const COMBO_WINDOW_MS = 1200;
+  // Combo window decays as combo builds: 900ms → 700ms → 500ms
+  function getComboWindow() {
+    if (comboCount >= 5) return 500;
+    if (comboCount >= 3) return 700;
+    return 900;
+  }
   let maxCombo = 0;
   let bestCombo = parseInt(localStorage.getItem('durianMergeBestCombo') || '0');
 
@@ -108,6 +113,7 @@ const Game = (() => {
   let dangerEnabled = true;
   let scoreEnabled = true;
   let radiusScale = 1;
+  let gravityScale = 1;
   let targetScore = 0; // for speed run
 
   // Cached DOM refs for per-frame access
@@ -301,16 +307,14 @@ const Game = (() => {
     dangerEnabled = true;
     scoreEnabled = true;
     radiusScale = 1;
+    gravityScale = 1;
     challengeTimer = 0;
     targetScore = 0;
 
     // Apply mode-specific
     if (settings.timeLimit) challengeTimer = settings.timeLimit;
     if (settings.radiusScale) radiusScale = settings.radiusScale;
-    if (settings.gravityScale) {
-      const engine = Physics.getEngine();
-      engine.gravity.y = 1.8 * settings.gravityScale;
-    }
+    if (settings.gravityScale) gravityScale = settings.gravityScale;
     if (settings.dropCooldown) DROP_COOLDOWN_MS = settings.dropCooldown;
     if (settings.dangerTimeout) DANGER_TIMEOUT = settings.dangerTimeout;
     if (settings.dangerEnabled === false) dangerEnabled = false;
@@ -349,7 +353,8 @@ const Game = (() => {
     dangerEnabled = true;
     scoreEnabled = true;
     radiusScale = 1;
-    // Reset physics gravity
+    gravityScale = 1;
+    // Reset physics gravity (progressive gravity handles actual value in game loop)
     const engine = Physics.getEngine();
     if (engine) engine.gravity.y = 1.8;
   }
@@ -357,7 +362,7 @@ const Game = (() => {
   // ===== ITEM USAGE =====
 
   const ITEM_DESCRIPTIONS = {
-    bomb: '💣 Bomb — Removes the smallest fruit',
+    bomb: '💣 Bomb — Removes all smallest fruits',
     shake: '🌊 Shake — Shuffles all fruits around',
   };
 
@@ -388,35 +393,71 @@ const Game = (() => {
 
   function useBomb() {
     if (fruitBodies.length === 0) return false;
-    // Find smallest fruit
-    let smallest = null;
+    // Find smallest level among non-merging fruits
     let smallestLevel = Infinity;
     for (const body of fruitBodies) {
       if (body.isMerging) continue;
-      if (body.fruitLevel < smallestLevel) {
-        smallestLevel = body.fruitLevel;
-        smallest = body;
+      if (body.fruitLevel < smallestLevel) smallestLevel = body.fruitLevel;
+    }
+    if (smallestLevel === Infinity) return false;
+
+    // Collect ALL fruits at that level
+    const targets = [];
+    for (let i = fruitBodies.length - 1; i >= 0; i--) {
+      if (fruitBodies[i].isMerging) continue;
+      if (fruitBodies[i].fruitLevel === smallestLevel) {
+        targets.push(fruitBodies[i]);
+        fruitBodies.splice(i, 1);
       }
     }
-    if (!smallest) return false;
+    if (targets.length === 0) return false;
 
-    // Visual effect
-    const mx = smallest.position.x;
-    const my = smallest.position.y;
-    mergeEffects.push({
-      x: mx, y: my,
-      radius: FRUITS[smallest.fruitLevel].radius,
-      alpha: 1,
-      color: '#FF4500',
-      glowRadius: 0,
-      particles: [],
-      level: smallest.fruitLevel,
-    });
-    shakeIntensity = 4;
+    // Explosion effect for each target
+    const bombColor = '#FF4500';
+    for (const body of targets) {
+      const mx = body.position.x;
+      const my = body.position.y;
+      const fruitRadius = FRUITS[smallestLevel].radius;
 
-    Physics.removeFruit(smallest);
-    const idx = fruitBodies.indexOf(smallest);
-    if (idx >= 0) fruitBodies.splice(idx, 1);
+      // Particles per fruit
+      const particles = [];
+      for (let i = 0; i < 8; i++) {
+        const p = acquireParticle();
+        if (!p) break;
+        p.angle = (i / 8) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+        p.dist = 0;
+        p.speed = 0.1 + Math.random() * 0.12;
+        p.size = 2 + Math.random() * 3;
+        p.isStar = i % 2 === 0;
+        p.color = i % 2 === 0 ? bombColor : '#FFD700';
+        p.rotSpeed = (Math.random() - 0.5) * 0.15;
+        p.rot = Math.random() * Math.PI * 2;
+        p.x = 0; p.y = 0; p.vx = 0; p.vy = 0; p.alpha = 0;
+        particles.push(p);
+      }
+
+      mergeEffects.push({
+        x: mx, y: my,
+        radius: fruitRadius,
+        alpha: 1,
+        color: bombColor,
+        glowRadius: 0,
+        particles,
+        level: smallestLevel,
+      });
+
+      // Score popup per fruit
+      scorePopups.push({
+        x: mx, y: my,
+        text: '💣',
+        alpha: 1,
+        dy: 0,
+      });
+
+      Physics.removeFruit(body);
+    }
+
+    shakeIntensity = Math.min(6 + targets.length, 12);
     return true;
   }
 
@@ -622,11 +663,11 @@ const Game = (() => {
       // Score + Combo
       const points = scoreEnabled ? FRUITS[level + 1].score : 0;
       comboCount++;
-      comboTimer = COMBO_WINDOW_MS;
+      comboTimer = getComboWindow();
 
       if (comboCount >= 2) {
         // Multiplier: x1.5, x2, x2.5, x3, x3.5, x4.0 (capped)
-        const multiplier = Math.min(1 + comboCount * 0.5, 4);
+        const multiplier = Math.min(1 + comboCount * 0.3, 3);
         const totalPoints = Math.floor(points * multiplier);
         score += totalPoints;
 
@@ -893,6 +934,12 @@ const Game = (() => {
       // Cap delta to prevent spiral of death (e.g., after tab switch)
       const delta = Math.min(accumulator, 33);
       accumulator = 0;
+
+      // Progressive gravity: 1.8 at 0pts → 2.4 at 1500pts (capped)
+      const BASE_GRAVITY = 1.8;
+      const progressGravity = BASE_GRAVITY + Math.min(score / 1500, 1) * 0.6;
+      const engine = Physics.getEngine();
+      if (engine) engine.gravity.y = progressGravity * gravityScale;
 
       Physics.update(16.67); // Fixed timestep (60fps) for consistent physics
 

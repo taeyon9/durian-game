@@ -11,35 +11,35 @@ const AchievementManager = (() => {
   };
 
   const ACHIEVEMENTS = [
-    // Bronze (easy)
-    { id: 'first_merge',     name: 'First Merge',       desc: 'Merge two fruits for the first time',       icon: '🔰', tier: 'bronze',   condition: { type: 'merge_any', target: 1 },     reward: { type: 'ticket', count: 1 } },
-    { id: 'play_10',         name: 'Regular Player',     desc: 'Play 10 games',                              icon: '🎮', tier: 'bronze',   condition: { type: 'play_count', target: 10 },   reward: { type: 'ticket', count: 1 } },
-    { id: 'score_100',       name: 'Getting Started',    desc: 'Score 100 points in a single game',          icon: '💯', tier: 'bronze',   condition: { type: 'score', target: 100 },       reward: { type: 'ticket', count: 1 } },
-    { id: 'merge_10',        name: 'Merger',             desc: 'Merge 10 times total',                       icon: '🔄', tier: 'bronze',   condition: { type: 'merge_total', target: 10 },  reward: { type: 'ticket', count: 1 } },
+    // Bronze (easy) — badge only, no material rewards
+    { id: 'first_merge',     name: 'First Merge',       desc: 'Merge two fruits for the first time',        icon: '🔰', tier: 'bronze',   condition: { type: 'merge_any', target: 1 } },
+    { id: 'play_10',         name: 'Regular Player',     desc: 'Play 30 games',                              icon: '🎮', tier: 'bronze',   condition: { type: 'play_count', target: 30 } },
+    { id: 'score_100',       name: 'Getting Started',    desc: 'Score 500 points in a single game',          icon: '💯', tier: 'bronze',   condition: { type: 'score', target: 500 } },
+    { id: 'merge_10',        name: 'Merger',             desc: 'Merge 50 times total',                       icon: '🔄', tier: 'bronze',   condition: { type: 'merge_total', target: 50 } },
 
     // Silver (medium)
-    { id: 'score_500',       name: 'Rising Star',        desc: 'Score 500 points in a single game',          icon: '⭐', tier: 'silver',   condition: { type: 'score', target: 500 },       reward: { type: 'item', itemId: 'shake', count: 1 } },
-    { id: 'combo_3',         name: 'Combo Starter',      desc: 'Get a 3x combo',                             icon: '💥', tier: 'silver',   condition: { type: 'combo', target: 3 },         reward: { type: 'item', itemId: 'shake', count: 1 } },
-    { id: 'merge_mango',     name: 'Mango Master',       desc: 'Create a Mango (level 5)',                   icon: '🥭', tier: 'silver',   condition: { type: 'merge_level', target: 4 },   reward: { type: 'item', itemId: 'shake', count: 1 } },
-    { id: 'play_50',         name: 'Dedicated Player',   desc: 'Play 50 games',                              icon: '🏅', tier: 'silver',   condition: { type: 'play_count', target: 50 },   reward: { type: 'item', itemId: 'shake', count: 2 } },
+    { id: 'score_500',       name: 'Rising Star',        desc: 'Score 2000 points in a single game',         icon: '⭐', tier: 'silver',   condition: { type: 'score', target: 2000 } },
+    { id: 'combo_3',         name: 'Combo Starter',      desc: 'Get a 5x combo',                             icon: '💥', tier: 'silver',   condition: { type: 'combo', target: 5 } },
+    { id: 'merge_mango',     name: 'Mango Master',       desc: 'Create a Mango (level 5)',                   icon: '🥭', tier: 'silver',   condition: { type: 'merge_level', target: 4 } },
+    { id: 'play_50',         name: 'Dedicated Player',   desc: 'Play 200 games',                             icon: '🏅', tier: 'silver',   condition: { type: 'play_count', target: 200 } },
 
     // Gold (hard)
-    { id: 'score_2000',      name: 'High Scorer',        desc: 'Score 2000 points in a single game',         icon: '🏆', tier: 'gold',     condition: { type: 'score', target: 2000 },      reward: { type: 'item', itemId: 'shake', count: 2 } },
-    { id: 'combo_5',         name: 'Combo Expert',       desc: 'Get a 5x combo',                             icon: '🔥', tier: 'gold',     condition: { type: 'combo', target: 5 },         reward: { type: 'item', itemId: 'shake', count: 2 } },
-    { id: 'merge_papaya',    name: 'Papaya Puncher',     desc: 'Create a Papaya (level 7)',                   icon: '🍈', tier: 'gold',     condition: { type: 'merge_level', target: 6 },   reward: { type: 'ticket', count: 3 } },
-    { id: 'merge_100',       name: 'Merge Machine',      desc: 'Merge 100 times total',                      icon: '⚙️', tier: 'gold',     condition: { type: 'merge_total', target: 100 }, reward: { type: 'item', itemId: 'shake', count: 2 } },
+    { id: 'score_2000',      name: 'High Scorer',        desc: 'Score 5000 points in a single game',         icon: '🏆', tier: 'gold',     condition: { type: 'score', target: 5000 } },
+    { id: 'combo_5',         name: 'Combo Expert',       desc: 'Get a 8x combo',                             icon: '🔥', tier: 'gold',     condition: { type: 'combo', target: 8 } },
+    { id: 'merge_papaya',    name: 'Papaya Puncher',     desc: 'Create a Papaya (level 7)',                   icon: '🍈', tier: 'gold',     condition: { type: 'merge_level', target: 6 } },
+    { id: 'merge_100',       name: 'Merge Machine',      desc: 'Merge 500 times total',                      icon: '⚙️', tier: 'gold',     condition: { type: 'merge_total', target: 500 } },
 
-    // Platinum (very hard) — bomb only from here
-    { id: 'score_5000',      name: 'Score Legend',        desc: 'Score 5000 points in a single game',         icon: '👑', tier: 'platinum', condition: { type: 'score', target: 5000 },      reward: { type: 'skin', skinId: 'jewel' } },
-    { id: 'merge_coconut',   name: 'Coconut Crusher',    desc: 'Create a Coconut (level 8)',                  icon: '🥥', tier: 'platinum', condition: { type: 'merge_level', target: 7 },   reward: { type: 'skin', skinId: 'jewel' } },
-    { id: 'combo_7',         name: 'Combo Maniac',       desc: 'Get a 7x combo',                             icon: '💎', tier: 'platinum', condition: { type: 'combo', target: 7 },         reward: { type: 'item', itemId: 'bomb', count: 1 } },
-    { id: 'challenge_clear', name: 'Challenger',         desc: 'Complete any challenge mode',                 icon: '🎯', tier: 'platinum', condition: { type: 'challenge_clear', target: 1 }, reward: { type: 'item', itemId: 'bomb', count: 1 } },
+    // Platinum (very hard)
+    { id: 'score_5000',      name: 'Score Legend',        desc: 'Score 15000 points in a single game',        icon: '👑', tier: 'platinum', condition: { type: 'score', target: 15000 } },
+    { id: 'merge_coconut',   name: 'Coconut Crusher',    desc: 'Create a Coconut (level 8)',                  icon: '🥥', tier: 'platinum', condition: { type: 'merge_level', target: 7 } },
+    { id: 'combo_7',         name: 'Combo Maniac',       desc: 'Get a 12x combo',                            icon: '💎', tier: 'platinum', condition: { type: 'combo', target: 12 } },
+    { id: 'challenge_clear', name: 'Challenger',         desc: 'Complete any challenge mode',                 icon: '🎯', tier: 'platinum', condition: { type: 'challenge_clear', target: 1 } },
 
     // Diamond (legendary)
-    { id: 'merge_durian',    name: 'Durian King',        desc: 'Create a Durian (level 10)',                  icon: '👑', tier: 'diamond',  condition: { type: 'merge_level', target: 9 },   reward: { type: 'skin', skinId: 'emoji' } },
-    { id: 'score_10000',     name: 'Mythic Scorer',      desc: 'Score 10000 points in a single game',         icon: '🌟', tier: 'diamond',  condition: { type: 'score', target: 10000 },     reward: { type: 'item', itemId: 'bomb', count: 1 } },
-    { id: 'combo_10',        name: 'Combo God',          desc: 'Get a 10x combo',                             icon: '⚡', tier: 'diamond',  condition: { type: 'combo', target: 10 },        reward: { type: 'item', itemId: 'bomb', count: 1 } },
-    { id: 'all_achievements', name: 'Completionist',     desc: 'Unlock all other achievements',               icon: '🎖️', tier: 'diamond',  condition: { type: 'all_achievements', target: 19 }, reward: { type: 'ticket', count: 10 } },
+    { id: 'merge_durian',    name: 'Durian King',        desc: 'Create a Durian (level 10)',                  icon: '👑', tier: 'diamond',  condition: { type: 'merge_level', target: 9 } },
+    { id: 'score_10000',     name: 'Mythic Scorer',      desc: 'Score 30000 points in a single game',        icon: '🌟', tier: 'diamond',  condition: { type: 'score', target: 30000 } },
+    { id: 'combo_10',        name: 'Combo God',          desc: 'Get a 15x combo',                            icon: '⚡', tier: 'diamond',  condition: { type: 'combo', target: 15 } },
+    { id: 'all_achievements', name: 'Completionist',     desc: 'Unlock all other achievements',               icon: '🎖️', tier: 'diamond',  condition: { type: 'all_achievements', target: 19 } },
   ];
 
   let _cache = null;
@@ -153,50 +153,13 @@ const AchievementManager = (() => {
     }
   }
 
-  function claim(achievementId) {
-    const data = load();
-    if (!data.unlocked[achievementId] || data.claimed[achievementId]) return false;
-
-    const ach = ACHIEVEMENTS.find(a => a.id === achievementId);
-    if (!ach) return false;
-
-    data.claimed[achievementId] = Date.now();
-    save(data);
-
-    // Grant reward
-    grantReward(ach.reward);
-    if (typeof SoundManager !== 'undefined') SoundManager.playMerge(5);
-    if (typeof Haptic !== 'undefined') Haptic.combo(2);
-    return true;
-  }
-
-  function grantReward(reward) {
-    if (!reward) return;
-    switch (reward.type) {
-      case 'ticket':
-        if (typeof TicketManager !== 'undefined') {
-          for (let i = 0; i < (reward.count || 1); i++) TicketManager.addTicket();
-        }
-        break;
-      case 'item':
-        if (typeof ItemManager !== 'undefined') {
-          ItemManager.addItem(reward.itemId, reward.count);
-        }
-        break;
-      case 'skin':
-        if (typeof SkinManager !== 'undefined' && reward.skinId) {
-          SkinManager.forceUnlock(reward.skinId);
-        }
-        break;
-    }
-  }
+  // No material rewards — achievements grant badges only (auto-claimed on unlock)
 
   function getAll() {
     const data = load();
     return ACHIEVEMENTS.map(ach => ({
       ...ach,
       unlocked: !!data.unlocked[ach.id],
-      claimed: !!data.claimed[ach.id],
       unlockedAt: data.unlocked[ach.id] || null,
       progress: data.progress[ach.id] || 0,
       tierInfo: TIERS[ach.tier],
@@ -206,11 +169,6 @@ const AchievementManager = (() => {
   function getUnlocked() {
     const data = load();
     return ACHIEVEMENTS.filter(a => data.unlocked[a.id]);
-  }
-
-  function getUnclaimedCount() {
-    const data = load();
-    return ACHIEVEMENTS.filter(a => data.unlocked[a.id] && !data.claimed[a.id]).length;
   }
 
   // ===== UI =====
@@ -259,30 +217,11 @@ const AchievementManager = (() => {
           (ach.unlocked ? '' : '<div class="ach-progress-bar"><div class="ach-progress-fill" style="width:' + progressPct + '%;background:' + ach.tierInfo.color + '"></div></div>') +
         '</div>' +
         '<div class="ach-reward">' +
-          (ach.claimed ? '<span class="ach-claimed">Claimed</span>' :
-           ach.unlocked ? '<button class="ach-claim-btn" data-id="' + ach.id + '">Claim</button>' :
+          (ach.unlocked ? '<span class="ach-claimed" style="color:' + ach.tierInfo.color + '">✓</span>' :
            '<span class="ach-tier" style="color:' + ach.tierInfo.color + '">' + ach.tierInfo.name + '</span>') +
         '</div>';
 
       list.appendChild(div);
-    }
-
-    // Bind claim buttons
-    list.querySelectorAll('.ach-claim-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (claim(btn.dataset.id)) {
-          renderUI();
-          if (typeof UI !== 'undefined') UI.updateMenu();
-        }
-      });
-    });
-
-    // Update badge
-    const badge = document.getElementById('achievementBadge');
-    if (badge) {
-      const count = getUnclaimedCount();
-      badge.style.display = count > 0 ? '' : 'none';
     }
   }
 
@@ -307,5 +246,5 @@ const AchievementManager = (() => {
     initUI();
   }
 
-  return { check, claim, getAll, getUnlocked, getUnclaimedCount, showPanel, hidePanel, renderUI };
+  return { check, getAll, getUnlocked, showPanel, hidePanel, renderUI };
 })();

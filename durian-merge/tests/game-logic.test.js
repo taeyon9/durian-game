@@ -396,9 +396,12 @@ describe('Score Calculation', () => {
 //  4. Combo System
 // ============================
 describe('Combo System', () => {
-  it('combo window should be 2000ms', () => {
+  it('combo window should decay: 900 → 700 → 500ms', () => {
     const src = readSrc('js/game.js');
-    assert.ok(src.includes('COMBO_WINDOW_MS = 1200'));
+    assert.ok(src.includes('function getComboWindow()'));
+    assert.ok(src.includes('return 500'));
+    assert.ok(src.includes('return 700'));
+    assert.ok(src.includes('return 900'));
   });
 
   it('comboCount should increment on each merge', () => {
@@ -406,25 +409,25 @@ describe('Combo System', () => {
     assert.ok(src.includes('comboCount++'));
   });
 
-  it('comboTimer should reset to COMBO_WINDOW_MS on merge', () => {
+  it('comboTimer should reset to getComboWindow() on merge', () => {
     const src = readSrc('js/game.js');
-    assert.ok(src.includes('comboTimer = COMBO_WINDOW_MS'));
+    assert.ok(src.includes('comboTimer = getComboWindow()'));
   });
 
-  it('multiplier should be 1 + comboCount * 0.5, capped at 4', () => {
+  it('multiplier should be 1 + comboCount * 0.3, capped at 3', () => {
     const src = readSrc('js/game.js');
-    assert.ok(src.includes('Math.min(1 + comboCount * 0.5, 4)'));
+    assert.ok(src.includes('Math.min(1 + comboCount * 0.3, 3)'));
   });
 
   it('combo multiplier values should be correct', () => {
-    // comboCount=2 → 1+2*0.5=2.0, count=3 → 2.5, count=4 → 3.0, count=5 → 3.5, count=6+ → 4.0
-    const calc = (count) => Math.min(1 + count * 0.5, 4);
-    assert.equal(calc(2), 2.0);
-    assert.equal(calc(3), 2.5);
-    assert.equal(calc(4), 3.0);
-    assert.equal(calc(5), 3.5);
-    assert.equal(calc(6), 4.0);
-    assert.equal(calc(7), 4.0); // capped
+    // comboCount=2 → 1+2*0.3=1.6, count=3 → 1.9, count=4 → 2.2, count=7+ → 3.0
+    const calc = (count) => Math.min(1 + count * 0.3, 3);
+    assert.strictEqual(calc(2), 1.6);
+    assert.strictEqual(calc(3), 1.9);
+    assert.strictEqual(calc(4), 2.2);
+    assert.strictEqual(calc(5), 2.5);
+    assert.strictEqual(calc(7), 3.0);
+    assert.strictEqual(calc(10), 3.0); // capped
   });
 
   it('combo should only activate at comboCount >= 2', () => {
@@ -934,10 +937,11 @@ describe('Achievement Cache', () => {
     assert.ok(src.includes('let _cache = null'), 'should have _cache variable');
   });
 
-  it('claim should play sound and haptic', () => {
+  it('achievements should be badge-only (no material rewards)', () => {
     const src = readSrc('js/achievements.js');
-    assert.ok(src.includes('SoundManager.playMerge(5)'), 'claim should play sound');
-    assert.ok(src.includes('Haptic.combo(2)'), 'claim should trigger haptic');
+    assert.ok(!src.includes("reward: { type: 'ticket'"), 'should not have ticket rewards');
+    assert.ok(!src.includes("reward: { type: 'item'"), 'should not have item rewards');
+    assert.ok(!src.includes("reward: { type: 'skin'"), 'should not have skin rewards');
   });
 });
 
