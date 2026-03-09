@@ -869,7 +869,8 @@ const Game = (() => {
       gameOverRank = RankingManager.addScore(name, score, userId);
       // Submit to Firebase
       if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
-        FirebaseLeaderboard.submitScore(name, score, userId);
+        const badgeId = typeof AchievementManager !== 'undefined' ? AchievementManager.getEquippedBadgeId() : null;
+        FirebaseLeaderboard.submitScore(name, score, userId, badgeId);
       }
     } else {
       gameOverRank = RankingManager.getRank(score);

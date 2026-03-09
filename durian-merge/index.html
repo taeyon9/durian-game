@@ -98,6 +98,7 @@
       <span class="bokeh" style="top:50%;right:5%;--delay:10s;"></span>
     </div>
     <div class="menu-top-icons">
+      <button class="icon-btn menu-profile-btn" id="menuProfileBtn" aria-label="Profile">👤</button>
       <button class="icon-btn menu-skins-btn" id="menuSkinsBtn" aria-label="Skins">🎨</button>
       <button class="icon-btn menu-stats" id="menuStatsBtn" aria-label="Statistics">🎮</button>
       <button class="icon-btn menu-help" id="menuHelpBtn" aria-label="How to play">?</button>
@@ -391,6 +392,23 @@
     </div>
   </div>
 
+
+  <!-- ===== PROFILE OVERLAY ===== -->
+  <div id="profileOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="profile-panel">
+      <div class="profile-header">
+        <h3>👤 Profile</h3>
+        <button class="settings-close" id="profileClose">✕</button>
+      </div>
+      <div class="profile-info">
+        <div class="profile-badge-slot" id="profileBadgeSlot">—</div>
+        <div class="profile-name" id="profileName"></div>
+        <div class="profile-best" id="profileBest"></div>
+      </div>
+      <div class="profile-section-title">Equip Badge</div>
+      <div class="profile-badge-list" id="profileBadgeList"></div>
+    </div>
+  </div>
 
   <!-- ===== ACHIEVEMENT OVERLAY ===== -->
   <div id="achievementOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">

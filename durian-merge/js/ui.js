@@ -147,6 +147,8 @@ const UI = (() => {
       els.rankingOverlay.style.display = '';
     });
     els.menuSettingsBtn.addEventListener('click', () => showModal('settings'));
+    const profileBtn = document.getElementById('menuProfileBtn');
+    if (profileBtn) profileBtn.addEventListener('click', showProfileOverlay);
     els.menuSkinsBtn.addEventListener('click', () => {
       renderMenuSkins();
       els.skinsOverlay.style.display = '';
@@ -252,7 +254,7 @@ const UI = (() => {
 
     // Menu player name tap to edit nickname
     els.menuPlayer.addEventListener('click', () => {
-      if (NicknameManager.hasName()) handleNickEdit();
+      if (NicknameManager.hasName()) showProfileOverlay();
     });
 
     // Share
@@ -466,7 +468,8 @@ const UI = (() => {
 
     if (name) {
       els.menuPlayer.style.display = '';
-      els.menuPlayerName.textContent = name;
+      const badge = typeof AchievementManager !== 'undefined' ? AchievementManager.getEquippedBadge() : null;
+      els.menuPlayerName.textContent = (badge ? badge.icon + ' ' : '') + name;
     } else {
       els.menuPlayer.style.display = 'none';
     }
@@ -659,10 +662,13 @@ const UI = (() => {
     entries.forEach((entry, i) => {
       const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
       const rankLabel = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
+      const badgeIcon = entry.badge && typeof AchievementManager !== 'undefined'
+        ? (AchievementManager.getAll().find(a => a.id === entry.badge) || {}).icon || ''
+        : '';
       html += `
         <div class="go-board-row">
           <div class="go-rank ${rankClass}">${rankLabel}</div>
-          <div class="go-name">${escHtml(entry.name)}</div>
+          <div class="go-name">${badgeIcon ? badgeIcon + ' ' : ''}${escHtml(entry.name)}</div>
           <div class="go-pts">${entry.score}</div>
         </div>`;
     });
@@ -735,7 +741,8 @@ const UI = (() => {
 
     // Submit to Firebase
     if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
-      FirebaseLeaderboard.submitScore(name, score, userId);
+      const badgeId = typeof AchievementManager !== 'undefined' ? AchievementManager.getEquippedBadgeId() : null;
+      FirebaseLeaderboard.submitScore(name, score, userId, badgeId);
     }
 
     renderBoardList(true);
@@ -775,6 +782,91 @@ const UI = (() => {
     }
     hideModal('nickname');
     if (nickModalResolve) nickModalResolve(val);
+  }
+
+  // ===== PROFILE OVERLAY =====
+
+  function showProfileOverlay() {
+    if (!NicknameManager.hasName()) {
+      showToast('Set a nickname first by playing a game!', 3000);
+      return;
+    }
+    const overlay = document.getElementById('profileOverlay');
+    if (!overlay) return;
+    renderProfileOverlay();
+    overlay.style.display = '';
+
+    // Close handlers
+    const closeBtn = document.getElementById('profileClose');
+    if (closeBtn) closeBtn.onclick = hideProfileOverlay;
+    overlay.onclick = (e) => { if (e.target === overlay) hideProfileOverlay(); };
+
+    // Name tap → edit
+    const nameEl = document.getElementById('profileName');
+    if (nameEl) nameEl.onclick = () => handleNickEdit();
+  }
+
+  function hideProfileOverlay() {
+    const overlay = document.getElementById('profileOverlay');
+    if (!overlay) return;
+    overlay.classList.add('hiding');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.classList.remove('hiding');
+    }, 200);
+  }
+
+  function renderProfileOverlay() {
+    const name = NicknameManager.getName() || 'Player';
+    const best = parseInt(localStorage.getItem('durianMergeHighScore') || '0');
+    const equipped = typeof AchievementManager !== 'undefined' ? AchievementManager.getEquippedBadge() : null;
+
+    const slotEl = document.getElementById('profileBadgeSlot');
+    const nameEl = document.getElementById('profileName');
+    const bestEl = document.getElementById('profileBest');
+    const listEl = document.getElementById('profileBadgeList');
+
+    if (slotEl) {
+      slotEl.textContent = equipped ? equipped.icon : '—';
+      slotEl.className = 'profile-badge-slot' + (equipped ? ' has-badge' : '');
+      if (equipped) {
+        const tierInfo = { bronze: '#CD7F32', silver: '#C0C0C0', gold: '#FFD700', platinum: '#B0E0E6', diamond: '#B9F2FF' };
+        slotEl.style.borderColor = tierInfo[equipped.tier] || 'var(--gold)';
+      } else {
+        slotEl.style.borderColor = '';
+      }
+    }
+    if (nameEl) nameEl.textContent = name;
+    if (bestEl) bestEl.textContent = '🏆 Best: ' + best;
+
+    if (!listEl || typeof AchievementManager === 'undefined') return;
+
+    const unlocked = AchievementManager.getUnlocked();
+    const equippedId = AchievementManager.getEquippedBadgeId();
+
+    if (unlocked.length === 0) {
+      listEl.innerHTML = '<div class="profile-no-badges">No badges unlocked yet.<br>Play to earn achievements!</div>';
+      return;
+    }
+
+    let html = '';
+    unlocked.forEach(ach => {
+      const isEquipped = ach.id === equippedId;
+      html += '<div class="profile-badge-item' + (isEquipped ? ' equipped' : '') + '" data-ach-id="' + ach.id + '">'
+        + '<span class="badge-icon">' + ach.icon + '</span>'
+        + '<span class="badge-name">' + ach.name + '</span>'
+        + '</div>';
+    });
+    listEl.innerHTML = html;
+
+    // Tap to equip/unequip
+    listEl.querySelectorAll('.profile-badge-item').forEach(el => {
+      el.addEventListener('click', () => {
+        AchievementManager.equipBadge(el.dataset.achId);
+        renderProfileOverlay();
+        updateMenu();
+      });
+    });
   }
 
   function handleNickEdit() {
@@ -833,10 +925,13 @@ const UI = (() => {
         const flag = entry.country && typeof FirebaseLeaderboard !== 'undefined'
           ? FirebaseLeaderboard.countryFlag(entry.country) + ' '
           : '';
+        const badgeIcon = entry.badge && typeof AchievementManager !== 'undefined'
+          ? (AchievementManager.getAll().find(a => a.id === entry.badge) || {}).icon || ''
+          : '';
         html += `
           <div class="lb-row ${isMe ? 'me' : ''}">
             <div class="lb-rank">${rankLabel}</div>
-            <div class="lb-name">${flag}${escHtml(entry.name)}${isMe ? ' ⭐' : ''}</div>
+            <div class="lb-name">${badgeIcon ? badgeIcon + ' ' : ''}${flag}${escHtml(entry.name)}${isMe ? ' ⭐' : ''}</div>
             <div class="lb-pts">${entry.score}</div>
           </div>`;
       });

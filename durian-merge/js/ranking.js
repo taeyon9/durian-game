@@ -24,6 +24,7 @@ const RankingManager = (() => {
       score: score,
       date: new Date().toISOString().split('T')[0],
       userId: userId || '',
+      badge: typeof AchievementManager !== 'undefined' ? AchievementManager.getEquippedBadgeId() : null,
     };
 
     board.push(entry);

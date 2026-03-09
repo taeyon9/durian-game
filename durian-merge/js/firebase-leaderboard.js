@@ -62,7 +62,7 @@ const FirebaseLeaderboard = (() => {
     );
   }
 
-  async function submitScore(name, score, userId) {
+  async function submitScore(name, score, userId, badgeId) {
     if (!db) return null;
     try {
       await db.collection('scores').add({
@@ -70,6 +70,7 @@ const FirebaseLeaderboard = (() => {
         score: score,
         country: userCountry,
         userId: userId || '',
+        badge: badgeId || null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
       return true;
@@ -130,6 +131,7 @@ const FirebaseLeaderboard = (() => {
           name: d.name,
           score: d.score,
           country: d.country,
+          badge: d.badge || null,
           date: d.createdAt ? d.createdAt.toDate().toISOString().split('T')[0] : '',
         };
       });

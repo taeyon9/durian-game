@@ -49,10 +49,11 @@ const AchievementManager = (() => {
     if (_cache) return _cache;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) { _cache = { unlocked: {}, claimed: {}, progress: {} }; return _cache; }
+      if (!raw) { _cache = { unlocked: {}, claimed: {}, progress: {}, equippedBadge: null }; return _cache; }
       _cache = JSON.parse(raw);
+      if (!('equippedBadge' in _cache)) _cache.equippedBadge = null;
       return _cache;
-    } catch { _cache = { unlocked: {}, claimed: {}, progress: {} }; return _cache; }
+    } catch { _cache = { unlocked: {}, claimed: {}, progress: {}, equippedBadge: null }; return _cache; }
   }
 
   function save(data) {
@@ -155,6 +156,31 @@ const AchievementManager = (() => {
 
   // No material rewards — achievements grant badges only (auto-claimed on unlock)
 
+  function equipBadge(achId) {
+    const data = load();
+    if (data.equippedBadge === achId) {
+      data.equippedBadge = null; // toggle off
+    } else {
+      if (!data.unlocked[achId]) return false;
+      data.equippedBadge = achId;
+    }
+    save(data);
+    return true;
+  }
+
+  function getEquippedBadge() {
+    const data = load();
+    if (!data.equippedBadge) return null;
+    const ach = ACHIEVEMENTS.find(a => a.id === data.equippedBadge);
+    if (!ach) return null;
+    return { id: ach.id, icon: ach.icon, tier: ach.tier };
+  }
+
+  function getEquippedBadgeId() {
+    const data = load();
+    return data.equippedBadge || null;
+  }
+
   function getAll() {
     const data = load();
     return ACHIEVEMENTS.map(ach => ({
@@ -246,5 +272,5 @@ const AchievementManager = (() => {
     initUI();
   }
 
-  return { check, getAll, getUnlocked, showPanel, hidePanel, renderUI };
+  return { check, getAll, getUnlocked, equipBadge, getEquippedBadge, getEquippedBadgeId, showPanel, hidePanel, renderUI };
 })();

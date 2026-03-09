@@ -364,6 +364,14 @@ async function captureAllScreens() {
   await safeEval(`document.getElementById('achievementOverlay').style.display = 'none'`);
   await sleep(300);
 
+  // ===== 6b. PROFILE =====
+  console.log('6b. Profile overlay');
+  await safeTap('#menuProfileBtn');
+  await sleep(SETTLE_MS);
+  await captureScreen('06b-profile');
+  await safeEval(`document.getElementById('profileOverlay').style.display = 'none'`);
+  await sleep(300);
+
   // ===== 7. DAILY REWARDS =====
   console.log('7. Daily rewards');
   await safeEval(`

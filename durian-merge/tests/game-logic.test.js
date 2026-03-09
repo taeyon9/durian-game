@@ -779,6 +779,66 @@ describe('Achievement System', () => {
 });
 
 // ============================
+//  13b. Badge Equip System
+// ============================
+describe('Badge Equip System', () => {
+  it('achievements.js should export equipBadge, getEquippedBadge, getEquippedBadgeId', () => {
+    const src = readSrc('js/achievements.js');
+    assert.ok(src.includes('equipBadge'), 'should have equipBadge function');
+    assert.ok(src.includes('getEquippedBadge'), 'should have getEquippedBadge function');
+    assert.ok(src.includes('getEquippedBadgeId'), 'should have getEquippedBadgeId function');
+    assert.ok(src.includes('equippedBadge'), 'should persist equippedBadge in storage');
+  });
+
+  it('equip/unequip badge should work via sandbox', () => {
+    const sandbox = createSandbox();
+    loadInto(sandbox, 'js/achievements.js');
+    const AM = sandbox.AchievementManager;
+    assert.ok(AM, 'AchievementManager should exist');
+
+    // No badge equipped initially
+    assert.strictEqual(AM.getEquippedBadgeId(), null);
+    assert.strictEqual(AM.getEquippedBadge(), null);
+
+    // Cannot equip locked badge
+    assert.strictEqual(AM.equipBadge('merge_durian'), false);
+    assert.strictEqual(AM.getEquippedBadgeId(), null);
+
+    // Unlock a badge then equip
+    AM.check('merge', 1); // unlocks first_merge
+    assert.ok(AM.equipBadge('first_merge'));
+    assert.strictEqual(AM.getEquippedBadgeId(), 'first_merge');
+    const badge = AM.getEquippedBadge();
+    assert.ok(badge);
+    assert.strictEqual(badge.icon, '🔰');
+
+    // Toggle off
+    AM.equipBadge('first_merge');
+    assert.strictEqual(AM.getEquippedBadgeId(), null);
+  });
+
+  it('ranking entry should include badge field', () => {
+    const sandbox = createSandbox();
+    loadInto(sandbox, 'js/achievements.js');
+    loadInto(sandbox, 'js/ranking.js');
+
+    // Equip a badge
+    sandbox.AchievementManager.check('merge', 1);
+    sandbox.AchievementManager.equipBadge('first_merge');
+
+    sandbox.RankingManager.addScore('Tester', 1000, 'user1');
+    const top = sandbox.RankingManager.getTopScores(1);
+    assert.strictEqual(top[0].badge, 'first_merge');
+  });
+
+  it('firebase submitScore should accept badge parameter', () => {
+    const src = readSrc('js/firebase-leaderboard.js');
+    assert.ok(src.includes('submitScore(name, score, userId, badgeId)'), 'should accept badgeId param');
+    assert.ok(src.includes('badge: badgeId'), 'should store badge in Firestore doc');
+  });
+});
+
+// ============================
 //  14. Daily Reward System
 // ============================
 describe('Daily Reward System', () => {
