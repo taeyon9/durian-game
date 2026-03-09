@@ -284,6 +284,15 @@ async function captureAllScreens() {
     await sleep(1000);
   }
 
+  // Backup localStorage keys that we'll modify during capture
+  const backup = await safeEval(`JSON.stringify({
+    nickname: localStorage.getItem('durianMergeNickname'),
+    userId: localStorage.getItem('durianMergeUserId'),
+    ranking: localStorage.getItem('durianMergeRanking'),
+    daily: localStorage.getItem('durianMergeDailyReward'),
+    tutorial: localStorage.getItem('durianMergeTutorialDone'),
+  })`);
+
   // Suppress tutorial and daily reward popup
   await safeEval(`
     localStorage.setItem('durianMergeTutorialDone', 'true');
@@ -400,9 +409,8 @@ async function captureAllScreens() {
   // ===== 11. GAME OVER =====
   console.log('11. Game Over');
   await safeEval(`
-    localStorage.setItem('durianMergeNickname', JSON.stringify({
-      name: 'TestPlayer', userId: 'test-123', changedAt: Date.now() - 86400000 * 30
-    }));
+    localStorage.setItem('durianMergeNickname', 'TestPlayer');
+    localStorage.setItem('durianMergeUserId', 'test-123');
     const scores = [
       { name: 'MangoKing', score: 2450, date: new Date().toISOString(), userId: 'f0' },
       { name: 'TestPlayer', score: 2100, date: new Date().toISOString(), userId: 'test-123' },
@@ -447,6 +455,31 @@ async function captureAllScreens() {
   await safeEval(`UI.showModal('nickname')`);
   await sleep(SETTLE_MS);
   await captureScreen('15-nickname');
+
+  // Restore localStorage from backup
+  if (backup) {
+    try {
+      await safeEval(`
+        const b = ${backup};
+        const map = {
+          nickname: 'durianMergeNickname',
+          userId: 'durianMergeUserId',
+          ranking: 'durianMergeRanking',
+          daily: 'durianMergeDailyReward',
+          tutorial: 'durianMergeTutorialDone',
+        };
+        Object.entries(map).forEach(([k, lsKey]) => {
+          if (b[k] === null) localStorage.removeItem(lsKey);
+          else localStorage.setItem(lsKey, b[k]);
+        });
+      `);
+      // Reload menu to reflect restored data
+      await safeEval(`UI.showScreen('menu')`);
+      console.log('  localStorage restored');
+    } catch (e) {
+      console.warn('  failed to restore localStorage:', e.message);
+    }
+  }
 
   // Cleanup
   console.log('\nAll screenshots captured!');
