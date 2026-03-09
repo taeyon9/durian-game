@@ -23,7 +23,7 @@
   /* Spacing scale */
   --sp-2xs: clamp(2px, 0.5vw, 4px);
   --sp-xs:  clamp(4px, 1vw, 6px);
-  --sp-sm:  clamp(6px, 1.5vw, 10px);
+  --sp-sm:  clamp(8px, 1.5vw, 10px);
   --sp-md:  clamp(8px, 2vw, 14px);
   --sp-lg:  clamp(12px, 3vw, 20px);
   --sp-xl:  clamp(16px, 4vw, 28px);
@@ -97,6 +97,7 @@ html, body {
   border: none;
   border-radius: 50px;
   padding: var(--sp-md) var(--sp-2xl);
+  min-height: var(--touch-min);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1802,7 +1803,7 @@ html, body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-sm);
+  gap: var(--sp-md);
 }
 .pause-resume-btn {
   font-size: var(--fs-xl);
@@ -1870,7 +1871,7 @@ html, body {
 }
 .pause-confirm-btns {
   display: flex;
-  gap: var(--sp-sm);
+  gap: var(--sp-md);
 }
 .btn-danger {
   background: var(--red);
