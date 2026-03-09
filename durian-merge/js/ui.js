@@ -507,37 +507,6 @@ const UI = (() => {
     }
     els.hudBest.textContent = highScore;
 
-    // DEBUG: tap BEST label 5 times to trigger game over
-    if (!els.hudBest._debugTapCount) {
-      els.hudBest._debugTapCount = 0;
-      els.hudBest.addEventListener('click', () => {
-        els.hudBest._debugTapCount++;
-        if (els.hudBest._debugTapCount >= 5) {
-          els.hudBest._debugTapCount = 0;
-          if (typeof Game !== 'undefined' && Game.triggerGameOver) {
-            Game.triggerGameOver();
-          }
-        }
-        clearTimeout(els.hudBest._debugTimer);
-        els.hudBest._debugTimer = setTimeout(() => { els.hudBest._debugTapCount = 0; }, 3000);
-      });
-    }
-
-    // DEBUG: tap SCORE label 5 times to fill screen with fruits
-    if (!els.hudScore._debugTapCount) {
-      els.hudScore._debugTapCount = 0;
-      els.hudScore.addEventListener('click', () => {
-        els.hudScore._debugTapCount++;
-        if (els.hudScore._debugTapCount >= 5) {
-          els.hudScore._debugTapCount = 0;
-          if (typeof Game !== 'undefined' && Game.debugFill) {
-            Game.debugFill(20);
-          }
-        }
-        clearTimeout(els.hudScore._debugTimer);
-        els.hudScore._debugTimer = setTimeout(() => { els.hudScore._debugTapCount = 0; }, 3000);
-      });
-    }
   }
 
   function updateNextFruit(level) {

@@ -143,13 +143,12 @@ const Game = (() => {
     // Firebase init
     if (typeof FirebaseLeaderboard !== 'undefined') {
       FirebaseLeaderboard.init({
-        // TODO: 실제 Firebase config로 교체
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyBIs88Zaeb3YUBnILJQB0i_F0i_-JRRUFI",
+        authDomain: "durian-merge.firebaseapp.com",
+        projectId: "durian-merge",
+        storageBucket: "durian-merge.firebasestorage.app",
+        messagingSenderId: "945144592763",
+        appId: "1:945144592763:android:bc2980d7508e5deccbe5de"
       });
     }
 
@@ -1398,20 +1397,7 @@ const Game = (() => {
     }
   }
 
-  // DEBUG: fill screen with fruits for quick testing
-  function debugFill(count) {
-    if (gameState !== 'playing') return;
-    const n = count || 15;
-    for (let i = 0; i < n; i++) {
-      const lvl = Math.floor(Math.random() * 5);
-      const x = FRUITS[lvl].radius + Math.random() * (BASE_WIDTH - FRUITS[lvl].radius * 2);
-      const y = DANGER_LINE_Y + 50 + Math.random() * (BASE_HEIGHT - DANGER_LINE_Y - 150);
-      const body = Physics.createFruit(x, y, lvl);
-      if (body) { body.droppedAt = 0; fruitBodies.push(body); }
-    }
-  }
-
-  return { init, triggerGameOver, useItem, debugFill };
+  return { init, useItem };
 })();
 
 window.addEventListener('load', () => Game.init());

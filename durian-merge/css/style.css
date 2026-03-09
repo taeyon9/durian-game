@@ -918,6 +918,9 @@ html, body {
   border-top-right-radius: 20px;
   width: 100%;
   max-width: var(--modal-lg);
+  max-height: 85vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: var(--sp-xl);
   padding-bottom: calc(var(--sp-xl) + var(--safe-bottom) + var(--banner-height));
   animation: slideUp 0.25s ease-out;

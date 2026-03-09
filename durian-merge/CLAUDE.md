@@ -9,6 +9,7 @@ durian-merge/
 ├── index.html              # 진입점 (HTML UI + Canvas)
 ├── css/style.css           # UI 스타일
 ├── js/
+│   ├── skins.js            # 스킨 시스템 (14종 정의 + 잠금 해제 조건 + 통계 관리)
 │   ├── fruits.js           # 과일 정의 11종 + 렌더링 (PNG + 프로시저럴 폴백)
 │   ├── physics.js          # Matter.js 래퍼
 │   ├── sounds.js           # Web Audio 프로시저럴 합성 (SFX + BGM)
@@ -52,6 +53,7 @@ game.js → admob.js
 - game.js: Firebase config의 "YOUR_API_KEY" 등을 실제 값으로 교체
 - localStorage `durianMergeTutorialDone` 삭제하고 튜토리얼 플로우 테스트
 - AD 배너 공존: `--banner-height` CSS 변수(0px/50px), 하단 패널 padding-bottom에 `+ var(--banner-height)`, 모달 z-index(200+) > 배너(100)
+- **스킨 시스템**: 14종 (procedural 9 + placeholder 5). unlock condition: totalScore, gamesPlayed, singleGameScore, loginStreak, albumCount, missionsCompleted, singleGameCombos, season. placeholder 스킨(desserts/sea/space/halloween/christmas)은 PNG 에셋 미완성 → emoji 렌더러 사용 중. 스킨 테스트: `node tests/skin-render-test.cjs` (로컬 서버 3456 필요)
 
 ## 릴리스 전 제거 (DEBUG)
 - ui.js: `// DEBUG:` 주석 블록 (BEST 5탭 → 강제 게임오버)

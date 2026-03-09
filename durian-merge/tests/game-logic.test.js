@@ -719,7 +719,7 @@ describe('Item System', () => {
 
   it('game.js should expose useItem in return', () => {
     const src = readSrc('js/game.js');
-    assert.ok(src.includes('return { init, triggerGameOver, useItem }'));
+    assert.ok(src.includes('return { init, useItem }'));
   });
 });
 
