@@ -74,3 +74,13 @@ npx serve .
 # 실기기 배포
 npm run deploy
 ```
+
+## UI/CSS 수정 후 QA 프로세스 (필수)
+디자인 초안 없이 개발하므로, 실기기 스크린샷이 유일한 시각 검증 수단. **모든 UI/CSS 변경 시** 아래 프로세스를 반드시 따를 것:
+
+1. `npm run deploy` (실기기 배포)
+2. `npm run device:capture` (15개 화면 자동 캡처 → `screenshots/device_*.png`)
+3. 캡처된 스크린샷을 사용자에게 보여주고 확인받기
+4. 문제 없으면 커밋
+
+**주의**: 커밋 전에 반드시 `device:capture` 실행. 스크린샷 확인 없이 UI 변경을 커밋하지 말 것.

@@ -226,7 +226,6 @@ const MissionManager = (() => {
     const badge = document.getElementById('missionBadge');
     if (badge) {
       const unclaimed = missions.filter(m => m.completed && !m.rewarded).length;
-      badge.textContent = unclaimed;
       badge.style.display = unclaimed > 0 ? '' : 'none';
     }
   }

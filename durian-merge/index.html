@@ -98,15 +98,10 @@
       <span class="bokeh" style="top:50%;right:5%;--delay:10s;"></span>
     </div>
     <div class="menu-top-icons">
+      <button class="icon-btn menu-skins-btn" id="menuSkinsBtn" aria-label="Skins">🎨</button>
       <button class="icon-btn menu-stats" id="menuStatsBtn" aria-label="Statistics">🎮</button>
       <button class="icon-btn menu-help" id="menuHelpBtn" aria-label="How to play">?</button>
       <button class="icon-btn menu-settings" id="menuSettingsBtn" aria-label="Settings"><span class="icon-gear">&#9881;</span></button>
-    </div>
-
-    <!-- Skin selector (top area) -->
-    <div class="menu-skins" id="menuSkins">
-      <div class="menu-skins-label">🎨 Skins</div>
-      <div class="menu-skins-list" id="menuSkinsList"></div>
     </div>
 
     <div class="menu-content">
@@ -129,12 +124,12 @@
         <button class="menu-sub-btn" id="missionBtn">
           <span class="menu-sub-btn-icon">📋</span>
           <span class="menu-sub-btn-label">Missions</span>
-          <span class="mission-badge" id="missionBadge" style="display:none;">0</span>
+          <span class="mission-badge" id="missionBadge" style="display:none;"></span>
         </button>
         <button class="menu-sub-btn" id="achievementBtn">
           <span class="menu-sub-btn-icon">🎖️</span>
           <span class="menu-sub-btn-label">Badges</span>
-          <span class="mission-badge" id="achievementBadge" style="display:none;">0</span>
+          <span class="mission-badge" id="achievementBadge" style="display:none;"></span>
         </button>
         <button class="menu-sub-btn" id="menuModesBtn">
           <span class="menu-sub-btn-icon">🎯</span>
@@ -143,17 +138,12 @@
         <button class="menu-sub-btn" id="menuDailyBtn">
           <span class="menu-sub-btn-icon">🎁</span>
           <span class="menu-sub-btn-label">Daily</span>
-          <span class="mission-badge" id="dailyBadge" style="display:none;">!</span>
+          <span class="mission-badge" id="dailyBadge" style="display:none;"></span>
         </button>
         <button class="menu-sub-btn" id="menuItemsBtn">
           <span class="menu-sub-btn-icon">🎒</span>
           <span class="menu-sub-btn-label">Items</span>
         </button>
-      </div>
-      <!-- Item inventory (toggle on Items btn click) -->
-      <div class="menu-items" id="menuItems" style="display:none;">
-        <span class="menu-item-slot">💣 <span id="menuBombCount">0</span></span>
-        <span class="menu-item-slot">🌊 <span id="menuShakeCount">0</span></span>
       </div>
       <button class="btn btn-play" id="menuPlayBtn">
         <span class="btn-main-text">▶ PLAY</span>
@@ -208,15 +198,8 @@
       <div class="go-rank-text" id="goRankText"></div>
     </div>
 
-    <!-- Buttons -->
-    <div class="go-buttons">
-      <button class="btn btn-continue" id="goContinue" style="display:none;">
-        <span class="btn-continue-icon">🎬</span>
-        <span class="btn-continue-label">
-          <span class="btn-main-text">CONTINUE</span>
-          <span class="btn-sub-text">Watch Ad to keep playing</span>
-        </span>
-      </button>
+    <!-- Game Over Buttons -->
+    <div class="go-buttons" id="goButtons">
       <button class="btn btn-play" id="goPlayAgain">
         <span class="btn-main-text">▶ PLAY AGAIN</span>
         <span class="btn-sub-text" id="goPlayTicket">🎟 5 left</span>
@@ -441,6 +424,45 @@
         <button class="settings-close" id="modeSelectClose">✕</button>
       </div>
       <div class="mode-list" id="modeSelectList"></div>
+    </div>
+  </div>
+
+  <!-- ===== SKINS OVERLAY ===== -->
+  <div id="skinsOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="skins-panel">
+      <div class="skins-header">
+        <h3>🎨 Skins</h3>
+        <button class="settings-close" id="skinsClose">✕</button>
+      </div>
+      <div class="skins-list" id="menuSkinsList"></div>
+    </div>
+  </div>
+
+  <!-- ===== RANKING OVERLAY ===== -->
+  <div id="rankingOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="ranking-panel">
+      <div class="ranking-header">
+        <h3>🏆 Ranking</h3>
+        <button class="settings-close" id="rankingClose">✕</button>
+      </div>
+      <div class="ranking-tabs">
+        <div class="lb-tab active" data-tab="alltime">All Time</div>
+        <div class="lb-tab" data-tab="weekly">Weekly</div>
+        <div class="lb-tab" data-tab="country">🌏 Country</div>
+      </div>
+      <div class="ranking-list" id="rankingList"></div>
+      <div class="ranking-me" id="rankingMe"></div>
+    </div>
+  </div>
+
+  <!-- ===== ITEMS OVERLAY ===== -->
+  <div id="itemsOverlay" class="modal-bg" style="display:none;" role="dialog" aria-modal="true">
+    <div class="items-panel">
+      <div class="items-header">
+        <h3>🎒 Items</h3>
+        <button class="settings-close" id="itemsClose">✕</button>
+      </div>
+      <div class="items-list" id="itemsList"></div>
     </div>
   </div>
 

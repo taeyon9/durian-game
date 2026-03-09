@@ -7,7 +7,7 @@ const UI = (() => {
   let currentScreen = 'menu'; // menu | playing | paused | gameover | leaderboard | settings
   let onPlayCallback = null;
   let onWatchAdCallback = null;
-  let onContinueCallback = null;
+
   let onPauseCallback = null;
   let onResumeCallback = null;
   let onRestartFromPauseCallback = null;
@@ -16,7 +16,7 @@ const UI = (() => {
   function init(callbacks) {
     onPlayCallback = callbacks.onPlay;
     onWatchAdCallback = callbacks.onWatchAd;
-    onContinueCallback = callbacks.onContinue;
+
     onPauseCallback = callbacks.onPause;
     onResumeCallback = callbacks.onResume;
     onRestartFromPauseCallback = callbacks.onRestartFromPause;
@@ -46,6 +46,16 @@ const UI = (() => {
       menuPlayBtn: document.getElementById('menuPlayBtn'),
       menuRankingBtn: document.getElementById('menuRankingBtn'),
       menuSettingsBtn: document.getElementById('menuSettingsBtn'),
+      menuSkinsBtn: document.getElementById('menuSkinsBtn'),
+      skinsOverlay: document.getElementById('skinsOverlay'),
+      skinsClose: document.getElementById('skinsClose'),
+      menuItemsBtn: document.getElementById('menuItemsBtn'),
+      itemsOverlay: document.getElementById('itemsOverlay'),
+      itemsClose: document.getElementById('itemsClose'),
+      rankingOverlay: document.getElementById('rankingOverlay'),
+      rankingClose: document.getElementById('rankingClose'),
+      rankingList: document.getElementById('rankingList'),
+      rankingMe: document.getElementById('rankingMe'),
       menuTickets: document.getElementById('menuTickets'),
       menuPlayer: document.getElementById('menuPlayer'),
       menuPlayerName: document.getElementById('menuPlayerName'),
@@ -67,7 +77,8 @@ const UI = (() => {
       goViewAll: document.getElementById('goViewAll'),
       goRankReveal: document.getElementById('goRankReveal'),
       goRankText: document.getElementById('goRankText'),
-      goContinue: document.getElementById('goContinue'),
+
+      goButtons: document.getElementById('goButtons'),
       goPlayAgain: document.getElementById('goPlayAgain'),
       goShareBtn: document.getElementById('goShareBtn'),
       goBackMenu: document.getElementById('goBackMenu'),
@@ -131,21 +142,56 @@ const UI = (() => {
   function bindEvents() {
     // Menu
     els.menuPlayBtn.addEventListener('click', handlePlay);
-    els.menuRankingBtn.addEventListener('click', () => showScreen('leaderboard'));
+    els.menuRankingBtn.addEventListener('click', () => {
+      renderRankingModal('alltime');
+      els.rankingOverlay.style.display = '';
+    });
     els.menuSettingsBtn.addEventListener('click', () => showModal('settings'));
+    els.menuSkinsBtn.addEventListener('click', () => {
+      renderMenuSkins();
+      els.skinsOverlay.style.display = '';
+    });
+    els.skinsClose.addEventListener('click', () => closeOverlay(els.skinsOverlay));
+    els.skinsOverlay.addEventListener('click', (e) => {
+      if (e.target === els.skinsOverlay) closeOverlay(els.skinsOverlay);
+    });
+    // Ranking modal
+    els.rankingClose.addEventListener('click', () => closeOverlay(els.rankingOverlay));
+    els.rankingOverlay.addEventListener('click', (e) => {
+      if (e.target === els.rankingOverlay) closeOverlay(els.rankingOverlay);
+    });
+    document.querySelectorAll('.ranking-tabs .lb-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.ranking-tabs .lb-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderRankingModal(tab.dataset.tab);
+      });
+    });
+    // Items modal
+    els.menuItemsBtn.addEventListener('click', () => {
+      renderItemsModal();
+      els.itemsOverlay.style.display = '';
+    });
+    els.itemsClose.addEventListener('click', () => closeOverlay(els.itemsOverlay));
+    els.itemsOverlay.addEventListener('click', (e) => {
+      if (e.target === els.itemsOverlay) closeOverlay(els.itemsOverlay);
+    });
     els.menuHelpBtn.addEventListener('click', () => TutorialManager.show());
 
     // HUD (hudSettingsBtn may not exist in HTML — guard)
     if (els.hudSettingsBtn) els.hudSettingsBtn.addEventListener('click', () => showModal('settings'));
 
     // Game Over
-    els.goContinue.addEventListener('click', handleContinue);
+
     els.goPlayAgain.addEventListener('click', handlePlay);
     els.goShareBtn.addEventListener('click', handleDirectShare);
     els.goBackMenu.addEventListener('click', () => showScreen('menu'));
     els.goNickSubmit.addEventListener('click', handleNickSubmit);
     els.goNickSkip.addEventListener('click', handleNickSkip);
-    els.goViewAll.addEventListener('click', () => showScreen('leaderboard'));
+    els.goViewAll.addEventListener('click', () => {
+      renderRankingModal('alltime');
+      els.rankingOverlay.style.display = '';
+    });
 
     // Leaderboard
     els.lbBack.addEventListener('click', goBack);
@@ -183,7 +229,7 @@ const UI = (() => {
       });
     });
 
-    // Missions & Stats backdrop close
+    // Missions, Stats, and other modal-bg backdrop close
     ['missionOverlay', 'statsOverlay'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
@@ -207,24 +253,6 @@ const UI = (() => {
     // Menu player name tap to edit nickname
     els.menuPlayer.addEventListener('click', () => {
       if (NicknameManager.hasName()) handleNickEdit();
-    });
-
-    // Items button toggle
-    const menuItemsBtn = document.getElementById('menuItemsBtn');
-    const menuItemsPanel = document.getElementById('menuItems');
-    if (menuItemsBtn && menuItemsPanel) {
-      menuItemsBtn.addEventListener('click', () => {
-        menuItemsPanel.style.display = menuItemsPanel.style.display === 'none' ? '' : 'none';
-      });
-    }
-
-    // Menu item slot descriptions
-    document.querySelectorAll('.menu-item-slot').forEach(slot => {
-      slot.addEventListener('click', () => {
-        const text = slot.textContent.trim();
-        if (text.startsWith('💣')) showToast('💣 Bomb — Removes the smallest fruit');
-        else if (text.startsWith('🌊')) showToast('🌊 Shake — Shuffles all fruits around');
-      });
     });
 
     // Share
@@ -443,8 +471,6 @@ const UI = (() => {
       els.menuPlayer.style.display = 'none';
     }
 
-    // Render skins in menu
-    renderMenuSkins();
   }
 
   function renderMenuFruits() {
@@ -496,6 +522,22 @@ const UI = (() => {
         els.hudBest._debugTimer = setTimeout(() => { els.hudBest._debugTapCount = 0; }, 3000);
       });
     }
+
+    // DEBUG: tap SCORE label 5 times to fill screen with fruits
+    if (!els.hudScore._debugTapCount) {
+      els.hudScore._debugTapCount = 0;
+      els.hudScore.addEventListener('click', () => {
+        els.hudScore._debugTapCount++;
+        if (els.hudScore._debugTapCount >= 5) {
+          els.hudScore._debugTapCount = 0;
+          if (typeof Game !== 'undefined' && Game.debugFill) {
+            Game.debugFill(20);
+          }
+        }
+        clearTimeout(els.hudScore._debugTimer);
+        els.hudScore._debugTimer = setTimeout(() => { els.hudScore._debugTapCount = 0; }, 3000);
+      });
+    }
   }
 
   function updateNextFruit(level) {
@@ -531,11 +573,17 @@ const UI = (() => {
   let lastMaxFruitLevel = 0;
   let lastIsNewBest = false;
   let lastMaxCombo = 0;
+  let lastScore = 0;
+  let lastHighScore = 0;
+  let lastRank = null;
 
-  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel, canContinue, maxCombo, bestCombo) {
+  function showGameOver(score, highScore, isNewBest, rank, maxFruitLevel, maxCombo, bestCombo) {
     lastMaxFruitLevel = maxFruitLevel || 0;
     lastIsNewBest = isNewBest;
     lastMaxCombo = maxCombo || 0;
+    lastScore = score;
+    lastHighScore = highScore;
+    lastRank = rank;
     els.goScore.textContent = score;
     // Best diff display
     const diffEl = document.getElementById('goBestDiff');
@@ -566,18 +614,19 @@ const UI = (() => {
       els.goComboStats.style.display = 'none';
     }
 
+    showFullGameOver();
+    showScreen('gameover');
+  }
+
+  function showFullGameOver() {
+    els.goButtons.style.display = '';
+
     const hasName = NicknameManager.hasName();
-
     if (hasName) {
-      // Returning user → show neighbor ranks
-      showReturningGameOver(score, rank);
+      showReturningGameOver(lastScore, lastRank);
     } else {
-      // First time → blurred board + nickname prompt
-      showFirstTimeGameOver(score);
+      showFirstTimeGameOver(lastScore);
     }
-
-    // Continue button (rewarded ad to resume game)
-    els.goContinue.style.display = canContinue ? '' : 'none';
 
     // Smart Play Again button — gold with tickets, purple for ad
     const tickets = TicketManager.getTickets();
@@ -594,13 +643,11 @@ const UI = (() => {
     }
 
     // Pulse share button on new best
-    if (isNewBest) {
+    if (lastIsNewBest) {
       els.goShareBtn.classList.add('new-best');
     } else {
       els.goShareBtn.classList.remove('new-best');
     }
-
-    showScreen('gameover');
   }
 
   function showFirstTimeGameOver(score) {
@@ -1022,20 +1069,79 @@ const UI = (() => {
     if (onWatchAdCallback) onWatchAdCallback();
   }
 
-  function handleContinue() {
-    if (onContinueCallback) onContinueCallback();
-  }
 
   // ===== UTILS =====
 
+  function closeOverlay(el) {
+    if (!el) return;
+    el.classList.add('hiding');
+    setTimeout(() => { el.style.display = 'none'; el.classList.remove('hiding'); }, 200);
+  }
+
+  // ===== RANKING MODAL =====
+
+  async function renderRankingModal(tab) {
+    const name = NicknameManager.getName();
+    let board = [];
+
+    if (typeof FirebaseLeaderboard !== 'undefined' && FirebaseLeaderboard.isAvailable()) {
+      els.rankingList.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Loading...</div>';
+      board = await FirebaseLeaderboard.getScores(tab === 'alltime' ? 'alltime' : tab, 50);
+    }
+
+    if (board.length === 0 && tab === 'alltime') {
+      board = RankingManager.getTopScores(20);
+    }
+
+    let html = '';
+    if (board.length === 0) {
+      html = '<div style="text-align:center;padding:40px;color:var(--text-dim);"><div style="font-size:48px;margin-bottom:12px;">🍉</div><div style="font-size:15px;font-weight:600;color:var(--white);margin-bottom:6px;">No scores yet</div><div style="font-size:13px;">Play a game to see your ranking here!</div></div>';
+    } else {
+      board.forEach((entry, i) => {
+        const rankLabel = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
+        const isMe = entry.name === name;
+        const flag = entry.country && typeof FirebaseLeaderboard !== 'undefined'
+          ? FirebaseLeaderboard.countryFlag(entry.country) + ' '
+          : '';
+        html += '<div class="lb-row ' + (isMe ? 'me' : '') + '">'
+          + '<div class="lb-rank">' + rankLabel + '</div>'
+          + '<div class="lb-name">' + flag + escHtml(entry.name) + (isMe ? ' ⭐' : '') + '</div>'
+          + '<div class="lb-pts">' + entry.score + '</div>'
+          + '</div>';
+      });
+    }
+    els.rankingList.innerHTML = html;
+  }
+
+  // ===== ITEMS MODAL =====
+
+  function renderItemsModal() {
+    const list = document.getElementById('itemsList');
+    if (!list) return;
+
+    const items = typeof ItemManager !== 'undefined' ? ItemManager.getAll() : { bomb: 0, shake: 0 };
+    const itemDefs = [
+      { key: 'bomb', icon: '💣', name: 'Bomb', desc: 'Removes the smallest fruit on the board' },
+      { key: 'shake', icon: '🌊', name: 'Shake', desc: 'Shuffles all fruits around' },
+    ];
+
+    let html = '';
+    itemDefs.forEach(def => {
+      const count = items[def.key] || 0;
+      html += '<div class="item-row">'
+        + '<div class="item-icon">' + def.icon + '</div>'
+        + '<div class="item-info">'
+        + '<div class="item-name">' + def.name + '</div>'
+        + '<div class="item-desc">' + def.desc + '</div>'
+        + '</div>'
+        + '<div class="item-count">×' + count + '</div>'
+        + '</div>';
+    });
+    list.innerHTML = html;
+  }
+
   function updateMenuItems() {
-    if (typeof ItemManager === 'undefined') return;
-    const items = ItemManager.getAll();
-    const el = (id) => document.getElementById(id);
-    const b = el('menuBombCount');
-    const s = el('menuShakeCount');
-    if (b) b.textContent = items.bomb || 0;
-    if (s) s.textContent = items.shake || 0;
+    // Update items modal data when menu loads
   }
 
   function renderMenuSkins() {

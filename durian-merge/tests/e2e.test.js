@@ -550,32 +550,32 @@ test.describe('Modal Panels', () => {
 //  10. Leaderboard & Stats
 // ============================
 test.describe('Leaderboard & Stats', () => {
-  test('ranking button should open leaderboard', async ({ page }) => {
+  test('ranking button should open ranking modal', async ({ page }) => {
     await gotoGame(page);
 
     await page.locator('#menuRankingBtn').click();
     await page.waitForTimeout(300);
 
     const visible = await page.evaluate(() => {
-      const el = document.getElementById('leaderboardScreen');
+      const el = document.getElementById('rankingOverlay');
       return el && el.style.display !== 'none';
     });
     expect(visible).toBe(true);
   });
 
-  test('leaderboard back should return to menu', async ({ page }) => {
+  test('ranking close should hide modal', async ({ page }) => {
     await gotoGame(page);
 
     await page.locator('#menuRankingBtn').click();
     await page.waitForTimeout(300);
-    await page.locator('#lbBack').click();
+    await page.locator('#rankingClose').click();
     await page.waitForTimeout(300);
 
-    const menuVisible = await page.evaluate(() => {
-      const el = document.getElementById('menuScreen');
-      return el && el.style.display !== 'none';
+    const hidden = await page.evaluate(() => {
+      const el = document.getElementById('rankingOverlay');
+      return el && el.style.display === 'none';
     });
-    expect(menuVisible).toBe(true);
+    expect(hidden).toBe(true);
   });
 
   test('stats button should open stats overlay', async ({ page }) => {
@@ -657,8 +657,7 @@ test.describe('Item HUD', () => {
 
     const itemsExist = await page.evaluate(() => {
       return !!(document.getElementById('hudItemBomb') &&
-                document.getElementById('hudItemShake') &&
-                document.getElementById('hudItemUpgrade'));
+                document.getElementById('hudItemShake'));
     });
     expect(itemsExist).toBe(true);
   });

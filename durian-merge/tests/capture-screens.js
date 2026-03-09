@@ -43,7 +43,8 @@ async function capture() {
   // Dismiss any overlay that might have auto-shown
   await page.evaluate(() => {
     ['dailyRewardOverlay', 'tutorialOverlay', 'missionOverlay', 'achievementOverlay',
-     'modeSelectOverlay', 'statsOverlay', 'settingsOverlay', 'shareOverlay', 'nickModal'].forEach(id => {
+     'modeSelectOverlay', 'statsOverlay', 'settingsOverlay', 'shareOverlay', 'nickModal',
+     'skinsOverlay', 'rankingOverlay', 'itemsOverlay'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });

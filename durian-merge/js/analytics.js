@@ -306,6 +306,3 @@ const AnalyticsManager = (() => {
 //
 // 4. In watchAdForTicket() [line ~200, inside if(rewarded)]:
 //    AnalyticsManager.track('ad_watched', { type: 'ticket' });
-//
-// 5. In watchAdToContinue() [line ~210, inside if(rewarded)]:
-//    AnalyticsManager.track('ad_watched', { type: 'continue' });

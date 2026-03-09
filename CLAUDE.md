@@ -53,6 +53,18 @@ game/
   - localStorage 조작으로 특정 상태(미션 완료, 보상 수령 등) 재현
   - `addInitScript()`로 튜토리얼/팝업 자동 차단 후 캡처
 - Figma 업로드 자동화: `ws` + WebSocket으로 MCP 채널에 직접 업로드 (`tests/upload-to-figma.js` 패턴)
+- 실기기 캡처 자동화: `ws` 기반 CDP + `adb screencap` 하이브리드 (`tests/device-capture.js` 패턴)
+  - Samsung WebView는 `chrome-remote-interface` 비호환 → `ws`로 직접 CDP 구현
+  - AdMob 등 다수 WebView 타겟 중 게임 페이지(`localhost`) 자동 선택
+  - Samsung FreecessHandler가 WebSocket을 끊으므로 자동 재연결 필수
+  - 화면 깨우기 + 잠금 해제 → 앱 포그라운드 → CDP 연결 순서
+
+### UI/CSS 수정 후 QA 프로세스 (필수)
+디자인 초안 없이 개발하므로, 실기기 스크린샷이 유일한 시각 검증 수단. **모든 UI/CSS 변경 시** 반드시:
+1. `npm run deploy` (실기기 배포)
+2. `npm run device:capture` (전체 화면 자동 캡처)
+3. 캡처된 스크린샷을 사용자에게 보여주고 확인받기
+4. 문제 없으면 커밋
 
 ## UI/UX 디자인 원칙
 
