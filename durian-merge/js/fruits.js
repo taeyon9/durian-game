@@ -88,8 +88,11 @@ function drawFruit(ctx, x, y, level, angle) {
   ctx.translate(x, y);
   if (angle) ctx.rotate(angle);
 
-  if (fruit.img) {
-    // Image-based rendering
+  const skin = typeof SkinManager !== 'undefined' ? SkinManager.getCurrentSkin() : null;
+  const usePNG = fruit.img && (!skin || skin.type === 'default');
+
+  if (usePNG) {
+    // Image-based rendering (tropical/default skin only)
     const size = fruit.radius * 2;
     ctx.drawImage(fruit.img, -fruit.radius, -fruit.radius, size, size);
 
@@ -100,8 +103,7 @@ function drawFruit(ctx, x, y, level, angle) {
       ctx.globalAlpha = 1;
     }
   } else {
-    // Fallback: simple colored circle (skin-aware)
-    const skin = typeof SkinManager !== 'undefined' ? SkinManager.getCurrentSkin() : null;
+    // Procedural rendering (skin-aware)
     const skinData = skin ? skin.data[level] : null;
     const skinType = skin ? skin.type : 'default';
     const baseColor = (skinData && skinData.color) ? skinData.color : fruit.color;

@@ -474,8 +474,8 @@ const UI = (() => {
   }
 
   function renderMenuFruits() {
-    // Show 3 hero fruits: Mango (4), Pineapple (8), Dragon Fruit (5)
-    const levels = [4, 8, 5];
+    // Show 3 hero fruits: Mango (4), Durian (9), Pineapple (8)
+    const levels = [4, 9, 8];
     const sizes = [70, 100, 70]; // center biggest
     els.menuFruits.innerHTML = '';
     levels.forEach((level, i) => {
