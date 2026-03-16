@@ -94,6 +94,7 @@ const UI = (() => {
       settingsNickSection: document.getElementById('settingsNickSection'),
       settingsNickName: document.getElementById('settingsNickName'),
       settingsNickEdit: document.getElementById('settingsNickEdit'),
+      settingsPrivacyLink: document.getElementById('settingsPrivacyLink'),
       toggleSfx: document.getElementById('toggleSfx'),
       toggleHaptic: document.getElementById('toggleHaptic'),
 
@@ -214,6 +215,15 @@ const UI = (() => {
       }
     });
     els.settingsNickEdit.addEventListener('click', handleNickEdit);
+    els.settingsPrivacyLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const url = 'https://taeyon9.github.io/durian-game/privacy-policy.html';
+      if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
+        window.open(url, '_system');
+      } else {
+        window.open(url, '_blank');
+      }
+    });
     // Toggle persistence
     [els.toggleSfx, els.toggleHaptic].forEach(t => {
       t.addEventListener('change', saveSettings);

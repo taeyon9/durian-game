@@ -1098,6 +1098,16 @@ html, body {
   flex-shrink: 0;
 }
 
+.settings-links {
+  text-align: center;
+  margin-top: var(--sp-sm);
+}
+.settings-link {
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  text-decoration: underline;
+  cursor: pointer;
+}
 .settings-ver {
   text-align: center;
   font-size: var(--fs-xs);

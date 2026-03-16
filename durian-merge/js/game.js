@@ -536,7 +536,11 @@ const Game = (() => {
       if (rewarded) {
         TicketManager.addTicket();
         startGame();
+      } else {
+        UI.showToast('Ad not available. Try again later.', 3000);
       }
+    } else {
+      UI.showToast('Ads are not available in this environment.', 3000);
     }
   }
 
@@ -896,6 +900,12 @@ const Game = (() => {
 
   function finishGameOver() {
     gameState = 'gameover';
+
+    // Clean up effects and particles to prevent pool exhaustion
+    mergeEffects.length = 0;
+    scorePopups.length = 0;
+    comboDisplay = null;
+    releaseAllParticles();
 
     // Hide challenge HUD elements
     const timer = document.getElementById('hudTimer');
