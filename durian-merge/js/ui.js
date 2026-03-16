@@ -217,7 +217,7 @@ const UI = (() => {
     els.settingsNickEdit.addEventListener('click', handleNickEdit);
     els.settingsPrivacyLink.addEventListener('click', (e) => {
       e.preventDefault();
-      const url = 'https://taeyon9.github.io/durian-game/privacy-policy.html';
+      const url = 'https://taeyon9.github.io/durian-game/durian-merge/docs/privacy-policy.html';
       if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
         window.open(url, '_system');
       } else {
