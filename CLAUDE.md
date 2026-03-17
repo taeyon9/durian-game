@@ -112,4 +112,5 @@ game/
 ## 빌드 & 배포
 - JDK 21 + Android SDK (`~/android-sdk`)
 - `npm run build` → `npx cap sync` → `./gradlew assembleDebug`
-- 릴리스 전: AdMob 테스트 ID → 실제 ID, isTesting: false, 서명된 APK
+- **릴리스 빌드**: `./gradlew bundleRelease` (AAB) — Play Console은 AAB만 수용, APK 불가
+- 릴리스 전: AdMob 테스트 ID → 실제 ID, isTesting: false, 서명된 AAB

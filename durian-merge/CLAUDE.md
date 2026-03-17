@@ -22,6 +22,7 @@ durian-merge/
 │   ├── game.js             # 메인 게임 루프 + 입력 + 충돌/합체 로직 + 이펙트
 │   └── admob.js            # AdMob 광고 (Capacitor 전용)
 ├── assets/fruits_clean/    # 과일 PNG 11개 (256x256)
+├── docs/privacy-policy.html # 개인정보처리방침 (GitHub Pages 호스팅)
 ├── capacitor.config.json   # Capacitor 설정
 ├── package.json
 └── PRD.md                  # 상세 기획서
@@ -86,3 +87,10 @@ npm run deploy
 4. 문제 없으면 커밋
 
 **주의**: 커밋 전에 반드시 `device:capture` 실행. 스크린샷 확인 없이 UI 변경을 커밋하지 말 것.
+
+## 배포 & 스토어
+- **Play Console은 AAB만 수용** (APK 업로드 불가): `./gradlew bundleRelease` 사용
+- AAB 경로: `android/app/build/outputs/bundle/release/app-release.aab`
+- Alpha 트랙 워크플로우: AAB 업로드 → 출시 노트 작성 → 검토 → 출시
+- release/debug 서명 충돌 시 실기기에서 `adb uninstall com.durianmerge.game` 후 재설치
+- Privacy Policy: GitHub Pages (`https://taeyon9.github.io/durian-game/durian-merge/docs/privacy-policy.html`)
